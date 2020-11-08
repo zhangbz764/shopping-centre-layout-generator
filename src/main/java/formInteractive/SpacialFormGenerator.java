@@ -1,13 +1,13 @@
 package formInteractive;
 
-import geometry.ZSkeleton;
-import processing.core.PApplet;
 import formInteractive.blockSplit.Split;
 import formInteractive.blockSplit.SplitBisector;
 import formInteractive.graphAdjusting.TrafficGraph;
 import formInteractive.graphAdjusting.TrafficNode;
 import formInteractive.graphAdjusting.TrafficNodeFixed;
 import formInteractive.graphAdjusting.TrafficNodeTree;
+import geometry.ZSkeleton;
+import processing.core.PApplet;
 import render.JtsRender;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
@@ -88,7 +88,6 @@ public class SpacialFormGenerator {
         // compute straight skeleton for each shop block
         this.skeletons = new ArrayList<>();
         for (WB_Polygon polygon : shopBlock) {
-
             skeletons.add(new ZSkeleton(polygon));
         }
     }
