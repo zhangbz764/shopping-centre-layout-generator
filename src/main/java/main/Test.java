@@ -1,11 +1,11 @@
 package main;
 
 import Guo_Cam.CameraController;
-import processing.core.PApplet;
 import formInteractive.SpacialFormGenerator;
+import processing.core.PApplet;
 import render.DisplayBasic;
 import render.JtsRender;
-import formInteractive.ShopSpaceGenerator;
+import shopSpace.ShopGenerator;
 import wblut.processing.WB_Render3D;
 
 public class Test extends PApplet {
@@ -18,7 +18,8 @@ public class Test extends PApplet {
     public boolean shopSpaceDraw = true;
 
     // generate steps
-    public SpacialFormGenerator publicSpace;
+    public SpacialFormGenerator spacialFormGenerator;
+    public ShopGenerator shopGenerator;
 
     // utils
     public WB_Render3D render;
@@ -38,7 +39,8 @@ public class Test extends PApplet {
         jtsRender = new JtsRender(this);
         gcam = new CameraController(this);
 
-        publicSpace = new SpacialFormGenerator(path);
+        spacialFormGenerator = new SpacialFormGenerator(path);
+        shopGenerator = new ShopGenerator(spacialFormGenerator.getBlockSkeletonMap());
     }
 
     /* ------------- draw ------------- */
@@ -57,16 +59,15 @@ public class Test extends PApplet {
     public void draw2D(JtsRender jrender, WB_Render3D render, PApplet app) {
         if (publicSpaceDraw) {
             showText();
-            publicSpace.display(jtsRender, render, this);
+            spacialFormGenerator.display(jtsRender, render, this);
         }
-
+        shopGenerator.display(render, this);
     }
 
     public void draw3D(JtsRender jrender, WB_Render3D render, PApplet app) {
         if (publicSpaceDraw) {
-            publicSpace.display(jtsRender, render, this);
+            spacialFormGenerator.display(jtsRender, render, this);
         }
-
     }
 
     /* ------------- print & text ------------- */
@@ -94,24 +95,25 @@ public class Test extends PApplet {
     public void mouseDragged() {
         if (publicSpaceAdjust && mouseButton == RIGHT) {
             // drag a node of traffic graph
-            publicSpace.mouseDrag(this);
+            spacialFormGenerator.mouseDrag(this);
+            shopGenerator = new ShopGenerator(spacialFormGenerator.getBlockSkeletonMap());
         }
     }
 
     public void mouseReleased() {
         if (publicSpaceAdjust && mouseButton == RIGHT) {
-            publicSpace.mouseRelease(this);
+            spacialFormGenerator.mouseRelease(this);
         }
     }
 
     public void keyPressed() {
         // display control
-        if (key == '+') {
-
-        }
-        if (key == '-') {
-
-        }
+//        if (key == '+') {
+//
+//        }
+//        if (key == '-') {
+//
+//        }
         if (key == '7') {
             publicSpaceDraw = !publicSpaceDraw;
         }
@@ -123,7 +125,8 @@ public class Test extends PApplet {
 
         // interact control
         if (publicSpaceAdjust) {
-            publicSpace.keyInteract(this);
+            spacialFormGenerator.keyInteract(this);
+            shopGenerator = new ShopGenerator(spacialFormGenerator.getBlockSkeletonMap());
         }
     }
 }

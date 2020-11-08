@@ -3,7 +3,6 @@ package main.demoTests;
 import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
-import transform.ZTransform;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_PolyLine;
 import wblut.geom.WB_Polygon;
@@ -48,7 +47,7 @@ public class TestPolySplit extends PApplet {
         pl = new WB_PolyLine(pts2);
         besides = ZGeoMath.pointsOnEdgeByDist(test, poly, 500);
 
-        split = ZGeoMath.splitPolygonEdge(poly, 27);
+        split = ZGeoMath.splitPolyLineEdge(poly, 27);
         println("split: " + split.size());
     }
 

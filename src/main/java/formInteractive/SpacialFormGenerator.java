@@ -14,7 +14,9 @@ import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author ZHANG Bai-zhou zhangbz
@@ -31,6 +33,7 @@ public class SpacialFormGenerator {
 
     // traffic mini spanning tree
     private TrafficGraph graph;
+
     // split block, could be variable types
     private Split splitBlock;
 
@@ -38,6 +41,7 @@ public class SpacialFormGenerator {
     private WB_Polygon publicBlock;
     private List<WB_Polygon> shopBlock;
     private List<ZSkeleton> skeletons;
+    private Map<ZSkeleton, WB_Polygon> blockSkeletonMap;
 
     /* ------------- constructor ------------- */
 
@@ -79,21 +83,21 @@ public class SpacialFormGenerator {
     }
 
     /**
-    * @return void
-    * @description catch output from Split and perform skeleton
-    */
+     * @return void
+     * @description catch output from Split and perform skeleton
+     */
     private void catchOutput() {
         this.publicBlock = splitBlock.getPublicBlockPoly();
         this.shopBlock = splitBlock.getShopBlockPolys();
         // compute straight skeleton for each shop block
         this.skeletons = new ArrayList<>();
-        for (WB_Polygon polygon : shopBlock) {
-            skeletons.add(new ZSkeleton(polygon));
-        }
-    }
 
-    public TrafficGraph getGraph() {
-        return this.graph;
+        this.blockSkeletonMap = new HashMap<>();
+        for (WB_Polygon polygon : shopBlock) {
+            ZSkeleton skeleton = new ZSkeleton(polygon);
+            skeletons.add(skeleton);
+            blockSkeletonMap.put(skeleton, polygon);
+        }
     }
 
     public WB_Polygon getPublicBlock() {
@@ -106,6 +110,10 @@ public class SpacialFormGenerator {
 
     public int getShopBlockNum() {
         return this.splitBlock.getShopBlockNum();
+    }
+
+    public Map<ZSkeleton, WB_Polygon> getBlockSkeletonMap() {
+        return this.blockSkeletonMap;
     }
 
     /* ------------- mouse & key interaction at TRAFFIC GRAPH STEP ------------- */
@@ -206,7 +214,7 @@ public class SpacialFormGenerator {
         splitBlock.display(render, app);
     }
 
-    private  void displaySkeleton(PApplet app){
+    private void displaySkeleton(PApplet app) {
         for (ZSkeleton skeleton : skeletons) {
             skeleton.display(app);
         }
