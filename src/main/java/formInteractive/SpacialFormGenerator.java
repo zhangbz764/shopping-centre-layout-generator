@@ -32,16 +32,15 @@ public class SpacialFormGenerator {
     private final InputData input;
 
     // traffic mini spanning tree
-    private TrafficGraph graph;
+    private TrafficGraph mainGraph;
 
     // split block, could be variable types
-    private Split splitBlock;
+    private Split blockSplit;
 
     // output
     private WB_Polygon publicBlock;
     private List<WB_Polygon> shopBlock;
     private List<ZSkeleton> skeletons;
-    private Map<ZSkeleton, WB_Polygon> blockSkeletonMap;
 
     /* ------------- constructor ------------- */
 
@@ -73,10 +72,10 @@ public class SpacialFormGenerator {
         for (WB_Point p : input.getInputEntries()) {
             entryNodes.add(new TrafficNodeFixed(p, input.getInputBoundary()));
         }
-        this.graph = new TrafficGraph(innerNodes, entryNodes);
+        this.mainGraph = new TrafficGraph(innerNodes, entryNodes);
 
         // compute split block
-        this.splitBlock = new SplitBisector(input.getInputBoundary(), graph);
+        this.blockSplit = new SplitBisector(input.getInputBoundary(), mainGraph);
 
         // get output
         catchOutput();
@@ -87,16 +86,14 @@ public class SpacialFormGenerator {
      * @description catch output from Split and perform skeleton
      */
     private void catchOutput() {
-        this.publicBlock = splitBlock.getPublicBlockPoly();
-        this.shopBlock = splitBlock.getShopBlockPolys();
+        this.publicBlock = blockSplit.getPublicBlockPoly();
+        this.shopBlock = blockSplit.getShopBlockPolys();
         // compute straight skeleton for each shop block
         this.skeletons = new ArrayList<>();
 
-        this.blockSkeletonMap = new HashMap<>();
         for (WB_Polygon polygon : shopBlock) {
             ZSkeleton skeleton = new ZSkeleton(polygon);
             skeletons.add(skeleton);
-            blockSkeletonMap.put(skeleton, polygon);
         }
     }
 
@@ -109,11 +106,11 @@ public class SpacialFormGenerator {
     }
 
     public int getShopBlockNum() {
-        return this.splitBlock.getShopBlockNum();
+        return this.blockSplit.getShopBlockNum();
     }
 
-    public Map<ZSkeleton, WB_Polygon> getBlockSkeletonMap() {
-        return this.blockSkeletonMap;
+    public List<ZSkeleton> getSkeletons(){
+        return this.skeletons;
     }
 
     /* ------------- mouse & key interaction at TRAFFIC GRAPH STEP ------------- */
@@ -123,12 +120,12 @@ public class SpacialFormGenerator {
      * @description update tree node location and graph, split polygon
      */
     public void mouseDrag(PApplet app) {
-        graph.dragTreeNode(app);
-        graph.dragFixedNode(app);
-        if (graph.update) {
-            splitBlock.init(graph);
+        mainGraph.dragTreeNode(app);
+        mainGraph.dragFixedNode(app);
+        if (mainGraph.update) {
+            blockSplit.init(mainGraph);
             catchOutput();
-            graph.update = false;
+            mainGraph.update = false;
         }
     }
 
@@ -137,7 +134,7 @@ public class SpacialFormGenerator {
      * @description reset fixed node to not active
      */
     public void mouseRelease(PApplet app) {
-        graph.resetActive(app);
+        mainGraph.resetActive(app);
     }
 
     /**
@@ -151,45 +148,45 @@ public class SpacialFormGenerator {
         }
         // add a TrafficNode to graph
         if (app.key == 'a' || app.key == 'A') {
-            graph.addTreeNode(app, input.getInputBoundary());
-            splitBlock.init(graph);
+            mainGraph.addTreeNode(app, input.getInputBoundary());
+            blockSplit.init(mainGraph);
             catchOutput();
-            graph.update = false;
+            mainGraph.update = false;
         }
         // remove a TrafficNode to graph (mouse location)
         if (app.key == 's' || app.key == 'S') {
-            graph.removeTreeNode(app);
-            splitBlock.init(graph);
+            mainGraph.removeTreeNode(app);
+            blockSplit.init(mainGraph);
             catchOutput();
-            graph.update = false;
+            mainGraph.update = false;
         }
         // add a fixed TrafficNode to graph
         if (app.key == 'q' || app.key == 'Q') {
-            graph.addFixedNode(app, input.getInputBoundary());
-            splitBlock.init(graph);
+            mainGraph.addFixedNode(app, input.getInputBoundary());
+            blockSplit.init(mainGraph);
             catchOutput();
-            graph.update = false;
+            mainGraph.update = false;
         }
         // remove a fixed TrafficNode to graph (mouse location)
         if (app.key == 'w' || app.key == 'W') {
-            graph.removeFixedNode(app);
-            splitBlock.init(graph);
+            mainGraph.removeFixedNode(app);
+            blockSplit.init(mainGraph);
             catchOutput();
-            graph.update = false;
+            mainGraph.update = false;
         }
         // increase TrafficNode's regionR
         if (app.key == 'z' || app.key == 'Z') {
-            graph.increaseR(app, 2);
-            splitBlock.init(graph);
+            mainGraph.increaseR(app, 2);
+            blockSplit.init(mainGraph);
             catchOutput();
-            graph.update = false;
+            mainGraph.update = false;
         }
         // decrease TrafficNode's regionR
         if (app.key == 'x' || app.key == 'X') {
-            graph.decreaseR(app, -2);
-            splitBlock.init(graph);
+            mainGraph.decreaseR(app, -2);
+            blockSplit.init(mainGraph);
             catchOutput();
-            graph.update = false;
+            mainGraph.update = false;
         }
     }
 
@@ -207,11 +204,11 @@ public class SpacialFormGenerator {
     }
 
     private void displayGraph(PApplet app) {
-        graph.display(app);
+        mainGraph.display(app);
     }
 
     private void displayBlock(JtsRender render, PApplet app) {
-        splitBlock.display(render, app);
+        blockSplit.display(render, app);
     }
 
     private void displaySkeleton(PApplet app) {

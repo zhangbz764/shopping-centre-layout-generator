@@ -1,4 +1,4 @@
-package shopSpace;
+package shoptype;
 
 /**
  * @author ZHANG Bai-zhou zhangbz

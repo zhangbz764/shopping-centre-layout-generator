@@ -5,7 +5,7 @@ import formInteractive.SpacialFormGenerator;
 import processing.core.PApplet;
 import render.DisplayBasic;
 import render.JtsRender;
-import shopSpace.ShopGenerator;
+import shoptype.ShopGenerator;
 import wblut.processing.WB_Render3D;
 
 public class Test extends PApplet {
@@ -29,7 +29,7 @@ public class Test extends PApplet {
     /* ------------- settings ------------- */
 
     public void settings() {
-        size(1000, 1800, P3D);
+        size(1800, 1000, P3D);
     }
 
     /* ------------- setup ------------- */
@@ -40,7 +40,7 @@ public class Test extends PApplet {
         gcam = new CameraController(this);
 
         spacialFormGenerator = new SpacialFormGenerator(path);
-        shopGenerator = new ShopGenerator(spacialFormGenerator.getBlockSkeletonMap());
+        shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
     }
 
     /* ------------- draw ------------- */
@@ -50,6 +50,7 @@ public class Test extends PApplet {
         DisplayBasic.drawAxis(this, 50);
 
         gcam.begin2d();
+//        gcam.top();
         draw2D(jtsRender, render, this);
 
         gcam.begin3d();
@@ -61,7 +62,9 @@ public class Test extends PApplet {
             showText();
             spacialFormGenerator.display(jtsRender, render, this);
         }
-        shopGenerator.display(render, this);
+        if(shopSpaceDraw){
+            shopGenerator.display(render, this);
+        }
     }
 
     public void draw3D(JtsRender jrender, WB_Render3D render, PApplet app) {
@@ -96,7 +99,7 @@ public class Test extends PApplet {
         if (publicSpaceAdjust && mouseButton == RIGHT) {
             // drag a node of traffic graph
             spacialFormGenerator.mouseDrag(this);
-            shopGenerator = new ShopGenerator(spacialFormGenerator.getBlockSkeletonMap());
+            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
         }
     }
 
@@ -117,6 +120,9 @@ public class Test extends PApplet {
         if (key == '7') {
             publicSpaceDraw = !publicSpaceDraw;
         }
+        if (key == '8') {
+            shopSpaceDraw = !shopSpaceDraw;
+        }
 
         // switch control
         if (key == '1') {
@@ -126,7 +132,7 @@ public class Test extends PApplet {
         // interact control
         if (publicSpaceAdjust) {
             spacialFormGenerator.keyInteract(this);
-            shopGenerator = new ShopGenerator(spacialFormGenerator.getBlockSkeletonMap());
+            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
         }
     }
 }

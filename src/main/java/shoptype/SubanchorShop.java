@@ -1,11 +1,11 @@
-package shopSpace;
+package shoptype;
 
 /**
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/31
- * @time 21:57
+ * @time 21:58
  * @description
  */
-public class AnchorShop {
+public class SubanchorShop {
 }
