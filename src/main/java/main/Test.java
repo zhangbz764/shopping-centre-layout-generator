@@ -5,7 +5,7 @@ import formInteractive.SpacialFormGenerator;
 import processing.core.PApplet;
 import render.DisplayBasic;
 import render.JtsRender;
-import shoptype.ShopGenerator;
+import formInteractive.ShopGenerator;
 import wblut.processing.WB_Render3D;
 
 public class Test extends PApplet {
@@ -14,8 +14,9 @@ public class Test extends PApplet {
 
     // switch toggle
     public boolean publicSpaceAdjust = false;
+    public boolean shopSpaceGenerate = false;
     public boolean publicSpaceDraw = true;
-    public boolean shopSpaceDraw = true;
+    public boolean shopSpaceDraw = false;
 
     // generate steps
     public SpacialFormGenerator spacialFormGenerator;
@@ -40,7 +41,6 @@ public class Test extends PApplet {
         gcam = new CameraController(this);
 
         spacialFormGenerator = new SpacialFormGenerator(path);
-        shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
     }
 
     /* ------------- draw ------------- */
@@ -100,6 +100,8 @@ public class Test extends PApplet {
             // drag a node of traffic graph
             spacialFormGenerator.mouseDrag(this);
             shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
+//            shopGenerator = new ShopGenerator();
+//            shopSpaceDraw = false;
         }
     }
 
@@ -127,6 +129,10 @@ public class Test extends PApplet {
         // switch control
         if (key == '1') {
             publicSpaceAdjust = !publicSpaceAdjust;
+        }
+        if(key=='2'){
+            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
+            shopSpaceDraw = !shopSpaceDraw;
         }
 
         // interact control

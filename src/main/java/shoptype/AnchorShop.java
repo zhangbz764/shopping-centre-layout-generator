@@ -5,7 +5,7 @@ package shoptype;
  * @project shopping_mall
  * @date 2020/10/31
  * @time 21:57
- * @description
+ * @description anchor shop (主力店)
  */
-public class AnchorShop {
+public class AnchorShop extends Shop{
 }

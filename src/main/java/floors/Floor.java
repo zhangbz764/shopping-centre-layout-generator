@@ -10,6 +10,8 @@ import formInteractive.graphAdjusting.TrafficGraph;
  * @description abstract class for floors in the shopping mall
  */
 public abstract class Floor {
+    private TrafficGraph trafficGraph;
+    private int floorNum;
 
     /* ------------- constructor ------------- */
 
@@ -19,15 +21,25 @@ public abstract class Floor {
 
     /* ------------- set & get ------------- */
 
-    public abstract void setTrafficGraph(TrafficGraph mainGraph);
+    public void setTrafficGraph(TrafficGraph mainGraph) {
+        this.trafficGraph = mainGraph;
+    }
+
+    public TrafficGraph getTrafficGraph() {
+        return this.trafficGraph;
+    }
+
+    public void setFloorNum(int floorNum) {
+        this.floorNum = floorNum;
+    }
+
+    public int getFloorNum() {
+        return floorNum;
+    }
 
     public abstract int getShopBlockNum();
 
     public abstract int getShopNum();
-
-    public abstract TrafficGraph getTrafficGraph();
-
-    public abstract int getFloorNum();
 
     /* ------------- draw ------------- */
 

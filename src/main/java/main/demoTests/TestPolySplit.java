@@ -47,7 +47,7 @@ public class TestPolySplit extends PApplet {
         pl = new WB_PolyLine(pts2);
         besides = ZGeoMath.pointsOnEdgeByDist(test, poly, 500);
 
-        split = ZGeoMath.splitPolyLineEdge(poly, 27);
+        split = ZGeoMath.splitWB_PolyLineEdge(poly, 27);
         println("split: " + split.size());
     }
 

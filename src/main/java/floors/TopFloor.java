@@ -10,21 +10,14 @@ import formInteractive.graphAdjusting.TrafficGraph;
  * @description top floor of a shopping mall
  */
 public class TopFloor extends Floor {
-    private TrafficGraph topFloorGraph;
-    private final int floorNum;
 
     /* ------------- constructor ------------- */
 
     public TopFloor(int floorNum) {
-        this.floorNum = floorNum;
+        super.setFloorNum(floorNum);
     }
 
     /* ------------- set & get ------------- */
-
-    @Override
-    public void setTrafficGraph(TrafficGraph mainGraph) {
-        this.topFloorGraph = mainGraph;
-    }
 
     @Override
     public int getShopBlockNum() {
@@ -36,15 +29,6 @@ public class TopFloor extends Floor {
         return 0;
     }
 
-    @Override
-    public TrafficGraph getTrafficGraph() {
-        return this.topFloorGraph;
-    }
-
-    @Override
-    public int getFloorNum() {
-        return this.floorNum;
-    }
 
     /* ------------- draw ------------- */
 

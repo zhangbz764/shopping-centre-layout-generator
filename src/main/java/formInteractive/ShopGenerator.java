@@ -1,21 +1,15 @@
-package shoptype;
+package formInteractive;
 
 import geometry.ZGeoFactory;
 import geometry.ZPoint;
 import geometry.ZSkeleton;
-import kn.uni.voronoitreemap.extension.VoroCellObject;
 import math.ZGeoMath;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.triangulate.VoronoiDiagramBuilder;
 import processing.core.PApplet;
 import wblut.geom.*;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author ZHANG Bai-zhou zhangbz
@@ -34,27 +28,33 @@ public class ShopGenerator {
 
     /* ------------- constructor ------------- */
 
+    public ShopGenerator() {
+
+    }
+
     public ShopGenerator(List<WB_Polygon> shopBlock, List<ZSkeleton> skeletons) {
         assert shopBlock.size() == skeletons.size();
         this.polyLineToGenerate = new ArrayList<>();
         this.splitPoints = new ArrayList<>();
-
-        for (ZSkeleton skel : skeletons) {
-            WB_PolyLine polyLine = ZGeoFactory.createWB_PolyLine(skel.getRidges());
-            polyLineToGenerate.add(polyLine);
-        }
-        splitPolyLine();
-
         this.voronois = new ArrayList<>();
-        for (int i = 0; i < splitPoints.size(); i++) {
-            List<WB_Point> points = new ArrayList<>();
-            for (ZPoint p : splitPoints.get(i)) {
-                points.add(p.toWB_Point());
-            }
-            WB_Voronoi2D voronoi = WB_VoronoiCreator.getClippedVoronoi2D(points, shopBlock.get(i));
-            voronois.add(voronoi);
-        }
 
+        for (int i = 0; i < skeletons.size(); i++) {
+            // maybe null
+            WB_PolyLine polyLine = ZGeoFactory.createWB_PolyLine(skeletons.get(i).getRidges());
+            if (polyLine != null) {
+                polyLineToGenerate.add(polyLine);
+
+                List<ZPoint> splitResult = ZGeoMath.splitWB_PolyLineEdge(polyLine, 8);
+                splitPoints.add(splitResult);
+
+                List<WB_Point> points = new ArrayList<>();
+                for (ZPoint p : splitResult) {
+                    points.add(p.toWB_Point());
+                }
+                WB_Voronoi2D voronoi = WB_VoronoiCreator.getClippedVoronoi2D(points, shopBlock.get(i));
+                voronois.add(voronoi);
+            }
+        }
     }
 
     public void performVoronoi() {
@@ -67,7 +67,7 @@ public class ShopGenerator {
      */
     public void splitPolyLine() {
         for (WB_PolyLine pl : polyLineToGenerate) {
-            splitPoints.add(ZGeoMath.splitPolyLineEdge(pl, 8));
+            splitPoints.add(ZGeoMath.splitWB_PolyLineEdge(pl, 8));
         }
     }
 
