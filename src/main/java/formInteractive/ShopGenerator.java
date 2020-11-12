@@ -23,7 +23,6 @@ import java.util.List;
 public class ShopGenerator {
     List<WB_PolyLine> polyLineToGenerate;
     List<List<ZPoint>> splitPoints;
-
     List<WB_Voronoi2D> voronois;
 
     /* ------------- constructor ------------- */

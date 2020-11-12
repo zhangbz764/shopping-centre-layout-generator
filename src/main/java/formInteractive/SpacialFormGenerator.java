@@ -14,9 +14,7 @@ import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author ZHANG Bai-zhou zhangbz
@@ -109,7 +107,7 @@ public class SpacialFormGenerator {
         return this.blockSplit.getShopBlockNum();
     }
 
-    public List<ZSkeleton> getSkeletons(){
+    public List<ZSkeleton> getSkeletons() {
         return this.skeletons;
     }
 
@@ -119,9 +117,9 @@ public class SpacialFormGenerator {
      * @return void
      * @description update tree node location and graph, split polygon
      */
-    public void mouseDrag(PApplet app) {
-        mainGraph.dragTreeNode(app);
-        mainGraph.dragFixedNode(app);
+    public void dragUpdate(int pointerX, int pointerY) {
+        mainGraph.setTreeNode(pointerX, pointerY);
+        mainGraph.setFixedNode(pointerX, pointerY);
         if (mainGraph.update) {
             blockSplit.init(mainGraph);
             catchOutput();
@@ -133,57 +131,57 @@ public class SpacialFormGenerator {
      * @return void
      * @description reset fixed node to not active
      */
-    public void mouseRelease(PApplet app) {
-        mainGraph.resetActive(app);
+    public void releaseUpdate() {
+        mainGraph.resetActive();
     }
 
     /**
      * @return void
      * @description all keyboard interaction
      */
-    public void keyInteract(PApplet app) {
+    public void keyUpdate(int pointerX, int pointerY, PApplet app) {
         // reload input file
         if (app.key == 'r' || app.key == 'R') {
             init();
         }
         // add a TrafficNode to graph
         if (app.key == 'a' || app.key == 'A') {
-            mainGraph.addTreeNode(app, input.getInputBoundary());
+            mainGraph.addTreeNode(pointerX, pointerY, input.getInputBoundary());
             blockSplit.init(mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
         // remove a TrafficNode to graph (mouse location)
         if (app.key == 's' || app.key == 'S') {
-            mainGraph.removeTreeNode(app);
+            mainGraph.removeTreeNode(pointerX, pointerY);
             blockSplit.init(mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
         // add a fixed TrafficNode to graph
         if (app.key == 'q' || app.key == 'Q') {
-            mainGraph.addFixedNode(app, input.getInputBoundary());
+            mainGraph.addFixedNode(pointerX, pointerY, input.getInputBoundary());
             blockSplit.init(mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
         // remove a fixed TrafficNode to graph (mouse location)
         if (app.key == 'w' || app.key == 'W') {
-            mainGraph.removeFixedNode(app);
+            mainGraph.removeFixedNode(pointerX, pointerY);
             blockSplit.init(mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
         // increase TrafficNode's regionR
         if (app.key == 'z' || app.key == 'Z') {
-            mainGraph.increaseR(app, 2);
+            mainGraph.changeR(pointerX, pointerY, 2);
             blockSplit.init(mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
         // decrease TrafficNode's regionR
         if (app.key == 'x' || app.key == 'X') {
-            mainGraph.decreaseR(app, -2);
+            mainGraph.changeR(pointerX, pointerY, -2);
             blockSplit.init(mainGraph);
             catchOutput();
             mainGraph.update = false;

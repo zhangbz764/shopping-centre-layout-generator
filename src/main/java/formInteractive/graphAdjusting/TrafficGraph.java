@@ -109,7 +109,7 @@ public class TrafficGraph {
 
     /* ------------- move, add & remove (public) ------------- */
 
-    public void resetActive(PApplet app) {
+    public void resetActive() {
         for (TrafficNode n : fixedNodes) {
             n.setActivate(false);
         }
@@ -118,97 +118,80 @@ public class TrafficGraph {
         }
     }
 
-    public void dragTreeNode(PApplet app) {
+    public void setTreeNode(int pointerX, int pointerY) {
         for (TrafficNode n : treeNodes) {
-            if (n.isMoused(app)) {
+            if (n.isMoused(pointerX, pointerY)) {
                 n.setActivate(true);
-                n.setByRestriction(app.mouseX, app.mouseY);
+                n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
             }
             if (n.isActivate()) {
-                n.setByRestriction(app.mouseX, app.mouseY);
+                n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
             }
         }
     }
 
-    public void dragFixedNode(PApplet app) {
+    public void setFixedNode(int pointerX, int pointerY) {
         for (TrafficNode n : fixedNodes) {
-            if (n.isMoused(app)) {
+            if (n.isMoused(pointerX, pointerY)) {
                 n.setActivate(true);
-                n.setByRestriction(app.mouseX, app.mouseY);
+                n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
             }
             if (n.isActivate()) {
-                n.setByRestriction(app.mouseX, app.mouseY);
+                n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
             }
         }
     }
 
-    public void addTreeNode(PApplet app, WB_Polygon boundary) {
-        TrafficNodeTree tree = new TrafficNodeTree(app.mouseX, app.mouseY, boundary);
+    public void addTreeNode(int pointerX, int pointerY, WB_Polygon boundary) {
+        TrafficNodeTree tree = new TrafficNodeTree(pointerX, pointerY, boundary);
         if (WB_GeometryOp.contains2D(tree.toWB_Point(), boundary) && WB_GeometryOp.getDistance2D(tree.toWB_Point(), boundary) > tree.getRegionR()) {
             treeNodes.add(tree);
             init();
-        } else {
-            tree = null;
         }
     }
 
-    public void removeTreeNode(PApplet app) {
+    public void removeTreeNode(int pointerX, int pointerY) {
         for (int i = 0; i < treeNodes.size(); i++) {
-            if (treeNodes.get(i).isMoused(app)) {
+            if (treeNodes.get(i).isMoused(pointerX, pointerY)) {
                 treeNodes.remove(i--);
                 init();
             }
         }
     }
 
-    public void addFixedNode(PApplet app, WB_Polygon boundary) {
-        TrafficNodeFixed fixed = new TrafficNodeFixed(app.mouseX, app.mouseY, boundary);
-        fixed.setByRestriction(app.mouseX, app.mouseY);
+    public void addFixedNode(int pointerX, int pointerY, WB_Polygon boundary) {
+        TrafficNodeFixed fixed = new TrafficNodeFixed(pointerX, pointerY, boundary);
+        fixed.setByRestriction(pointerX, pointerY);
         fixedNodes.add(fixed);
         init();
     }
 
-    public void removeFixedNode(PApplet app) {
+    public void removeFixedNode(int pointerX, int pointerY) {
         for (int i = 0; i < fixedNodes.size(); i++) {
-            if (fixedNodes.get(i).isMoused(app)) {
+            if (fixedNodes.get(i).isMoused(pointerX, pointerY)) {
                 fixedNodes.remove(i--);
                 init();
             }
         }
     }
 
-    public void increaseR(PApplet app, double r) {
+    public void changeR(int pointerX, int pointerY, double r) {
         for (TrafficNode fixedNode : fixedNodes) {
-            if (fixedNode.isMoused(app)) {
+            if (fixedNode.isMoused(pointerX, pointerY)) {
                 fixedNode.updateRegionR(r);
                 init();
             }
         }
         for (TrafficNode treeNode : treeNodes) {
-            if (treeNode.isMoused(app)) {
-                treeNode.updateRegionR(r);
-                init();
-            }
-        }
-    }
-
-    public void decreaseR(PApplet app, double r) {
-        for (TrafficNode fixedNode : fixedNodes) {
-            if (fixedNode.isMoused(app)) {
-                fixedNode.updateRegionR(r);
-                init();
-            }
-        }
-        for (TrafficNode treeNode : treeNodes) {
-            if (treeNode.isMoused(app)) {
+            if (treeNode.isMoused(pointerX, pointerY)) {
                 treeNode.updateRegionR(r);
                 init();
             }
@@ -252,9 +235,9 @@ public class TrafficGraph {
      * @return void
      * @description draw neighbor nodes of one node where mouse at
      */
-    public void displayNeighbor(PApplet app) {
+    public void displayNeighbor(int pointerX, int pointerY, PApplet app) {
         for (TrafficNode n : treeNodes) {
-            if (n.isMoused(app)) {
+            if (n.isMoused(pointerX, pointerY)) {
                 n.displayNeighbor(app);
             }
         }

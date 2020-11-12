@@ -41,6 +41,7 @@ public class Test extends PApplet {
         gcam = new CameraController(this);
 
         spacialFormGenerator = new SpacialFormGenerator(path);
+
     }
 
     /* ------------- draw ------------- */
@@ -50,8 +51,12 @@ public class Test extends PApplet {
         DisplayBasic.drawAxis(this, 50);
 
         gcam.begin2d();
-//        gcam.top();
+        pushMatrix();
+        scale(1, -1);
+        translate(0, -height);
         draw2D(jtsRender, render, this);
+        popMatrix();
+        showText();
 
         gcam.begin3d();
         draw3D(jtsRender, render, this);
@@ -59,10 +64,9 @@ public class Test extends PApplet {
 
     public void draw2D(JtsRender jrender, WB_Render3D render, PApplet app) {
         if (publicSpaceDraw) {
-            showText();
             spacialFormGenerator.display(jtsRender, render, this);
         }
-        if(shopSpaceDraw){
+        if (shopSpaceDraw) {
             shopGenerator.display(render, this);
         }
     }
@@ -76,20 +80,22 @@ public class Test extends PApplet {
     /* ------------- print & text ------------- */
 
     public void showText() {
-        fill(0);
-        if (publicSpaceAdjust) {
-            String string = "** ADJUSTING TRAFFIC GRAPH **"
-                    + "\n" + "Press 'r' to reload input file"
-                    + "\n"
-                    + "\n" + "Press 'a' to add a tree node at mouse location"
-                    + "\n" + "Press 's' to remove a tree node at mouse location"
-                    + "\n" + "Press 'q' to add a node at mouse location"
-                    + "\n" + "Press 'w' to remove a node at mouse location"
-                    + "\n"
-                    + "\n" + "Press 'z' to increase node region radius"
-                    + "\n" + "Press 'x' to decrease node region radius";
-            //textSize(15);
-            text(string, 10, 20);
+        if (publicSpaceDraw) {
+            fill(0);
+            if (publicSpaceAdjust) {
+                String string = "** ADJUSTING TRAFFIC GRAPH **"
+                        + "\n" + "Press 'r' to reload input file"
+                        + "\n"
+                        + "\n" + "Press 'a' to add a tree node at mouse location"
+                        + "\n" + "Press 's' to remove a tree node at mouse location"
+                        + "\n" + "Press 'q' to add a node at mouse location"
+                        + "\n" + "Press 'w' to remove a node at mouse location"
+                        + "\n"
+                        + "\n" + "Press 'z' to increase node region radius"
+                        + "\n" + "Press 'x' to decrease node region radius";
+                //textSize(15);
+                text(string, 10, 20);
+            }
         }
     }
 
@@ -98,7 +104,7 @@ public class Test extends PApplet {
     public void mouseDragged() {
         if (publicSpaceAdjust && mouseButton == RIGHT) {
             // drag a node of traffic graph
-            spacialFormGenerator.mouseDrag(this);
+            spacialFormGenerator.dragUpdate(mouseX, -1 * mouseY + height);
             shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
 //            shopGenerator = new ShopGenerator();
 //            shopSpaceDraw = false;
@@ -107,7 +113,7 @@ public class Test extends PApplet {
 
     public void mouseReleased() {
         if (publicSpaceAdjust && mouseButton == RIGHT) {
-            spacialFormGenerator.mouseRelease(this);
+            spacialFormGenerator.releaseUpdate();
         }
     }
 
@@ -130,14 +136,14 @@ public class Test extends PApplet {
         if (key == '1') {
             publicSpaceAdjust = !publicSpaceAdjust;
         }
-        if(key=='2'){
+        if (key == '2') {
             shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
             shopSpaceDraw = !shopSpaceDraw;
         }
 
         // interact control
         if (publicSpaceAdjust) {
-            spacialFormGenerator.keyInteract(this);
+            spacialFormGenerator.keyUpdate(mouseX, -1 * mouseY + height, this);
             shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
         }
     }

@@ -49,17 +49,17 @@ public class InputData {
         this.inputEntries = new ArrayList<>();
         IPoint[] entries = IG.layer("entry").points();
         for (IPoint p : entries) {
-            inputEntries.add(ZTransform.IPointToWB(p));
+            inputEntries.add(ZTransform.IPointToWB(p,2));
         }
         // load inner nodes
         this.inputInnerNodes = new ArrayList<>();
         IPoint[] inners = IG.layer("inner").points();
         for (IPoint p : inners) {
-            inputInnerNodes.add(ZTransform.IPointToWB(p));
+            inputInnerNodes.add(ZTransform.IPointToWB(p,2));
         }
         // load boundary polygon
         ICurve[] boundary = IG.layer("boundary").curves();
-        this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0]);
+        this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0],2);
 
         // print
         assert inputBoundary != null;

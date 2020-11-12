@@ -38,8 +38,8 @@ public abstract class TrafficNode extends ZNode {
      * @return boolean
      * @description test whether mouse is in the node (square)
      */
-    public boolean isMoused(PApplet app) {
-        return app.mouseX > super.x() - super.r() && app.mouseX < super.x() + super.r() && app.mouseY > super.y() - super.r() && app.mouseY < super.y() + super.r();
+    public boolean isMoused(int pointerX, int pointerY) {
+        return pointerX > super.x() - super.r() && pointerX < super.x() + super.r() && pointerY > super.y() - super.r() && pointerY < super.y() + super.r();
     }
 
     public void setActivate(boolean activate) {
