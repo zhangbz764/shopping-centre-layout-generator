@@ -15,7 +15,7 @@ import java.util.List;
  * @description
  */
 public abstract class TrafficNode extends ZNode {
-    private double regionR = 25;  // affect radius
+    private double regionR = 18;  // affect radius
     private boolean activate = false;
 
     /* ------------- constructor ------------- */

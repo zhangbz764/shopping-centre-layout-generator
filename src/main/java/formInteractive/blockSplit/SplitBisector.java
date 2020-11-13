@@ -13,6 +13,7 @@ import formInteractive.graphAdjusting.TrafficGraph;
 import formInteractive.graphAdjusting.TrafficNode;
 import render.JtsRender;
 import transform.ZTransform;
+import wblut.geom.WB_GeometryOp2D;
 import wblut.geom.WB_Polygon;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class SplitBisector implements Split {
     // boundary convert to jts LineString
     private final LineString boundaryLineString;
     // select joint connection for each edge
-    private List<ZLine> jointConnection;
+    private List<ZLine> connectedLinesToSplit;
 
     // output
     private Polygon publicBlockPoly; // 交通区域多边形
@@ -45,9 +46,9 @@ public class SplitBisector implements Split {
         this.boundaryLineString = ZTransform.WB_PolygonToJtsLineString(boundary);
         setNodeJoints(graph);
         // connect joints
-        this.jointConnection = connectJoints(graph);
+        this.connectedLinesToSplit = connectJoints(graph);
         // get split result
-        performSplit(boundaryLineString, jointConnection, graph.getTreeNodes().get(0));
+        performSplit(boundaryLineString, connectedLinesToSplit, graph.getTreeNodes().get(0));
         shopBlockNum = shopBlockPolys.size();
         System.out.println("---> traffic space block num: " + 1 +
                 "\n" + "---> shop space block num: " + shopBlockNum);
@@ -60,9 +61,9 @@ public class SplitBisector implements Split {
         // refresh input data
         setNodeJoints(graph);
         // refresh joints connection
-        this.jointConnection = connectJoints(graph);
+        this.connectedLinesToSplit = connectJoints(graph);
         // refresh split result
-        performSplit(boundaryLineString, jointConnection, graph.getTreeNodes().get(0));
+        performSplit(boundaryLineString, connectedLinesToSplit, graph.getTreeNodes().get(0));
         // print if number change
         if (shopBlockNum != shopBlockPolys.size()) {
             shopBlockNum = shopBlockPolys.size();
@@ -209,7 +210,9 @@ public class SplitBisector implements Split {
             }
             // add cap if tree node is an dead end
             if (start.getLinkedEdgeNum() == 1) {
-                connections.add(new ZLine(start.getJoints().get(0), start.getJoints().get(1)));
+                ZLine cap = new ZLine(start.getJoints().get(0), start.getJoints().get(1));
+                connections.add(cap);
+                
             }
             if (end.getLinkedEdgeNum() == 1) {
                 connections.add(new ZLine(end.getJoints().get(0), end.getJoints().get(1)));

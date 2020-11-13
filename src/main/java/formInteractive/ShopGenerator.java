@@ -56,10 +56,6 @@ public class ShopGenerator {
         }
     }
 
-    public void performVoronoi() {
-
-    }
-
     /**
      * @return void
      * @description

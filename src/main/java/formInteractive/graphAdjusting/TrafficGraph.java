@@ -156,6 +156,7 @@ public class TrafficGraph {
             treeNodes.add(tree);
             init();
         }
+
     }
 
     public void removeTreeNode(int pointerX, int pointerY) {

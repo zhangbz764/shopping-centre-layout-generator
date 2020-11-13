@@ -10,6 +10,7 @@ import geometry.ZSkeleton;
 import processing.core.PApplet;
 import render.JtsRender;
 import wblut.geom.WB_Point;
+import wblut.geom.WB_PolyLine;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render3D;
 
@@ -24,10 +25,8 @@ import java.util.List;
  * @description main control of public space generator
  */
 public class SpacialFormGenerator {
-    // input file absolute path from main class
-    private final String filePath;
     // geometry input 3dm file
-    private final InputData input;
+    private InputData input;
 
     // traffic mini spanning tree
     private TrafficGraph mainGraph;
@@ -42,12 +41,10 @@ public class SpacialFormGenerator {
 
     /* ------------- constructor ------------- */
 
-    public SpacialFormGenerator(String filePath) {
+    public SpacialFormGenerator(InputData input) {
         System.out.println("* GENERATING PUBLIC SPACE *");
-        this.filePath = filePath;
-        this.input = new InputData();
 
-        init();
+        init(input);
     }
 
     /* ------------- initialize & get (public) ------------- */
@@ -56,9 +53,9 @@ public class SpacialFormGenerator {
      * @return void
      * @description initialize generator with input file & tree graph
      */
-    public void init() {
+    public void init(InputData input) {
         // catch input data
-        this.input.loadData(filePath);
+        this.input = input;
         System.out.println("** ADJUSTING TRAFFIC GRAPH AND SPLITTING BLOCKS **");
 
         // compute traffic mini spanning tree, nodes input from input data
@@ -140,10 +137,6 @@ public class SpacialFormGenerator {
      * @description all keyboard interaction
      */
     public void keyUpdate(int pointerX, int pointerY, PApplet app) {
-        // reload input file
-        if (app.key == 'r' || app.key == 'R') {
-            init();
-        }
         // add a TrafficNode to graph
         if (app.key == 'a' || app.key == 'A') {
             mainGraph.addTreeNode(pointerX, pointerY, input.getInputBoundary());

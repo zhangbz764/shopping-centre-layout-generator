@@ -1,7 +1,9 @@
 package main;
 
 import Guo_Cam.CameraController;
+import formInteractive.InputData;
 import formInteractive.SpacialFormGenerator;
+import formInteractive.StructureGenerator;
 import processing.core.PApplet;
 import render.DisplayBasic;
 import render.JtsRender;
@@ -9,8 +11,11 @@ import formInteractive.ShopGenerator;
 import wblut.processing.WB_Render3D;
 
 public class Test extends PApplet {
+    // model scale from input file
+    private final static double scale = 2;
     // input file path
     public final String path = "E:\\AAA_Project\\202009_Shuishi\\codefiles\\1029.3dm";
+    public final InputData input = new InputData();
 
     // switch toggle
     public boolean publicSpaceAdjust = false;
@@ -20,6 +25,7 @@ public class Test extends PApplet {
 
     // generate steps
     public SpacialFormGenerator spacialFormGenerator;
+    public StructureGenerator structureGenerator;
     public ShopGenerator shopGenerator;
 
     // utils
@@ -40,8 +46,9 @@ public class Test extends PApplet {
         jtsRender = new JtsRender(this);
         gcam = new CameraController(this);
 
-        spacialFormGenerator = new SpacialFormGenerator(path);
-
+        input.loadData(path, scale);
+        spacialFormGenerator = new SpacialFormGenerator(input);
+        structureGenerator = new StructureGenerator(input.getInputBoundary(), 8.5 * scale, spacialFormGenerator.getShopBlock());
     }
 
     /* ------------- draw ------------- */
@@ -69,11 +76,24 @@ public class Test extends PApplet {
         if (shopSpaceDraw) {
             shopGenerator.display(render, this);
         }
+        structureGenerator.display(this);
     }
 
     public void draw3D(JtsRender jrender, WB_Render3D render, PApplet app) {
         if (publicSpaceDraw) {
+            pushMatrix();
+            structureGenerator.display(this);
             spacialFormGenerator.display(jtsRender, render, this);
+            translate(0, 0, 100);
+            structureGenerator.display(this);
+            spacialFormGenerator.display(jtsRender, render, this);
+            translate(0, 0, 100);
+            structureGenerator.display(this);
+            spacialFormGenerator.display(jtsRender, render, this);
+            translate(0, 0, 100);
+            structureGenerator.display(this);
+            spacialFormGenerator.display(jtsRender, render, this);
+            popMatrix();
         }
     }
 
@@ -141,6 +161,11 @@ public class Test extends PApplet {
             shopSpaceDraw = !shopSpaceDraw;
         }
 
+        // reload input file
+        if (key == 'r' || key == 'R') {
+            input.loadData(path, scale);
+            spacialFormGenerator.init(input);
+        }
         // interact control
         if (publicSpaceAdjust) {
             spacialFormGenerator.keyUpdate(mouseX, -1 * mouseY + height, this);

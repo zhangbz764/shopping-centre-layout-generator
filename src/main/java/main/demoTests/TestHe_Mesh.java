@@ -5,6 +5,7 @@ import geometry.ZPoint;
 import processing.core.PApplet;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
+import wblut.geom.WB_Ray;
 import wblut.hemesh.*;
 import wblut.processing.WB_Render;
 
@@ -88,6 +89,7 @@ public class TestHe_Mesh extends PApplet {
 
     public void draw() {
         background(255);
+        box(20,20,20);
         strokeWeight(1);
         for (int i = 0; i < mesh.getEdges().size(); i++) {
             render.drawEdge(mesh.getEdges().get(i));
@@ -110,6 +112,8 @@ public class TestHe_Mesh extends PApplet {
                 }
             }
         }
+        WB_Ray ray = new WB_Ray(new WB_Point(800, 800), new WB_Point(100, 0));
+        render.drawRay(ray,1000);
     }
 
 }
