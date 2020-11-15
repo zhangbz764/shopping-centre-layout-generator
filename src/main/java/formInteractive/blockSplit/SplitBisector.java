@@ -13,7 +13,6 @@ import formInteractive.graphAdjusting.TrafficGraph;
 import formInteractive.graphAdjusting.TrafficNode;
 import render.JtsRender;
 import transform.ZTransform;
-import wblut.geom.WB_GeometryOp2D;
 import wblut.geom.WB_Polygon;
 
 import java.util.ArrayList;
@@ -101,13 +100,13 @@ public class SplitBisector implements Split {
     /*-------- print & draw --------*/
 
     @Override
-    public void display(JtsRender render, PApplet app) {
+    public void display(JtsRender jrender, PApplet app) {
         app.pushStyle();
         app.fill(255);
-        render.draw(publicBlockPoly);
+        jrender.drawGeometry(publicBlockPoly);
         for (Polygon p : shopBlockPolys) {
             app.fill(p.getNumPoints() * 10, 100, 100);
-            render.draw(p);
+            jrender.drawGeometry(p);
         }
         app.popStyle();
     }
@@ -173,7 +172,7 @@ public class SplitBisector implements Split {
                 }
             }
 
-            // 判断fixed node的连接点是否在同侧，不同侧则重新连线到亮点之间
+            // 判断fixed node的连接点是否在同侧，不同侧则重新连线到两点之间
             if ((pos.size() == 0 || neg.size() == 0) && curr.getNodeType().equals("TrafficNodeFixed") && joints.size() == 2) {
                 ZPoint newLineDir = joints.get(0).centerWith(joints.get(1)).sub(curr);
                 if (newLineDir.dot2D(lineDir) < 0) {
@@ -212,7 +211,7 @@ public class SplitBisector implements Split {
             if (start.getLinkedEdgeNum() == 1) {
                 ZLine cap = new ZLine(start.getJoints().get(0), start.getJoints().get(1));
                 connections.add(cap);
-                
+
             }
             if (end.getLinkedEdgeNum() == 1) {
                 connections.add(new ZLine(end.getJoints().get(0), end.getJoints().get(1)));

@@ -10,7 +10,6 @@ import geometry.ZSkeleton;
 import processing.core.PApplet;
 import render.JtsRender;
 import wblut.geom.WB_Point;
-import wblut.geom.WB_PolyLine;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render3D;
 
@@ -117,6 +116,7 @@ public class SpacialFormGenerator {
     public void dragUpdate(int pointerX, int pointerY) {
         mainGraph.setTreeNode(pointerX, pointerY);
         mainGraph.setFixedNode(pointerX, pointerY);
+        mainGraph.setAtrium();
         if (mainGraph.update) {
             blockSplit.init(mainGraph);
             catchOutput();
@@ -179,6 +179,10 @@ public class SpacialFormGenerator {
             catchOutput();
             mainGraph.update = false;
         }
+        // add an atrium to treeNode
+        if (app.key == 'e' || app.key == 'E') {
+            mainGraph.addAtrium(pointerX, pointerY);
+        }
     }
 
     /* ------------- draw ------------- */
@@ -186,7 +190,7 @@ public class SpacialFormGenerator {
     public void display(JtsRender jrender, WB_Render3D render, PApplet app) {
         displayInputData(render, app);
         displayBlock(jrender, app);
-        displayGraph(app);
+        displayGraph(render, app);
         displaySkeleton(app);
     }
 
@@ -194,8 +198,8 @@ public class SpacialFormGenerator {
         input.display(render, app);
     }
 
-    private void displayGraph(PApplet app) {
-        mainGraph.display(app);
+    private void displayGraph(WB_Render3D render, PApplet app) {
+        mainGraph.display(render, app);
     }
 
     private void displayBlock(JtsRender render, PApplet app) {

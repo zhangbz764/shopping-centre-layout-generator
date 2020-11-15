@@ -1,5 +1,6 @@
 package formInteractive.graphAdjusting;
 
+import formInteractive.spacialElements.Atrium;
 import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
@@ -66,6 +67,12 @@ public class TrafficNodeFixed extends TrafficNode {
     @Override
     public String getNodeType() {
         return "TrafficNodeFixed";
+    }
+
+    @Override
+    @Deprecated
+    public Atrium getAtrium() {
+        return null;
     }
 
     /* ------------- draw -------------*/

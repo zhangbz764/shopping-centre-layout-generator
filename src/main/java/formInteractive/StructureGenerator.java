@@ -47,7 +47,7 @@ public class StructureGenerator {
      * if point within one of the shop blocks,
      * record point and axis vector
      */
-    private void setAxis(List<WB_Polygon> shopBlocks) {
+    public void setAxis(List<WB_Polygon> shopBlocks) {
         this.axisPoint = new ArrayList<>();
         this.axisVec = new ArrayList<>();
 
@@ -64,8 +64,6 @@ public class StructureGenerator {
                 }
             }
         }
-        System.out.println(axisPoint.size());
-        System.out.println(axisVec.size());
     }
 
     /* ------------- draw ------------- */

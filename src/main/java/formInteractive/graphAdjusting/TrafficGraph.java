@@ -6,6 +6,7 @@ import org.locationtech.jts.geom.LineString;
 import processing.core.PApplet;
 import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -134,6 +135,22 @@ public class TrafficGraph {
         }
     }
 
+    public void addAtrium(int pointerX, int pointerY) {
+        for (TrafficNode n : treeNodes) {
+            if (n.isMoused(pointerX, pointerY)) {
+                n.setAtrium();
+            }
+        }
+    }
+
+    public void setAtrium() {
+        for (TrafficNode n : treeNodes) {
+            if (n.getAtrium() != null) {
+                n.setAtrium();
+            }
+        }
+    }
+
     public void setFixedNode(int pointerX, int pointerY) {
         for (TrafficNode n : fixedNodes) {
             if (n.isMoused(pointerX, pointerY)) {
@@ -205,7 +222,7 @@ public class TrafficGraph {
      * @return void
      * @description draw all nodes and edges
      */
-    public void display(PApplet app) {
+    public void display(WB_Render3D render, PApplet app) {
         app.pushStyle();
         app.pushStyle();
         app.stroke(0, 255, 0);
@@ -222,6 +239,7 @@ public class TrafficGraph {
         for (TrafficNode n : treeNodes) {
             n.displayAsPoint(app);
             n.displayJoint(app, 5);
+            n.displayAtrium(render, app);
         }
         app.fill(128);
         for (TrafficNode n : fixedNodes) {

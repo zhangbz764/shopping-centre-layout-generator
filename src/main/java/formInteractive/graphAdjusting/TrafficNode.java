@@ -1,9 +1,11 @@
 package formInteractive.graphAdjusting;
 
+import formInteractive.spacialElements.Atrium;
 import geometry.ZNode;
 import geometry.ZPoint;
 import processing.core.PApplet;
 import wblut.geom.WB_Point;
+import wblut.processing.WB_Render3D;
 
 import java.util.List;
 
@@ -68,6 +70,11 @@ public abstract class TrafficNode extends ZNode {
 
     public abstract void setJoints();
 
+    public void setAtrium() {
+    }
+
+    public abstract Atrium getAtrium();
+
     public abstract List<ZPoint> getJoints();
 
     public abstract String getNodeType();
@@ -75,4 +82,7 @@ public abstract class TrafficNode extends ZNode {
     /* ------------- draw -------------*/
 
     public abstract void displayJoint(PApplet app, float r);
+
+    public void displayAtrium(WB_Render3D render, PApplet app) {
+    }
 }

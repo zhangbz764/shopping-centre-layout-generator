@@ -1,9 +1,9 @@
 package main.demoTests;
 
 import geometry.ZPoint;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.operation.buffer.BufferOp;
+import org.locationtech.jts.operation.buffer.BufferParameters;
 import processing.core.PApplet;
 import render.JtsRender;
 
@@ -21,11 +21,13 @@ public class TestGeoRelation extends PApplet {
 
     GeometryFactory gf = new GeometryFactory();
     Polygon poly;
+    LineString ls ;
+    Geometry buffer;
     ZPoint mouse;
-    JtsRender render;
+    JtsRender jrender;
 
     public void setup() {
-        render = new JtsRender(this);
+        jrender = new JtsRender(this);
 
         Coordinate[] vertices = new Coordinate[6];
         vertices[0] = new Coordinate(100, 100);
@@ -35,15 +37,27 @@ public class TestGeoRelation extends PApplet {
         vertices[4] = new Coordinate(100, 600);
         vertices[5] = new Coordinate(100, 100);
 
+        Coordinate[] vertices2 = new Coordinate[5];
+        vertices2[0] = new Coordinate(100, 100);
+        vertices2[1] = new Coordinate(700, 100);
+        vertices2[2] = new Coordinate(800, 400);
+        vertices2[3] = new Coordinate(500, 800);
+        vertices2[4] = new Coordinate(100, 600);
 
         poly = gf.createPolygon(vertices);
+        ls = gf.createLineString(vertices2);
+
+        BufferOp bufferOp = new BufferOp(poly);
+        bufferOp.setEndCapStyle(BufferParameters.CAP_SQUARE);
+        buffer = bufferOp.getResultGeometry(20);
         mouse = new ZPoint(500, 500);
     }
 
     public void draw() {
         background(255);
 
-        render.draw(poly);
+        jrender.drawGeometry(poly);
+        jrender.drawGeometry(buffer);
         mouse.set(mouseX, mouseY);
         mouse.displayAsPoint(this);
         println(poly.contains(mouse.toJtsPoint()));
