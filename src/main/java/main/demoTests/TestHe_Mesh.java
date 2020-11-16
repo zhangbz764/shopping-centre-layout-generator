@@ -2,12 +2,17 @@ package main.demoTests;
 
 import Guo_Cam.CameraController;
 import geometry.ZPoint;
+import org.locationtech.jts.geom.Polygon;
 import processing.core.PApplet;
+import transform.ZTransform;
 import wblut.geom.WB_Point;
+import wblut.geom.WB_PolyLine;
 import wblut.geom.WB_Polygon;
 import wblut.geom.WB_Ray;
 import wblut.hemesh.*;
 import wblut.processing.WB_Render;
+
+import java.util.List;
 
 /**
  * @author ZHANG Bai-zhou zhangbz
@@ -72,6 +77,8 @@ public class TestHe_Mesh extends PApplet {
         poly4 = new WB_Polygon(pts4);
     }
 
+    WB_Polygon polygon;
+
     public void setup() {
         gcam = new CameraController(this);
         render = new WB_Render(this);
@@ -83,13 +90,42 @@ public class TestHe_Mesh extends PApplet {
         System.out.println(mesh.getVertices().size());
         System.out.println(mesh.getAllBoundaryVertices().size());
 
+
+        // *******************
+        WB_Point[] pts1 = new WB_Point[5];
+        WB_Point[] pts2 = new WB_Point[5];
+        pts2[0] = pts1[0] = new WB_Point(100, 100);
+        pts2[1] = pts1[1] = new WB_Point(700, 100);
+        pts2[2] = pts1[2] = new WB_Point(800, 400);
+        pts2[3] = pts1[3] = new WB_Point(500, 800);
+        pts2[4] = pts1[4] = new WB_Point(100, 600);
+//        pts1[5] = new WB_Point(100, 100);
+        polygon = new WB_Polygon(pts1);
+        println(polygon.getNumberOfPoints());
+        println(polygon.getNumberSegments());
+    }
+
+    private void optimize() {
+        HE_Face f1 = mesh.getFaces().get(0);
+        HE_Face f2 = mesh.getFaces().get(0).getNeighborFaces().get(0);
+        Polygon p1 = ZTransform.WB_PolygonToJtsPolygon(f1.getPolygon());
+        Polygon p2 = ZTransform.WB_PolygonToJtsPolygon(f2.getPolygon());
+
+        mesh.remove(f1);
+        mesh.remove(f2);
+        WB_Polygon union = ZTransform.JtsPolygonToWB_Polygon((Polygon) p1.union(p2));
+
+        List<WB_Polygon> newPolygons = mesh.getPolygonList();
+        newPolygons.add(union);
+        mesh = new HEC_FromPolygons(newPolygons).create();
     }
 
     /* ------------- draw ------------- */
 
+
     public void draw() {
         background(255);
-        box(20,20,20);
+        box(20, 20, 20);
         strokeWeight(1);
         for (int i = 0; i < mesh.getEdges().size(); i++) {
             render.drawEdge(mesh.getEdges().get(i));
@@ -113,7 +149,15 @@ public class TestHe_Mesh extends PApplet {
             }
         }
         WB_Ray ray = new WB_Ray(new WB_Point(800, 800), new WB_Point(100, 0));
-        render.drawRay(ray,1000);
+        render.drawRay(ray, 1000);
+
+        translate(0, 1000);
+        noFill();
+        render.drawPolygonEdges2D(polygon);
+    }
+
+    public void keyPressed() {
+        optimize();
     }
 
 }
