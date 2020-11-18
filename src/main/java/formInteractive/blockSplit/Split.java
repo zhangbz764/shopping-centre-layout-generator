@@ -15,7 +15,7 @@ import java.util.List;
  * @description
  */
 public interface Split {
-    public void init(TrafficGraph graph);
+    public void init(WB_Polygon boundary, TrafficGraph graph);
 
     public WB_Polygon getPublicBlockPoly();
 

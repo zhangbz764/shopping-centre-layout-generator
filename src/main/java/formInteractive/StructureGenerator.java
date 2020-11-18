@@ -6,6 +6,7 @@ import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
 import wblut.geom.WB_GeometryOp2D;
+import wblut.geom.WB_PolyLine;
 import wblut.geom.WB_Polygon;
 import wblut.geom.WB_Vector;
 
@@ -19,27 +20,41 @@ import java.util.List;
  * @time 11:46
  * @description generate structure net based on graph node
  */
+@Deprecated
 public class StructureGenerator {
     private TrafficGraph graph;
     private final WB_Polygon boundary;
     private final double span;
+    List<WB_Polygon> shopBlocks;
 
     private final List<ZPoint> allSplitPoints;
     private List<ZPoint> axisPoint;
     private List<ZPoint> axisVec;
     private List<ZLine> axis;
 
+    List<List<Integer>> concavePoints;
+
     /* ------------- constructor ------------- */
 
     public StructureGenerator(WB_Polygon boundary, double span, List<WB_Polygon> shopBlocks) {
         this.boundary = boundary;
         this.span = span;
+        this.shopBlocks = shopBlocks;
+
         this.allSplitPoints = ZGeoMath.splitWB_PolyLineEdgeByThreshold(boundary, this.span + 1, span - 1);
 
+        splitConcave();
         setAxis(shopBlocks);
     }
 
     /* ------------- set & get (public) ------------- */
+
+    private void splitConcave() {
+        this.concavePoints = new ArrayList<>();
+        for (WB_Polygon block : shopBlocks) {
+            concavePoints.add(ZGeoMath.getConcavePointIndices(block));
+        }
+    }
 
     /**
      * @return void
@@ -71,6 +86,11 @@ public class StructureGenerator {
     public void display(PApplet app) {
         app.pushStyle();
         app.noFill();
+//        for (int i = 0; i < concavePoints.size(); i++) {
+//            for (Integer index : concavePoints.get(i)) {
+//                app.ellipse((float) shopBlocks.get(i).getPoint(index).xd(), (float) shopBlocks.get(i).getPoint(index).yd(), 10, 10);
+//            }
+//        }
         app.strokeWeight(2);
         for (int i = 0; i < axisVec.size(); i++) {
             axisVec.get(i).displayAsVector(app, axisPoint.get(i), 50);

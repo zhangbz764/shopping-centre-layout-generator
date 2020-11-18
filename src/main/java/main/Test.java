@@ -2,12 +2,12 @@ package main;
 
 import Guo_Cam.CameraController;
 import formInteractive.InputData;
+import formInteractive.ShopGenerator;
 import formInteractive.SpacialFormGenerator;
 import formInteractive.StructureGenerator;
 import processing.core.PApplet;
 import render.DisplayBasic;
 import render.JtsRender;
-import formInteractive.ShopGenerator;
 import wblut.processing.WB_Render3D;
 
 public class Test extends PApplet {
@@ -22,11 +22,12 @@ public class Test extends PApplet {
     public boolean shopSpaceGenerate = false;
     public boolean publicSpaceDraw = true;
     public boolean shopSpaceDraw = false;
+    public boolean structureDraw = false;
 
     // generate steps
     public SpacialFormGenerator spacialFormGenerator;
     public StructureGenerator structureGenerator;
-//    public ShopGenerator shopGenerator;
+    public ShopGenerator shopGenerator;
 
     // utils
     public WB_Render3D render;
@@ -73,27 +74,28 @@ public class Test extends PApplet {
         if (publicSpaceDraw) {
             spacialFormGenerator.display(jtsRender, render, this);
         }
-//        if (shopSpaceDraw) {
-//            shopGenerator.display(render, this);
-//        }
-        structureGenerator.display(this);
+        if (shopSpaceDraw) {
+            shopGenerator.display(render, this);
+        }
+        if (structureDraw) {
+            structureGenerator.display(this);
+        }
     }
 
     public void draw3D(JtsRender jrender, WB_Render3D render, PApplet app) {
         if (publicSpaceDraw) {
             pushMatrix();
-            structureGenerator.display(this);
             spacialFormGenerator.display(jtsRender, render, this);
             translate(0, 0, 100);
-            structureGenerator.display(this);
             spacialFormGenerator.display(jtsRender, render, this);
             translate(0, 0, 100);
-            structureGenerator.display(this);
             spacialFormGenerator.display(jtsRender, render, this);
             translate(0, 0, 100);
-            structureGenerator.display(this);
             spacialFormGenerator.display(jtsRender, render, this);
             popMatrix();
+        }
+        if (shopSpaceDraw) {
+            shopGenerator.display(render, this);
         }
     }
 
@@ -125,7 +127,7 @@ public class Test extends PApplet {
         if (publicSpaceAdjust && mouseButton == RIGHT) {
             // drag a node of traffic graph
             spacialFormGenerator.dragUpdate(mouseX, -1 * mouseY + height);
-//            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
+            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getPublicBlock(), spacialFormGenerator.getSkeletons());
             structureGenerator.setAxis(spacialFormGenerator.getShopBlock());
         }
     }
@@ -150,8 +152,14 @@ public class Test extends PApplet {
             publicSpaceAdjust = !publicSpaceAdjust;
         }
         if (key == '2') {
-//            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
+            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getPublicBlock(), spacialFormGenerator.getSkeletons());
             shopSpaceDraw = !shopSpaceDraw;
+        }
+        if (key == '3') {
+            structureDraw = !structureDraw;
+        }
+        if (key == '0') {
+            shopGenerator.dede();
         }
 
         // reload input file
@@ -162,7 +170,7 @@ public class Test extends PApplet {
         // interact control
         if (publicSpaceAdjust) {
             spacialFormGenerator.keyUpdate(mouseX, -1 * mouseY + height, this);
-//            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getSkeletons());
+            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getPublicBlock(), spacialFormGenerator.getSkeletons());
             structureGenerator.setAxis(spacialFormGenerator.getShopBlock());
         }
     }

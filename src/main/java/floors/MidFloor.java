@@ -1,6 +1,9 @@
 package floors;
 
 import formInteractive.graphAdjusting.TrafficGraph;
+import processing.core.PApplet;
+import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render3D;
 
 /**
  * @author ZHANG Bai-zhou zhangbz
@@ -9,12 +12,12 @@ import formInteractive.graphAdjusting.TrafficGraph;
  * @time 10:50
  * @description middle floor of a shopping mall
  */
-public class MiddleFloor extends Floor {
+public class MidFloor extends Floor {
 
     /* ------------- constructor ------------- */
 
-    public MiddleFloor(int floorNum) {
-        super.setFloorNum(floorNum);
+    public MidFloor(int floorNum, TrafficGraph mainGraph, WB_Polygon boundary) {
+        super(floorNum, mainGraph, boundary);
     }
 
     /* ------------- set & get ------------- */
@@ -32,7 +35,7 @@ public class MiddleFloor extends Floor {
     /* ------------- draw ------------- */
 
     @Override
-    public void display(){
-
+    public void display(WB_Render3D render, PApplet app) {
+        super.display(render, app);
     }
 }

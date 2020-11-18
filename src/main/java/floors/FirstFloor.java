@@ -1,6 +1,9 @@
 package floors;
 
 import formInteractive.graphAdjusting.TrafficGraph;
+import processing.core.PApplet;
+import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render3D;
 
 /**
  * @author ZHANG Bai-zhou zhangbz
@@ -13,8 +16,8 @@ public class FirstFloor extends Floor {
 
     /* ------------- constructor ------------- */
 
-    public FirstFloor() {
-        super.setFloorNum(1);
+    public FirstFloor(TrafficGraph mainGraph, WB_Polygon boundary) {
+        super(1, mainGraph, boundary);
     }
 
     /* ------------- set & get ------------- */
@@ -32,7 +35,7 @@ public class FirstFloor extends Floor {
     /* ------------- draw ------------- */
 
     @Override
-    public void display() {
-
+    public void display(WB_Render3D render, PApplet app) {
+        super.display(render, app);
     }
 }

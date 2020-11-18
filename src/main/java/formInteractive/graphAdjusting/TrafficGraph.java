@@ -93,6 +93,11 @@ public class TrafficGraph {
         return fixedEdges;
     }
 
+    public void clearFixed() {
+        this.fixedNodes.clear();
+        this.fixedEdges.clear();
+    }
+
     /**
      * @return java.util.List<org.locationtech.jts.geom.LineString>
      * @description transform all edges to a list of LineStrings

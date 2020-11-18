@@ -45,7 +45,7 @@ public class SplitBisector implements Split {
         this.boundaryLineString = ZTransform.WB_PolygonToJtsLineString(boundary);
         setNodeJoints(graph);
         // connect joints
-        this.connectedLinesToSplit = connectJoints(graph);
+        this.connectedLinesToSplit = connectJoints(boundary, graph);
         // get split result
         performSplit(boundaryLineString, connectedLinesToSplit, graph.getTreeNodes().get(0));
         shopBlockNum = shopBlockPolys.size();
@@ -55,12 +55,11 @@ public class SplitBisector implements Split {
 
     /* ------------- initialize & get (public) ------------- */
 
-    @Override
-    public void init(TrafficGraph graph) {
+    public void init(WB_Polygon boundary, TrafficGraph graph) {
         // refresh input data
         setNodeJoints(graph);
         // refresh joints connection
-        this.connectedLinesToSplit = connectJoints(graph);
+        this.connectedLinesToSplit = connectJoints(boundary, graph);
         // refresh split result
         performSplit(boundaryLineString, connectedLinesToSplit, graph.getTreeNodes().get(0));
         // print if number change
@@ -105,7 +104,7 @@ public class SplitBisector implements Split {
         app.fill(255);
         jrender.drawGeometry(publicBlockPoly);
         for (Polygon p : shopBlockPolys) {
-            app.fill(p.getNumPoints() * 10, 100, 100);
+            app.fill(200);
             jrender.drawGeometry(p);
         }
         app.popStyle();
@@ -193,7 +192,7 @@ public class SplitBisector implements Split {
      * @return java.util.List<geometry.ZLine>
      * @description get all connect lines
      */
-    private List<ZLine> connectJoints(TrafficGraph graph) {
+    private List<ZLine> connectJoints(WB_Polygon boundary, TrafficGraph graph) {
         List<ZLine> connections = new ArrayList<>();
         // connect joints from tree edges
         for (ZEdge edge : graph.getTreeEdges()) {
@@ -207,14 +206,37 @@ public class SplitBisector implements Split {
                 connections.add(new ZLine(startSelect[0], endSelect[1]));
                 connections.add(new ZLine(startSelect[1], endSelect[0]));
             }
-            // add cap if tree node is an dead end
-            if (start.getLinkedEdgeNum() == 1) {
-                ZLine cap = new ZLine(start.getJoints().get(0), start.getJoints().get(1));
-                connections.add(cap);
 
-            }
-            if (end.getLinkedEdgeNum() == 1) {
-                connections.add(new ZLine(end.getJoints().get(0), end.getJoints().get(1)));
+            // add cap if tree node is an dead end
+            // if no fixed node, extend the cap to the boundary intersection (scale 1.1)
+            if (graph.getFixedNodes().size() >= 1) {
+                if (start.getLinkedEdgeNum() == 1) {
+                    ZLine cap = new ZLine(start.getJoints().get(0), start.getJoints().get(1));
+                    connections.add(cap);
+                }
+                if (end.getLinkedEdgeNum() == 1) {
+                    ZLine cap = new ZLine(end.getJoints().get(0), end.getJoints().get(1));
+                    connections.add(cap);
+                }
+            } else {
+                if (start.getLinkedEdgeNum() == 1) {
+                    ZLine cap = new ZLine(start.getJoints().get(0), start.getJoints().get(1));
+                    ZLine extend1 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt1(), cap.getDirection()}, boundary);
+                    ZLine extend2 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt0(), cap.getDirection().scaleTo(-1)}, boundary);
+                    connections.add(cap);
+                    assert extend1 != null && extend2 != null;
+                    connections.add(extend1.scaleTo(1.1));
+                    connections.add(extend2.scaleTo(1.1));
+                }
+                if (end.getLinkedEdgeNum() == 1) {
+                    ZLine cap = new ZLine(end.getJoints().get(0), end.getJoints().get(1));
+                    ZLine extend1 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt1(), cap.getDirection()}, boundary);
+                    ZLine extend2 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt0(), cap.getDirection().scaleTo(-1)}, boundary);
+                    connections.add(cap);
+                    assert extend1 != null && extend2 != null;
+                    connections.add(extend1.scaleTo(1.1));
+                    connections.add(extend2.scaleTo(1.1));
+                }
             }
         }
         // connect joints from fixed edges (scale 1.1 for better intersection)

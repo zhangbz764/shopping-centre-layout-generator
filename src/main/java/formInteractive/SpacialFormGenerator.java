@@ -21,7 +21,7 @@ import java.util.List;
  * @project shopping_mall
  * @date 2020/10/12
  * @time 8:30
- * @description main control of public space generator
+ * @description main control of public space spacial form
  */
 public class SpacialFormGenerator {
     // geometry input 3dm file
@@ -59,17 +59,17 @@ public class SpacialFormGenerator {
 
         // compute traffic mini spanning tree, nodes input from input data
         List<TrafficNode> innerNodes = new ArrayList<>();
-        for (WB_Point p : input.getInputInnerNodes()) {
-            innerNodes.add(new TrafficNodeTree(p, input.getInputBoundary()));
+        for (WB_Point p : this.input.getInputInnerNodes()) {
+            innerNodes.add(new TrafficNodeTree(p, this.input.getInputBoundary()));
         }
         List<TrafficNode> entryNodes = new ArrayList<>();
-        for (WB_Point p : input.getInputEntries()) {
-            entryNodes.add(new TrafficNodeFixed(p, input.getInputBoundary()));
+        for (WB_Point p : this.input.getInputEntries()) {
+            entryNodes.add(new TrafficNodeFixed(p, this.input.getInputBoundary()));
         }
         this.mainGraph = new TrafficGraph(innerNodes, entryNodes);
 
         // compute split block
-        this.blockSplit = new SplitBisector(input.getInputBoundary(), mainGraph);
+        this.blockSplit = new SplitBisector(this.input.getInputBoundary(), mainGraph);
 
         // get output
         catchOutput();
@@ -82,9 +82,9 @@ public class SpacialFormGenerator {
     private void catchOutput() {
         this.publicBlock = blockSplit.getPublicBlockPoly();
         this.shopBlock = blockSplit.getShopBlockPolys();
+
         // compute straight skeleton for each shop block
         this.skeletons = new ArrayList<>();
-
         for (WB_Polygon polygon : shopBlock) {
             ZSkeleton skeleton = new ZSkeleton(polygon);
             skeletons.add(skeleton);
@@ -118,7 +118,7 @@ public class SpacialFormGenerator {
         mainGraph.setFixedNode(pointerX, pointerY);
         mainGraph.setAtrium();
         if (mainGraph.update) {
-            blockSplit.init(mainGraph);
+            blockSplit.init(input.getInputBoundary(), mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
@@ -140,42 +140,42 @@ public class SpacialFormGenerator {
         // add a TrafficNode to graph
         if (app.key == 'a' || app.key == 'A') {
             mainGraph.addTreeNode(pointerX, pointerY, input.getInputBoundary());
-            blockSplit.init(mainGraph);
+            blockSplit.init(input.getInputBoundary(), mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
         // remove a TrafficNode to graph (mouse location)
         if (app.key == 's' || app.key == 'S') {
             mainGraph.removeTreeNode(pointerX, pointerY);
-            blockSplit.init(mainGraph);
+            blockSplit.init(input.getInputBoundary(), mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
         // add a fixed TrafficNode to graph
         if (app.key == 'q' || app.key == 'Q') {
             mainGraph.addFixedNode(pointerX, pointerY, input.getInputBoundary());
-            blockSplit.init(mainGraph);
+            blockSplit.init(input.getInputBoundary(), mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
         // remove a fixed TrafficNode to graph (mouse location)
         if (app.key == 'w' || app.key == 'W') {
             mainGraph.removeFixedNode(pointerX, pointerY);
-            blockSplit.init(mainGraph);
+            blockSplit.init(input.getInputBoundary(), mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
         // increase TrafficNode's regionR
         if (app.key == 'z' || app.key == 'Z') {
             mainGraph.changeR(pointerX, pointerY, 2);
-            blockSplit.init(mainGraph);
+            blockSplit.init(input.getInputBoundary(), mainGraph);
             catchOutput();
             mainGraph.update = false;
         }
         // decrease TrafficNode's regionR
         if (app.key == 'x' || app.key == 'X') {
             mainGraph.changeR(pointerX, pointerY, -2);
-            blockSplit.init(mainGraph);
+            blockSplit.init(input.getInputBoundary(), mainGraph);
             catchOutput();
             mainGraph.update = false;
         }

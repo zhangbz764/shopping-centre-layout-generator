@@ -1,6 +1,9 @@
 package floors;
 
 import formInteractive.graphAdjusting.TrafficGraph;
+import processing.core.PApplet;
+import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render3D;
 
 /**
  * @author ZHANG Bai-zhou zhangbz
@@ -13,8 +16,8 @@ public class TopFloor extends Floor {
 
     /* ------------- constructor ------------- */
 
-    public TopFloor(int floorNum) {
-        super.setFloorNum(floorNum);
+    public TopFloor(int floorNum, TrafficGraph mainGraph, WB_Polygon boundary) {
+        super(floorNum, mainGraph, boundary);
     }
 
     /* ------------- set & get ------------- */
@@ -29,11 +32,10 @@ public class TopFloor extends Floor {
         return 0;
     }
 
-
     /* ------------- draw ------------- */
 
     @Override
-    public void display(){
-
+    public void display(WB_Render3D render, PApplet app) {
+        super.display(render, app);
     }
 }

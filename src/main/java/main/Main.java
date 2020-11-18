@@ -11,5 +11,6 @@ public class Main {
 //        PApplet.main("main.demoTests.TestDistCloset");
 //        PApplet.main("main.demoTests.TestSkeleton");
 //        PApplet.main("main.demoTests.TestHe_Mesh");
+//        PApplet.main("main.demoTests.TestConvexHull");
     }
 }
