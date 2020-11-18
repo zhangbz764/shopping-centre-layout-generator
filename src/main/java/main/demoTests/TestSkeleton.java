@@ -19,7 +19,7 @@ import wblut.processing.WB_Render;
  */
 public class TestSkeleton extends PApplet {
     public void settings() {
-        size(1000, 1800, P3D);
+        size(1800, 1000, P3D);
     }
 
     WB_Point[] pts;

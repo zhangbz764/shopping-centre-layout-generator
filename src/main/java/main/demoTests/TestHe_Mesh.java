@@ -5,10 +5,7 @@ import geometry.ZPoint;
 import org.locationtech.jts.geom.Polygon;
 import processing.core.PApplet;
 import transform.ZTransform;
-import wblut.geom.WB_Point;
-import wblut.geom.WB_PolyLine;
-import wblut.geom.WB_Polygon;
-import wblut.geom.WB_Ray;
+import wblut.geom.*;
 import wblut.hemesh.*;
 import wblut.processing.WB_Render;
 
@@ -28,7 +25,7 @@ public class TestHe_Mesh extends PApplet {
     public void settings() {
         size(1000, 1000, P3D);
     }
-
+    WB_Polygon poly0;
     WB_Polygon poly1;
     WB_Polygon poly2;
     WB_Polygon poly3;
@@ -38,10 +35,19 @@ public class TestHe_Mesh extends PApplet {
 
     WB_Render render;
     CameraController gcam;
+    WB_GeometryFactory wbgf = new WB_GeometryFactory();
 
     /* ------------- setup ------------- */
 
     private void setPolys() {
+        WB_Point[] pts0 = new WB_Point[5];
+        pts0[0] = new WB_Point(200, 400);
+        pts0[1] = new WB_Point(700, 100);
+        pts0[2] = new WB_Point(800, 400);
+        pts0[3] = new WB_Point(200, 400);
+        pts0[4] = new WB_Point(200, 400);
+        poly0 = new WB_Polygon(pts0);
+
         WB_Point[] pts1 = new WB_Point[5];
         pts1[0] = new WB_Point(100, 100);
         pts1[1] = new WB_Point(700, 100);
@@ -77,8 +83,6 @@ public class TestHe_Mesh extends PApplet {
         poly4 = new WB_Polygon(pts4);
     }
 
-    WB_Polygon polygon;
-
     public void setup() {
         gcam = new CameraController(this);
         render = new WB_Render(this);
@@ -90,33 +94,22 @@ public class TestHe_Mesh extends PApplet {
         System.out.println(mesh.getVertices().size());
         System.out.println(mesh.getAllBoundaryVertices().size());
 
-
-        // *******************
-        WB_Point[] pts1 = new WB_Point[5];
-        WB_Point[] pts2 = new WB_Point[5];
-        pts2[0] = pts1[0] = new WB_Point(100, 100);
-        pts2[1] = pts1[1] = new WB_Point(700, 100);
-        pts2[2] = pts1[2] = new WB_Point(800, 400);
-        pts2[3] = pts1[3] = new WB_Point(500, 800);
-        pts2[4] = pts1[4] = new WB_Point(100, 600);
-//        pts1[5] = new WB_Point(100, 100);
-        polygon = new WB_Polygon(pts1);
-        println(polygon.getNumberOfPoints());
-        println(polygon.getNumberSegments());
     }
 
     private void optimize() {
+        WB_Polygon p1 = mesh.getFaces().get(0).getPolygon();
+        WB_Polygon p2 = mesh.getFaces().get(0).getNeighborFaces().get(0).getPolygon();
+
         HE_Face f1 = mesh.getFaces().get(0);
         HE_Face f2 = mesh.getFaces().get(0).getNeighborFaces().get(0);
-        Polygon p1 = ZTransform.WB_PolygonToJtsPolygon(f1.getPolygon());
-        Polygon p2 = ZTransform.WB_PolygonToJtsPolygon(f2.getPolygon());
 
         mesh.remove(f1);
         mesh.remove(f2);
-        WB_Polygon union = ZTransform.JtsPolygonToWB_Polygon((Polygon) p1.union(p2));
+        List<WB_Polygon> union = wbgf.unionPolygons2D(p1, p2);
+        println("union:" + union.size());
 
         List<WB_Polygon> newPolygons = mesh.getPolygonList();
-        newPolygons.add(union);
+        newPolygons.add(union.get(0));
         mesh = new HEC_FromPolygons(newPolygons).create();
     }
 
@@ -134,9 +127,9 @@ public class TestHe_Mesh extends PApplet {
         for (int j = 0; j < mesh.getFaces().size(); j++) {
             text(j, mesh.getFaceWithIndex(j).getFaceCenter().xf(), mesh.getFaceWithIndex(j).getFaceCenter().yf());
         }
-//        for (HE_Face nei : mesh.getFaceWithIndex(3).getNeighborFaces()) {
-//            render.drawFace(nei);
-//        }
+        for (HE_Face nei : mesh.getFaceWithIndex(3).getNeighborFaces()) {
+            render.drawFace(nei);
+        }
         strokeWeight(5);
         for (int k = 0; k < mesh.getNumberOfVertices(); k++) {
             if (!mesh.getVertexWithIndex(k).isBoundary()) {
@@ -148,12 +141,6 @@ public class TestHe_Mesh extends PApplet {
                 }
             }
         }
-        WB_Ray ray = new WB_Ray(new WB_Point(800, 800), new WB_Point(100, 0));
-        render.drawRay(ray, 1000);
-
-        translate(0, 1000);
-        noFill();
-        render.drawPolygonEdges2D(polygon);
     }
 
     public void keyPressed() {
