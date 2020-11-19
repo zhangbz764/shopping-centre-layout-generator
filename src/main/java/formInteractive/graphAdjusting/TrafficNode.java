@@ -19,6 +19,7 @@ import java.util.List;
 public abstract class TrafficNode extends ZNode {
     private double regionR = 18;  // affect radius
     private boolean activate = false;
+    private double[] lastPosition;
 
     /* ------------- constructor ------------- */
 
@@ -28,10 +29,12 @@ public abstract class TrafficNode extends ZNode {
 
     public TrafficNode(double x, double y) {
         super(x, y);
+        this.lastPosition = new double[]{0, 0, 0};
     }
 
     public TrafficNode(WB_Point p) {
         super(p);
+        this.lastPosition = new double[]{0, 0, 0};
     }
 
     /* ------------- mouse interaction ------------- */
@@ -70,6 +73,12 @@ public abstract class TrafficNode extends ZNode {
 
     public abstract void setJoints();
 
+    public void setLastPosition(double x, double y, double z) {
+        this.lastPosition[0] = x;
+        this.lastPosition[1] = y;
+        this.lastPosition[2] = z;
+    }
+
     public void setAtrium() {
     }
 
@@ -78,6 +87,10 @@ public abstract class TrafficNode extends ZNode {
     public abstract List<ZPoint> getJoints();
 
     public abstract String getNodeType();
+
+    public boolean isMoved() {
+        return this.x() != lastPosition[0] || this.y() != lastPosition[1] || this.z() != lastPosition[2];
+    }
 
     /* ------------- draw -------------*/
 

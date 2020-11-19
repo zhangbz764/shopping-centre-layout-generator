@@ -1,10 +1,9 @@
 package main;
 
 import Guo_Cam.CameraController;
+import floors.Floor;
 import formInteractive.InputData;
-import formInteractive.ShopGenerator;
 import formInteractive.SpacialFormGenerator;
-import formInteractive.StructureGenerator;
 import processing.core.PApplet;
 import render.DisplayBasic;
 import render.JtsRender;
@@ -13,21 +12,18 @@ import wblut.processing.WB_Render3D;
 public class Test extends PApplet {
     // model scale from input file
     private final static double scale = 2;
-    // input file path
+
+    // input file
     public final String path = "E:\\AAA_Project\\202009_Shuishi\\codefiles\\1029.3dm";
     public final InputData input = new InputData();
 
+    // generate elements
+    public SpacialFormGenerator spacialFormGenerator;
+    public Floor[] floors;
+
     // switch toggle
     public boolean publicSpaceAdjust = false;
-    public boolean shopSpaceGenerate = false;
     public boolean publicSpaceDraw = true;
-    public boolean shopSpaceDraw = false;
-    public boolean structureDraw = false;
-
-    // generate steps
-    public SpacialFormGenerator spacialFormGenerator;
-    public StructureGenerator structureGenerator;
-    public ShopGenerator shopGenerator;
 
     // utils
     public WB_Render3D render;
@@ -49,15 +45,18 @@ public class Test extends PApplet {
 
         input.loadData(path, scale);
         spacialFormGenerator = new SpacialFormGenerator(input);
-        structureGenerator = new StructureGenerator(input.getInputBoundary(), 8.5 * scale, spacialFormGenerator.getShopBlock());
+
+        floors = new Floor[4];
+        for (int i = 0; i < floors.length; i++) {
+            println("generating floor " + (i + 1));
+            floors[i] = new Floor(i + 1, spacialFormGenerator.getMainGraph(), input.getInputBoundary(), scale);
+        }
     }
 
     /* ------------- draw ------------- */
 
     public void draw() {
         background(255);
-        DisplayBasic.drawAxis(this, 50);
-
         gcam.begin2d();
         pushMatrix();
         scale(1, -1);
@@ -70,32 +69,31 @@ public class Test extends PApplet {
         draw3D(jtsRender, render, this);
     }
 
-    public void draw2D(JtsRender jrender, WB_Render3D render, PApplet app) {
+    public void draw2D(JtsRender jtsRender, WB_Render3D render, PApplet app) {
+        pushStyle();
+        noStroke();
+        fill(200);
+        rect(0, 0, 700, 1000);
+        popStyle();
         if (publicSpaceDraw) {
             spacialFormGenerator.display(jtsRender, render, this);
         }
-        if (shopSpaceDraw) {
-            shopGenerator.display(render, this);
-        }
-        if (structureDraw) {
-            structureGenerator.display(this);
+        for (Floor f : floors) {
+            if (f.activate) {
+                f.display(render, jtsRender, app);
+            }
         }
     }
 
-    public void draw3D(JtsRender jrender, WB_Render3D render, PApplet app) {
+    public void draw3D(JtsRender jtsRender, WB_Render3D render, PApplet app) {
+        DisplayBasic.drawAxis(this, 50);
         if (publicSpaceDraw) {
             pushMatrix();
-            spacialFormGenerator.display(jtsRender, render, this);
-            translate(0, 0, 100);
-            spacialFormGenerator.display(jtsRender, render, this);
-            translate(0, 0, 100);
-            spacialFormGenerator.display(jtsRender, render, this);
-            translate(0, 0, 100);
-            spacialFormGenerator.display(jtsRender, render, this);
+            for (int i = 0; i < floors.length; i++) {
+                floors[i].display(render, jtsRender, app);
+                translate(0, 0, 500);
+            }
             popMatrix();
-        }
-        if (shopSpaceDraw) {
-            shopGenerator.display(render, this);
         }
     }
 
@@ -103,20 +101,28 @@ public class Test extends PApplet {
 
     public void showText() {
         if (publicSpaceDraw) {
-            fill(0);
             if (publicSpaceAdjust) {
-                String string = "** ADJUSTING TRAFFIC GRAPH **"
+                for (Floor f : floors) {
+                    if (f.activate) {
+                        text(f.getTextInfo(), 30, 750);
+                    }
+                }
+                String title = "INSTRUCTIONS";
+                textSize(15);
+                fill(0);
+                text(title, 30, 30);
+
+                String operation = "Hold right button to drag a node"
                         + "\n" + "Press 'r' to reload input file"
-                        + "\n"
                         + "\n" + "Press 'a' to add a tree node at mouse location"
                         + "\n" + "Press 's' to remove a tree node at mouse location"
                         + "\n" + "Press 'q' to add a node at mouse location"
                         + "\n" + "Press 'w' to remove a node at mouse location"
-                        + "\n"
                         + "\n" + "Press 'z' to increase node region radius"
                         + "\n" + "Press 'x' to decrease node region radius";
-                //textSize(15);
-                text(string, 10, 20);
+                textSize(15);
+                strokeWeight(1);
+                text(operation, 30, 70);
             }
         }
     }
@@ -127,8 +133,10 @@ public class Test extends PApplet {
         if (publicSpaceAdjust && mouseButton == RIGHT) {
             // drag a node of traffic graph
             spacialFormGenerator.dragUpdate(mouseX, -1 * mouseY + height);
-            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getPublicBlock(), spacialFormGenerator.getSkeletons());
-            structureGenerator.setAxis(spacialFormGenerator.getShopBlock());
+            for (Floor floor : floors) {
+                floor.updateSplit(spacialFormGenerator.getMainGraph());
+            }
+            spacialFormGenerator.setMainGraphSwitch(false);
         }
     }
 
@@ -138,28 +146,29 @@ public class Test extends PApplet {
         }
     }
 
+    public void mouseClicked() {
+        for (Floor f : floors) {
+            if (f.activate && mouseButton == RIGHT) {
+                f.selectShop(mouseX, -1 * mouseY + height);
+            }
+        }
+    }
+
     public void keyPressed() {
         // display control
         if (key == '7') {
             publicSpaceDraw = !publicSpaceDraw;
         }
-        if (key == '8') {
-            shopSpaceDraw = !shopSpaceDraw;
-        }
 
         // switch control
-        if (key == '1') {
+        if (key == ',') {
             publicSpaceAdjust = !publicSpaceAdjust;
         }
-        if (key == '2') {
-            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getPublicBlock(), spacialFormGenerator.getSkeletons());
-            shopSpaceDraw = !shopSpaceDraw;
-        }
-        if (key == '3') {
-            structureDraw = !structureDraw;
-        }
-        if (key == '0') {
-            shopGenerator.dede();
+
+        for (int i = 1; i < floors.length + 1; i++) {
+            char num = Character.forDigit(i, 10);
+            floors[i - 1].activate = key == num;
+
         }
 
         // reload input file
@@ -170,8 +179,10 @@ public class Test extends PApplet {
         // interact control
         if (publicSpaceAdjust) {
             spacialFormGenerator.keyUpdate(mouseX, -1 * mouseY + height, this);
-            shopGenerator = new ShopGenerator(spacialFormGenerator.getShopBlock(), spacialFormGenerator.getPublicBlock(), spacialFormGenerator.getSkeletons());
-            structureGenerator.setAxis(spacialFormGenerator.getShopBlock());
+            for (Floor floor : floors) {
+                floor.updateSplit(spacialFormGenerator.getMainGraph());
+            }
+            spacialFormGenerator.setMainGraphSwitch(false);
         }
     }
 }

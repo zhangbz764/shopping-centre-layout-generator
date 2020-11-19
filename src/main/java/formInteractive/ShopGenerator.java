@@ -85,21 +85,6 @@ public class ShopGenerator {
     }
 
     /**
-     * @return void
-     * @description convert each voronoi block to mesh
-     */
-    private void convertToMesh() {
-        this.meshes = new ArrayList<>();
-        List<WB_Polygon> cellPolygons = new ArrayList<>();
-        for (WB_Voronoi2D voronoi : voronois) {
-            for (WB_VoronoiCell2D cell : voronoi.getCells()) {
-                cellPolygons.add(cell.getPolygon());
-            }
-            meshes.add(new HEC_FromPolygons(cellPolygons).create());
-        }
-    }
-
-    /**
      * @return boolean
      * @description test if mesh need to optimize
      */

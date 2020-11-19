@@ -57,6 +57,7 @@ public class TrafficGraph {
      * @description initialize adjacency matrix and tree, including fixed nodes if necessary
      */
     public void init() {
+        update = true; // changed
         if (treeNodes.size() > 0) {
             if (fixedNodes.size() > 0) {
                 getFixedLink();
@@ -74,7 +75,6 @@ public class TrafficGraph {
             this.fixedEdges = new ArrayList<>();
         }
         setRelations();
-        update = true; // changed
     }
 
     public List<TrafficNode> getTreeNodes() {
@@ -94,6 +94,9 @@ public class TrafficGraph {
     }
 
     public void clearFixed() {
+        for (TrafficNode fixed : fixedNodes) {
+            fixed.getNeighbor().get(0).removeNeighbor(fixed);
+        }
         this.fixedNodes.clear();
         this.fixedEdges.clear();
     }
@@ -128,11 +131,13 @@ public class TrafficGraph {
         for (TrafficNode n : treeNodes) {
             if (n.isMoused(pointerX, pointerY)) {
                 n.setActivate(true);
+                n.setLastPosition(n.x(), n.y(), n.z());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
             }
             if (n.isActivate()) {
+                n.setLastPosition(n.x(), n.y(), n.z());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
@@ -160,11 +165,13 @@ public class TrafficGraph {
         for (TrafficNode n : fixedNodes) {
             if (n.isMoused(pointerX, pointerY)) {
                 n.setActivate(true);
+                n.setLastPosition(n.x(), n.y(), n.z());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
             }
             if (n.isActivate()) {
+                n.setLastPosition(n.x(), n.y(), n.z());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
@@ -230,7 +237,7 @@ public class TrafficGraph {
     public void display(WB_Render3D render, PApplet app) {
         app.pushStyle();
         app.pushStyle();
-        app.stroke(0, 255, 0);
+        app.stroke(0, 200, 0);
         app.strokeWeight(2);
         for (ZEdge e : treeEdges) {
             e.display(app);
@@ -243,13 +250,13 @@ public class TrafficGraph {
         app.fill(255, 0, 0);
         for (TrafficNode n : treeNodes) {
             n.displayAsPoint(app);
-            n.displayJoint(app, 5);
+//            n.displayJoint(app, 5);
             n.displayAtrium(render, app);
         }
         app.fill(128);
         for (TrafficNode n : fixedNodes) {
             n.displayAsPoint(app);
-            n.displayJoint(app, 5);
+//            n.displayJoint(app, 5);
         }
 //        displayNeighbor(app);
         app.popStyle();

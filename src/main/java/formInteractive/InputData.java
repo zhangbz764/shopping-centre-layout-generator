@@ -99,7 +99,7 @@ public class InputData {
      */
     public void display(WB_Render3D render, PApplet app) {
         app.pushStyle();
-        app.noFill();
+        app.fill(255);
         app.strokeWeight(4);
         app.stroke(0);
         render.drawPolygonEdges2D(inputBoundary);

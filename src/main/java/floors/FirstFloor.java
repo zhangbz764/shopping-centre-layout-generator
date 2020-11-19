@@ -17,25 +17,14 @@ public class FirstFloor extends Floor {
     /* ------------- constructor ------------- */
 
     public FirstFloor(TrafficGraph mainGraph, WB_Polygon boundary) {
-        super(1, mainGraph, boundary);
+
     }
 
     /* ------------- set & get ------------- */
 
-    @Override
-    public int getShopBlockNum() {
-        return 0;
-    }
-
-    @Override
-    public int getShopNum() {
-        return 0;
-    }
 
     /* ------------- draw ------------- */
 
-    @Override
     public void display(WB_Render3D render, PApplet app) {
-        super.display(render, app);
     }
 }

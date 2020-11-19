@@ -123,13 +123,15 @@ public class TestHe_Mesh extends PApplet {
         for (int i = 0; i < mesh.getEdges().size(); i++) {
             render.drawEdge(mesh.getEdges().get(i));
         }
-        fill(0);
+        fill(128);
         for (int j = 0; j < mesh.getFaces().size(); j++) {
             text(j, mesh.getFaceWithIndex(j).getFaceCenter().xf(), mesh.getFaceWithIndex(j).getFaceCenter().yf());
         }
+        noStroke();
         for (HE_Face nei : mesh.getFaceWithIndex(3).getNeighborFaces()) {
             render.drawFace(nei);
         }
+        stroke(0);
         strokeWeight(5);
         for (int k = 0; k < mesh.getNumberOfVertices(); k++) {
             if (!mesh.getVertexWithIndex(k).isBoundary()) {
