@@ -1,16 +1,12 @@
 package formInteractive;
 
-import formInteractive.blockSplit.Split;
-import formInteractive.blockSplit.SplitBisector;
 import formInteractive.graphAdjusting.TrafficGraph;
 import formInteractive.graphAdjusting.TrafficNode;
 import formInteractive.graphAdjusting.TrafficNodeFixed;
 import formInteractive.graphAdjusting.TrafficNodeTree;
-import geometry.ZSkeleton;
 import processing.core.PApplet;
 import render.JtsRender;
 import wblut.geom.WB_Point;
-import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;

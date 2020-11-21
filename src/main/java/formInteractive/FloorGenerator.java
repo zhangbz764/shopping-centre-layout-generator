@@ -1,9 +1,6 @@
 package formInteractive;
 
-import floors.FirstFloor;
 import floors.Floor;
-import floors.MidFloor;
-import floors.TopFloor;
 import formInteractive.graphAdjusting.TrafficGraph;
 
 /**

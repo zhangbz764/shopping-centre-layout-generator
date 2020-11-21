@@ -1,6 +1,5 @@
 package formInteractive;
 
-import geometry.ZSkeleton;
 import igeo.ICurve;
 import igeo.IG;
 import igeo.IPoint;

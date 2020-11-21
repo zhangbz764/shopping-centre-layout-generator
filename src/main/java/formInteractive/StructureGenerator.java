@@ -6,7 +6,6 @@ import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
 import wblut.geom.WB_GeometryOp2D;
-import wblut.geom.WB_PolyLine;
 import wblut.geom.WB_Polygon;
 import wblut.geom.WB_Vector;
 

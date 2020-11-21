@@ -3,7 +3,10 @@ package main.demoTests;
 import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
-import wblut.geom.*;
+import wblut.geom.WB_GeometryOp2D;
+import wblut.geom.WB_Point;
+import wblut.geom.WB_PolyLine;
+import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render2D;
 
 import java.util.List;

@@ -1,5 +1,7 @@
 package formInteractive.blockSplit;
 
+import formInteractive.graphAdjusting.TrafficGraph;
+import formInteractive.graphAdjusting.TrafficNode;
 import geometry.ZEdge;
 import geometry.ZLine;
 import geometry.ZPoint;
@@ -9,8 +11,6 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
 import processing.core.PApplet;
-import formInteractive.graphAdjusting.TrafficGraph;
-import formInteractive.graphAdjusting.TrafficNode;
 import render.JtsRender;
 import transform.ZTransform;
 import wblut.geom.WB_Polygon;
@@ -104,7 +104,7 @@ public class SplitBisector implements Split {
         app.fill(255);
         jrender.drawGeometry(publicBlockPoly);
         for (Polygon p : shopBlockPolys) {
-            app.fill(200);
+            app.fill(220);
             jrender.drawGeometry(p);
         }
         app.popStyle();

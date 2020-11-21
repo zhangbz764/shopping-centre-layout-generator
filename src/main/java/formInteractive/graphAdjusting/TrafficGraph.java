@@ -237,7 +237,7 @@ public class TrafficGraph {
     public void display(WB_Render3D render, PApplet app) {
         app.pushStyle();
         app.pushStyle();
-        app.stroke(0, 200, 0);
+        app.stroke(24, 169, 222);
         app.strokeWeight(2);
         for (ZEdge e : treeEdges) {
             e.display(app);
@@ -247,7 +247,7 @@ public class TrafficGraph {
             e.display(app);
         }
         app.popStyle();
-        app.fill(255, 0, 0);
+        app.fill(255,97,136);
         for (TrafficNode n : treeNodes) {
             n.displayAsPoint(app);
 //            n.displayJoint(app, 5);

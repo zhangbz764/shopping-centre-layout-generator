@@ -5,14 +5,11 @@ import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
 import wblut.geom.WB_GeometryOp;
-import wblut.geom.WB_GeometryOp2D;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render3D;
 
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**

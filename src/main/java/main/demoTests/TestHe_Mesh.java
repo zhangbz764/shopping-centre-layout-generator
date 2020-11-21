@@ -1,12 +1,14 @@
 package main.demoTests;
 
 import Guo_Cam.CameraController;
-import geometry.ZPoint;
-import org.locationtech.jts.geom.Polygon;
 import processing.core.PApplet;
-import transform.ZTransform;
-import wblut.geom.*;
-import wblut.hemesh.*;
+import wblut.geom.WB_GeometryFactory;
+import wblut.geom.WB_Point;
+import wblut.geom.WB_Polygon;
+import wblut.hemesh.HEC_FromPolygons;
+import wblut.hemesh.HE_Face;
+import wblut.hemesh.HE_Mesh;
+import wblut.hemesh.HE_Vertex;
 import wblut.processing.WB_Render;
 
 import java.util.List;

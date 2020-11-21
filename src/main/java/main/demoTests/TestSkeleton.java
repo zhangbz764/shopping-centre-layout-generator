@@ -1,10 +1,9 @@
 package main.demoTests;
 
 import Guo_Cam.CameraController;
-import processing.core.PApplet;
 import geometry.ZSkeleton;
+import processing.core.PApplet;
 import render.DisplayBasic;
-import wblut.geom.WB_GeometryFactory;
 import wblut.geom.WB_GeometryFactory3D;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;

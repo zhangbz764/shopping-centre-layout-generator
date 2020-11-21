@@ -18,12 +18,14 @@ public class Test extends PApplet {
     public final InputData input = new InputData();
 
     // generate elements
-    public SpacialFormGenerator spacialFormGenerator;
+    public SpacialFormGenerator publicSpaceGenerator;
     public Floor[] floors;
 
     // switch toggle
     public boolean publicSpaceAdjust = false;
     public boolean publicSpaceDraw = true;
+    public boolean floorAdjust = false;
+    public boolean floorDraw = true;
 
     // utils
     public WB_Render3D render;
@@ -44,12 +46,12 @@ public class Test extends PApplet {
         gcam = new CameraController(this);
 
         input.loadData(path, scale);
-        spacialFormGenerator = new SpacialFormGenerator(input);
+        publicSpaceGenerator = new SpacialFormGenerator(input);
 
-        floors = new Floor[4];
+        floors = new Floor[3];
         for (int i = 0; i < floors.length; i++) {
             println("generating floor " + (i + 1));
-            floors[i] = new Floor(i + 1, spacialFormGenerator.getMainGraph(), input.getInputBoundary(), scale);
+            floors[i] = new Floor(i + 1, publicSpaceGenerator.getMainGraph(), input.getInputBoundary(), scale);
         }
     }
 
@@ -57,40 +59,46 @@ public class Test extends PApplet {
 
     public void draw() {
         background(255);
+
         gcam.begin2d();
         pushMatrix();
         scale(1, -1);
         translate(0, -height);
         draw2D(jtsRender, render, this);
         popMatrix();
-        showText();
+
+        showInstruction();
 
         gcam.begin3d();
         draw3D(jtsRender, render, this);
     }
 
     public void draw2D(JtsRender jtsRender, WB_Render3D render, PApplet app) {
+        // "background"
         pushStyle();
         noStroke();
-        fill(200);
-        rect(0, 0, 700, 1000);
+        fill(180);
+        rect(0, 0, 700, height);
         popStyle();
+
         if (publicSpaceDraw) {
-            spacialFormGenerator.display(jtsRender, render, this);
+            publicSpaceGenerator.display(jtsRender, render, this);
         }
-        for (Floor f : floors) {
-            if (f.activate) {
-                f.display(render, jtsRender, app);
+        if (floorDraw) {
+            for (Floor f : floors) {
+                if (f.activate) {
+                    f.display(render, jtsRender, app);
+                }
             }
         }
     }
 
     public void draw3D(JtsRender jtsRender, WB_Render3D render, PApplet app) {
         DisplayBasic.drawAxis(this, 50);
-        if (publicSpaceDraw) {
+        if (floorDraw) {
             pushMatrix();
-            for (int i = 0; i < floors.length; i++) {
-                floors[i].display(render, jtsRender, app);
+            for (Floor floor : floors) {
+                floor.display(render, jtsRender, app);
                 translate(0, 0, 500);
             }
             popMatrix();
@@ -99,30 +107,67 @@ public class Test extends PApplet {
 
     /* ------------- print & text ------------- */
 
-    public void showText() {
-        if (publicSpaceDraw) {
-            if (publicSpaceAdjust) {
-                for (Floor f : floors) {
-                    if (f.activate) {
-                        text(f.getTextInfo(), 30, 750);
-                    }
-                }
-                String title = "INSTRUCTIONS";
-                textSize(15);
-                fill(0);
-                text(title, 30, 30);
+    public void showInstruction() {
+        pushStyle();
+        textSize(15);
+        fill(0);
+        showInstructions1();
+        showInstructions2();
+        showFloorStatistics();
+        popStyle();
+    }
 
-                String operation = "Hold right button to drag a node"
-                        + "\n" + "Press 'r' to reload input file"
-                        + "\n" + "Press 'a' to add a tree node at mouse location"
-                        + "\n" + "Press 's' to remove a tree node at mouse location"
-                        + "\n" + "Press 'q' to add a node at mouse location"
-                        + "\n" + "Press 'w' to remove a node at mouse location"
-                        + "\n" + "Press 'z' to increase node region radius"
-                        + "\n" + "Press 'x' to decrease node region radius";
-                textSize(15);
-                strokeWeight(1);
-                text(operation, 30, 70);
+    public void showInstructions1() {
+        if (publicSpaceAdjust) {
+            String title = "INSTRUCTIONS";
+            text(title, 30, 30);
+            StringBuilder operation = new StringBuilder("Press '.' to enable FLOOR adjustment"
+                    + "\n" + "This will also lock the PUBLIC SPACE adjustment"
+                    + "\n"
+                    + "\n" + "Hold right button to drag a node"
+                    + "\n" + "Press 'r' to reload input file"
+                    + "\n" + "Press 'a' to add a tree node at mouse location"
+                    + "\n" + "Press 's' to remove a tree node at mouse location"
+                    + "\n" + "Press 'q' to add a node at mouse location"
+                    + "\n" + "Press 'w' to remove a node at mouse location"
+                    + "\n" + "Press 'z' to increase node region radius"
+                    + "\n" + "Press 'x' to decrease node region radius"
+                    + "\n");
+            for (int i = 0; i < floors.length; i++) {
+                String s = "\n" + "Press '" + (i + 1) + "' to switch to " + (i + 1) + "F";
+                operation.append(s);
+            }
+            text(operation.toString(), 30, 70);
+        }
+    }
+
+    public void showInstructions2() {
+        if (floorDraw) {
+            if (floorAdjust) {
+                String title = "INSTRUCTIONS";
+                text(title, 30, 30);
+                StringBuilder operation = new StringBuilder("Press ',' to enable PUBLIC SPACE adjustment"
+                        + "\n" + "This will also dismiss and lock the FLOOR adjustment"
+                        + "\n"
+                        + "\n" + "Right click a shop to pick it"
+                        + "\n" + "Press 'u' to union all the picked shops"
+                        + "\n");
+                for (int i = 0; i < floors.length; i++) {
+                    String s = "\n" + "Press '" + (i + 1) + "' to switch to " + (i + 1) + "F";
+                    operation.append(s);
+                }
+                text(operation.toString(), 30, 70);
+            }
+        }
+    }
+
+    public void showFloorStatistics() {
+        if (floorDraw) {
+            for (Floor f : floors) {
+                if (f.activate) {
+                    text(f.getTextInfo(), 30, 750);
+                    text(f.getTextInfo2(), 350, 750);
+                }
             }
         }
     }
@@ -132,57 +177,94 @@ public class Test extends PApplet {
     public void mouseDragged() {
         if (publicSpaceAdjust && mouseButton == RIGHT) {
             // drag a node of traffic graph
-            spacialFormGenerator.dragUpdate(mouseX, -1 * mouseY + height);
+            publicSpaceGenerator.dragUpdate(mouseX, -1 * mouseY + height);
             for (Floor floor : floors) {
-                floor.updateSplit(spacialFormGenerator.getMainGraph());
+                floor.updateSplit(publicSpaceGenerator.getMainGraph());
             }
-            spacialFormGenerator.setMainGraphSwitch(false);
+            publicSpaceGenerator.setMainGraphSwitch(false);
         }
     }
 
     public void mouseReleased() {
         if (publicSpaceAdjust && mouseButton == RIGHT) {
-            spacialFormGenerator.releaseUpdate();
+            publicSpaceGenerator.releaseUpdate();
         }
     }
 
     public void mouseClicked() {
-        for (Floor f : floors) {
-            if (f.activate && mouseButton == RIGHT) {
-                f.selectShop(mouseX, -1 * mouseY + height);
+        if (!publicSpaceAdjust && floorAdjust) {
+            for (Floor f : floors) {
+                if (f.activate && mouseButton == RIGHT) {
+                    f.selectShop(mouseX, -1 * mouseY + height);
+                }
             }
         }
     }
 
     public void keyPressed() {
         // display control
-        if (key == '7') {
+        if (key == '/') {
             publicSpaceDraw = !publicSpaceDraw;
+        }
+        if (key == '*') {
+            floorDraw = !floorDraw;
         }
 
         // switch control
         if (key == ',') {
             publicSpaceAdjust = !publicSpaceAdjust;
+            for (Floor floor : floors) {
+                floor.clearSelect();
+            }
+            floorAdjust = false;
+        }
+        if (key == '.') {
+            floorAdjust = !floorAdjust;
+            publicSpaceAdjust = false;
         }
 
-        for (int i = 1; i < floors.length + 1; i++) {
-            char num = Character.forDigit(i, 10);
-            floors[i - 1].activate = key == num;
+        // switch floor draw
+        if (floorDraw) {
+            for (int i = 1; i < floors.length + 1; i++) {
+                char num = Character.forDigit(i, 10);
+                if (key == num) {
+                    floors[i - 1].activate = true;
+                    for (int j = 1; j < floors.length + 1; j++) {
+                        if (j != i) {
+                            floors[j - 1].activate = false;
+                        }
+                    }
+                }
+            }
+        }
 
+        // floor polygon union
+        if (!publicSpaceAdjust && floorAdjust) {
+            if (key == 'u' || key == 'U') {
+                for (Floor f : floors) {
+                    f.updateShop();
+                }
+            }
         }
 
         // reload input file
         if (key == 'r' || key == 'R') {
             input.loadData(path, scale);
-            spacialFormGenerator.init(input);
+            publicSpaceGenerator.init(input);
+            floors = new Floor[3];
+            for (int i = 0; i < floors.length; i++) {
+                println("generating floor " + (i + 1));
+                floors[i] = new Floor(i + 1, publicSpaceGenerator.getMainGraph(), input.getInputBoundary(), scale);
+            }
         }
+
         // interact control
         if (publicSpaceAdjust) {
-            spacialFormGenerator.keyUpdate(mouseX, -1 * mouseY + height, this);
+            publicSpaceGenerator.keyUpdate(mouseX, -1 * mouseY + height, this);
             for (Floor floor : floors) {
-                floor.updateSplit(spacialFormGenerator.getMainGraph());
+                floor.updateSplit(publicSpaceGenerator.getMainGraph());
             }
-            spacialFormGenerator.setMainGraphSwitch(false);
+            publicSpaceGenerator.setMainGraphSwitch(false);
         }
     }
 }

@@ -1,9 +1,7 @@
 package floors;
 
 import formInteractive.graphAdjusting.TrafficGraph;
-import processing.core.PApplet;
 import wblut.geom.WB_Polygon;
-import wblut.processing.WB_Render3D;
 
 /**
  * @author ZHANG Bai-zhou zhangbz

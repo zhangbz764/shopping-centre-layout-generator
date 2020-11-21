@@ -1,9 +1,7 @@
 package formInteractive.spacialElements;
 
 import formInteractive.graphAdjusting.TrafficNodeTree;
-import geometry.ZEdge;
 import wblut.geom.WB_Polygon;
-import wblut.processing.WB_Render;
 import wblut.processing.WB_Render3D;
 
 /**
