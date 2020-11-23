@@ -294,18 +294,13 @@ public class Floor {
     }
 
     /* ------------- set & get ------------- */
+
     public void setFloorNum(int floorNum) {
         this.floorNum = floorNum;
     }
 
-    public void setTrafficGraph(TrafficGraph mainGraph) {
-        if (this.floorNum == 1) {
-            this.trafficGraph = new TrafficGraph(mainGraph.getTreeNodes(), mainGraph.getFixedNodes());
-        } else if (this.floorNum > 1) {
-            this.trafficGraph = new TrafficGraph(mainGraph.getTreeNodes(), new ArrayList<TrafficNode>());
-        } else {
-            this.trafficGraph = null;
-        }
+    public void setTrafficGraph(TrafficGraph graph) {
+        this.trafficGraph = graph;
     }
 
     public void setBoundary(WB_Polygon boundary) {
@@ -406,5 +401,9 @@ public class Floor {
                 + "\n" + "ATRIUM NUMBER : " + atriumNum
                 + "\n" + "ESCALATOR NUMBER : " + escalatorNum
                 + "\n" + "EVACUATION NUMBER : " + evacuationStairNum;
+
+
     }
+
+
 }

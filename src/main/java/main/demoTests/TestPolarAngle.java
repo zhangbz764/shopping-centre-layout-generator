@@ -65,6 +65,11 @@ public class TestPolarAngle extends PApplet {
         line((float) oo.x(), (float) oo.y(), (float) aa.x(), (float) aa.y());
         line((float) oo.x(), (float) oo.y(), (float) bb.x(), (float) bb.y());
 
+        ZPoint center = new ZPoint((oo.x() + bb.x()) * 0.5, (oo.y() + bb.y()) * 0.5);
+        ZPoint rotate = bb.add(center.sub(bb).unit().rotate2D(Math.PI * 1.25).scaleTo(100));
+
+        line((float) bb.x(), (float) bb.y(), (float) rotate.x(), (float) rotate.y());
+
         bisector = ZGeoMath.getAngleBisectorOrdered(aa.sub(oo), bb.sub(oo));
         bisector.displayAsVector(this, oo, 50);
     }

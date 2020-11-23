@@ -51,7 +51,11 @@ public class Test extends PApplet {
         floors = new Floor[3];
         for (int i = 0; i < floors.length; i++) {
             println("generating floor " + (i + 1));
-            floors[i] = new Floor(i + 1, publicSpaceGenerator.getMainGraph(), input.getInputBoundary(), scale);
+            if (i == 0) {
+                floors[i] = new Floor(i + 1, publicSpaceGenerator.getMainGraph(), input.getInputBoundary(), scale);
+            } else {
+                floors[i] = new Floor(i + 1, publicSpaceGenerator.getFloorGraph(), input.getInputBoundary(), scale);
+            }
         }
     }
 
@@ -179,9 +183,13 @@ public class Test extends PApplet {
             // drag a node of traffic graph
             publicSpaceGenerator.dragUpdate(mouseX, -1 * mouseY + height);
             for (Floor floor : floors) {
-                floor.updateSplit(publicSpaceGenerator.getMainGraph());
+                if (floor.getFloorNum() == 1) {
+                    floor.updateSplit(publicSpaceGenerator.getMainGraph());
+                } else {
+                    floor.updateSplit(publicSpaceGenerator.getFloorGraph());
+                }
             }
-            publicSpaceGenerator.setMainGraphSwitch(false);
+            publicSpaceGenerator.setGraphSwitch(false);
         }
     }
 
@@ -254,7 +262,11 @@ public class Test extends PApplet {
             floors = new Floor[3];
             for (int i = 0; i < floors.length; i++) {
                 println("generating floor " + (i + 1));
-                floors[i] = new Floor(i + 1, publicSpaceGenerator.getMainGraph(), input.getInputBoundary(), scale);
+                if (i == 0) {
+                    floors[i] = new Floor(i + 1, publicSpaceGenerator.getMainGraph(), input.getInputBoundary(), scale);
+                } else {
+                    floors[i] = new Floor(i + 1, publicSpaceGenerator.getFloorGraph(), input.getInputBoundary(), scale);
+                }
             }
         }
 
@@ -262,9 +274,13 @@ public class Test extends PApplet {
         if (publicSpaceAdjust) {
             publicSpaceGenerator.keyUpdate(mouseX, -1 * mouseY + height, this);
             for (Floor floor : floors) {
-                floor.updateSplit(publicSpaceGenerator.getMainGraph());
+                if (floor.getFloorNum() == 1) {
+                    floor.updateSplit(publicSpaceGenerator.getMainGraph());
+                } else {
+                    floor.updateSplit(publicSpaceGenerator.getFloorGraph());
+                }
             }
-            publicSpaceGenerator.setMainGraphSwitch(false);
+            publicSpaceGenerator.setGraphSwitch(false);
         }
     }
 }

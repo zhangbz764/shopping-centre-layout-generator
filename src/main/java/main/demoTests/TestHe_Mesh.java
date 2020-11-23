@@ -27,6 +27,7 @@ public class TestHe_Mesh extends PApplet {
     public void settings() {
         size(1000, 1000, P3D);
     }
+
     WB_Polygon poly0;
     WB_Polygon poly1;
     WB_Polygon poly2;
@@ -83,7 +84,10 @@ public class TestHe_Mesh extends PApplet {
         pts4[4] = new WB_Point(1200, 400);
         pts4[5] = new WB_Point(800, 400);
         poly4 = new WB_Polygon(pts4);
+        System.out.println(poly0.getSimplePolygon().getNumberOfPoints());
     }
+
+    WB_Polygon testPoly;
 
     public void setup() {
         gcam = new CameraController(this);
@@ -96,8 +100,10 @@ public class TestHe_Mesh extends PApplet {
         System.out.println(mesh.getVertices().size());
         System.out.println(mesh.getAllBoundaryVertices().size());
 
+        testPoly = mesh.getFaceWithIndex(0).getPolygon().getSimplePolygon();
+        System.out.println("dede " + testPoly.getNumberOfPoints());
     }
-
+    
     private void optimize() {
         WB_Polygon p1 = mesh.getFaces().get(0).getPolygon();
         WB_Polygon p2 = mesh.getFaces().get(0).getNeighborFaces().get(0).getPolygon();
@@ -135,6 +141,7 @@ public class TestHe_Mesh extends PApplet {
         }
         stroke(0);
         strokeWeight(5);
+        render.drawPolygonEdges2D(testPoly);
         for (int k = 0; k < mesh.getNumberOfVertices(); k++) {
             if (!mesh.getVertexWithIndex(k).isBoundary()) {
                 ellipse(mesh.getVertexWithIndex(k).xf(), mesh.getVertexWithIndex(k).yf(), 100, 100);

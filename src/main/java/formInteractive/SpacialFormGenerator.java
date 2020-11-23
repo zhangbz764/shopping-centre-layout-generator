@@ -25,6 +25,7 @@ public class SpacialFormGenerator {
 
     // traffic mini spanning tree
     private TrafficGraph mainGraph;
+    private TrafficGraph floorGraph;
 
     /* ------------- constructor ------------- */
 
@@ -47,22 +48,30 @@ public class SpacialFormGenerator {
 
         // compute traffic mini spanning tree, nodes input from input data
         List<TrafficNode> innerNodes = new ArrayList<>();
+        List<TrafficNode> innerNodes2 = new ArrayList<>();
         for (WB_Point p : this.input.getInputInnerNodes()) {
             innerNodes.add(new TrafficNodeTree(p, this.input.getInputBoundary()));
+            innerNodes2.add(new TrafficNodeTree(p, this.input.getInputBoundary()));
         }
         List<TrafficNode> entryNodes = new ArrayList<>();
         for (WB_Point p : this.input.getInputEntries()) {
             entryNodes.add(new TrafficNodeFixed(p, this.input.getInputBoundary()));
         }
         this.mainGraph = new TrafficGraph(innerNodes, entryNodes);
+        this.floorGraph = new TrafficGraph(innerNodes2, new ArrayList<TrafficNode>());
     }
 
-    public void setMainGraphSwitch(boolean update) {
+    public void setGraphSwitch(boolean update) {
         this.mainGraph.update = update;
+        this.floorGraph.update = update;
     }
 
     public TrafficGraph getMainGraph() {
         return mainGraph;
+    }
+
+    public TrafficGraph getFloorGraph() {
+        return floorGraph;
     }
 
     /* ------------- mouse & key interaction at TRAFFIC GRAPH STEP ------------- */
@@ -74,7 +83,8 @@ public class SpacialFormGenerator {
     public void dragUpdate(int pointerX, int pointerY) {
         mainGraph.setTreeNode(pointerX, pointerY);
         mainGraph.setFixedNode(pointerX, pointerY);
-        mainGraph.setAtrium();
+        floorGraph.setTreeNode(pointerX, pointerY);
+        floorGraph.setAtrium();
     }
 
     /**
@@ -83,6 +93,7 @@ public class SpacialFormGenerator {
      */
     public void releaseUpdate() {
         mainGraph.resetActive();
+        floorGraph.resetActive();
     }
 
     /**
@@ -93,10 +104,12 @@ public class SpacialFormGenerator {
         // add a TrafficNode to graph
         if (app.key == 'a' || app.key == 'A') {
             mainGraph.addTreeNode(pointerX, pointerY, input.getInputBoundary());
+            floorGraph.addTreeNode(pointerX, pointerY, input.getInputBoundary());
         }
         // remove a TrafficNode to graph (mouse location)
         if (app.key == 's' || app.key == 'S') {
             mainGraph.removeTreeNode(pointerX, pointerY);
+            floorGraph.removeTreeNode(pointerX, pointerY);
         }
         // add a fixed TrafficNode to graph
         if (app.key == 'q' || app.key == 'Q') {
@@ -109,14 +122,16 @@ public class SpacialFormGenerator {
         // increase TrafficNode's regionR
         if (app.key == 'z' || app.key == 'Z') {
             mainGraph.changeR(pointerX, pointerY, 2);
+            floorGraph.changeR(pointerX, pointerY, 2);
         }
         // decrease TrafficNode's regionR
         if (app.key == 'x' || app.key == 'X') {
             mainGraph.changeR(pointerX, pointerY, -2);
+            floorGraph.changeR(pointerX, pointerY, -2);
         }
         // add an atrium to treeNode
         if (app.key == 'e' || app.key == 'E') {
-            mainGraph.addAtrium(pointerX, pointerY);
+            floorGraph.addAtrium(pointerX, pointerY);
         }
     }
 

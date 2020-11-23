@@ -70,7 +70,7 @@ public class StructureGenerator {
                 for (WB_Polygon shopBlock : shopBlocks) {
                     if (WB_GeometryOp2D.contains2D(p.toWB_Point(), shopBlock)) {
                         axisPoint.add(p);
-                        int[] indices = ZGeoMath.pointOnWhichPolyEdge(p, boundary);
+                        int[] indices = ZGeoMath.pointOnWhichPolyEdgeIndices(p, boundary);
                         WB_Vector edgeDir = new WB_Vector(boundary.getPoint(indices[1]).sub(boundary.getPoint(indices[0])));
                         axisVec.add(new ZPoint(edgeDir.yd(), -1 * edgeDir.xd()).unit());
                         break;

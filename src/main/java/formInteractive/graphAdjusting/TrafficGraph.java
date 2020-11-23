@@ -1,6 +1,8 @@
 package formInteractive.graphAdjusting;
 
 import geometry.ZEdge;
+import geometry.ZPoint;
+import math.ZGeoMath;
 import math.ZMath;
 import org.locationtech.jts.geom.LineString;
 import processing.core.PApplet;
@@ -95,7 +97,7 @@ public class TrafficGraph {
 
     public void clearFixed() {
         for (TrafficNode fixed : fixedNodes) {
-            fixed.getNeighbor().get(0).removeNeighbor(fixed);
+            fixed.getNeighbors().get(0).removeNeighbor(fixed);
         }
         this.fixedNodes.clear();
         this.fixedEdges.clear();
@@ -247,7 +249,7 @@ public class TrafficGraph {
             e.display(app);
         }
         app.popStyle();
-        app.fill(255,97,136);
+        app.fill(255, 97, 136);
         for (TrafficNode n : treeNodes) {
             n.displayAsPoint(app);
 //            n.displayJoint(app, 5);
@@ -258,7 +260,6 @@ public class TrafficGraph {
             n.displayAsPoint(app);
 //            n.displayJoint(app, 5);
         }
-//        displayNeighbor(app);
         app.popStyle();
     }
 
@@ -388,15 +389,26 @@ public class TrafficGraph {
             e.getStart().setNeighbor(e.getEnd());
             e.getEnd().setNeighbor(e.getStart());
 
-            e.getStart().setLinkedEdge(e);
-            e.getEnd().setLinkedEdge(e);
+            e.getStart().setLinkedEdges(e);
+            e.getEnd().setLinkedEdges(e);
         }
         for (ZEdge e : fixedEdges) {
             e.getStart().setNeighbor(e.getEnd());
             e.getEnd().setNeighbor(e.getStart());
 
-            e.getStart().setLinkedEdge(e);
-            e.getEnd().setLinkedEdge(e);
+            e.getStart().setLinkedEdges(e);
+            e.getEnd().setLinkedEdges(e);
         }
+    }
+
+    // TODO: 2020/11/22  沿graph找点
+    public List<ZPoint> pointsOnGraphByDist(final ZPoint origin, final double step) {
+        List<ZEdge> allEdges = treeEdges;
+        allEdges.addAll(fixedEdges);
+        TrafficNode[] startAndEnd = (TrafficNode[]) ZGeoMath.pointOnWhichZEdge(origin, allEdges);
+        if (startAndEnd[0] != null) {
+
+        }
+        return null;
     }
 }

@@ -42,7 +42,7 @@ public class SplitBisector implements Split {
 
     public SplitBisector(WB_Polygon boundary, TrafficGraph graph) {
         // initialize input data
-        this.boundaryLineString = ZTransform.WB_PolygonToJtsLineString(boundary);
+        this.boundaryLineString = ZTransform.WB_PolyLineToJtsLineString(boundary);
         setNodeJoints(graph);
         // connect joints
         this.connectedLinesToSplit = connectJoints(boundary, graph);
@@ -223,7 +223,7 @@ public class SplitBisector implements Split {
                     connections.add(cap);
                 }
             } else {
-                if (start.getNeighbor().size() == 1) {
+                if (start.getNeighbors().size() == 1) {
                     ZLine cap = new ZLine(start.getJoints().get(0), start.getJoints().get(1));
                     ZLine extend1 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt1(), cap.getDirection()}, boundary);
                     ZLine extend2 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt0(), cap.getDirection().scaleTo(-1)}, boundary);
@@ -232,7 +232,7 @@ public class SplitBisector implements Split {
                     connections.add(extend1.scaleTo(1.1));
                     connections.add(extend2.scaleTo(1.1));
                 }
-                if (end.getNeighbor().size() == 1) {
+                if (end.getNeighbors().size() == 1) {
                     ZLine cap = new ZLine(end.getJoints().get(0), end.getJoints().get(1));
                     ZLine extend1 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt1(), cap.getDirection()}, boundary);
                     ZLine extend2 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt0(), cap.getDirection().scaleTo(-1)}, boundary);

@@ -44,7 +44,7 @@ public class TestSkeleton extends PApplet {
         System.out.println("poly area" + poly.getSignedArea());
 
         System.out.println("origin:" + poly.getNormal());
-        ss = new ZSkeleton(poly);
+        ss = new ZSkeleton(poly, true);
         ss.printInfo();
 
     }
@@ -80,7 +80,7 @@ public class TestSkeleton extends PApplet {
             pts[4] = new WB_Point(mouseX, mouseY);
         }
         poly = new WB_Polygon(pts);
-        ss = new ZSkeleton(poly);
+        ss = new ZSkeleton(poly, true);
         ss.printInfo();
     }
 
@@ -88,7 +88,7 @@ public class TestSkeleton extends PApplet {
         if (mouseButton == RIGHT) {
             pts[0] = pts[4] = new WB_Point(mouseX, mouseY);
             poly = new WB_Polygon(pts);
-            ss = new ZSkeleton(poly);
+            ss = new ZSkeleton(poly, true);
             ss.printInfo();
         }
     }

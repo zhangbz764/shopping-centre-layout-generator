@@ -60,6 +60,10 @@ public class TrafficNodeFixed extends TrafficNode {
     }
 
     @Override
+    public void setAtrium() {
+    }
+
+    @Override
     public List<ZPoint> getJoints() {
         return this.joints;
     }
@@ -70,9 +74,13 @@ public class TrafficNodeFixed extends TrafficNode {
     }
 
     @Override
-    @Deprecated
     public Atrium getAtrium() {
-        return null;
+        throw new NullPointerException("Fixed node can't have atrium");
+    }
+
+    @Override
+    public boolean hasAtrium() {
+        return false;
     }
 
     /* ------------- draw -------------*/

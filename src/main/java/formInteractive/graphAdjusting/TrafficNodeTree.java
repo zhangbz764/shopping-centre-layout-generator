@@ -56,17 +56,17 @@ public class TrafficNodeTree extends TrafficNode {
      */
     @Override
     public void setJoints() {
-        if (this.getNeighbor() != null && this.getNeighbor().size() != 0) {
+        if (this.getNeighbors() != null && this.getNeighbors().size() != 0) {
             this.joints = new ArrayList<>();
             if (this.isEnd()) {  // only has 1 neighbor, make its bisectors to an square cap
-                ZPoint reverse = this.sub(this.getNeighbor().get(0)).unit();
+                ZPoint reverse = this.sub(this.getNeighbors().get(0)).unit();
                 joints.add(this.add(reverse.rotate2D(Math.PI / 4).scaleTo(super.getRegionR())));
                 joints.add(this.add(reverse.rotate2D(Math.PI / -4).scaleTo(super.getRegionR())));
             } else {  // 2 or more neighbors, re-order vectors and get each angular bisector
-                ZPoint[] order = ZGeoMath.sortPolarAngle(this.getVecToNeighbor());
+                ZPoint[] order = ZGeoMath.sortPolarAngle(this.getVecUnitToNeighbors());
                 for (int i = 0; i < order.length; i++) {
                     ZPoint bisector = ZGeoMath.getAngleBisectorOrdered(order[i], order[(i + 1) % order.length]);
-                    double sin = Math.abs(order[i].unit().cross2D(bisector));
+                    double sin = Math.abs(order[i].cross2D(bisector));
                     joints.add(this.add(bisector.scaleTo(super.getRegionR() / sin)));
                 }
             }
@@ -95,29 +95,11 @@ public class TrafficNodeTree extends TrafficNode {
 
     /**
      * @return void
-     * @description set an initial atrium
+     * @description initialize an atrium
      */
     @Override
     public void setAtrium() {
-        if (this.getNeighbor() != null && this.getNeighbor().size() != 0) {
-            if (this.isEnd()) {
-
-            } else {
-                if (this.getNeighbor().size() == 2) {
-
-                } else {
-                    ZPoint[] order = ZGeoMath.sortPolarAngleUnit(this.getVecToNeighbor());
-                    WB_Point[] points = new WB_Point[order.length + 1];
-                    for (int i = 0; i < order.length; i++) {
-                        points[i] = new WB_Point(this.add(order[i].scaleTo(this.getRegionR())).toWB_Point());
-                    }
-                    points[order.length] = points[0];
-                    this.atrium = new Atrium(this, new WB_Polygon(points));
-                }
-            }
-        } else {
-            System.out.println("can't generate an atrium here");
-        }
+        this.atrium = new Atrium(this);
     }
 
     @Override
@@ -133,6 +115,11 @@ public class TrafficNodeTree extends TrafficNode {
     @Override
     public Atrium getAtrium() {
         return atrium;
+    }
+
+    @Override
+    public boolean hasAtrium() {
+        return this.atrium == null;
     }
 
     /* ------------- draw -------------*/

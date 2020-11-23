@@ -79,10 +79,11 @@ public abstract class TrafficNode extends ZNode {
         this.lastPosition[2] = z;
     }
 
-    public void setAtrium() {
-    }
+    public abstract void setAtrium();
 
     public abstract Atrium getAtrium();
+
+    public abstract boolean hasAtrium();
 
     public abstract List<ZPoint> getJoints();
 
