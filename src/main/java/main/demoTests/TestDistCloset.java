@@ -15,7 +15,7 @@ import wblut.processing.WB_Render;
  * @project shopping_mall
  * @date 2020/10/29
  * @time 15:34
- * @description
+ * @description 测试hemesh里的最近点计算、线段trim和extend计算
  */
 public class TestDistCloset extends PApplet {
     public void settings() {

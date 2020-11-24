@@ -12,7 +12,7 @@ import render.JtsRender;
  * @project shopping_mall
  * @date 2020/10/23
  * @time 11:41
- * @description 测试几何图形布尔关系
+ * @description 测试jts几何图形布尔关系
  */
 public class TestGeoRelation extends PApplet {
     public void settings() {

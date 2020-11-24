@@ -1,5 +1,6 @@
 package main.demoTests;
 
+import geometry.ZLine;
 import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
@@ -16,7 +17,7 @@ import java.util.List;
  * @project shopping_mall
  * @date 2020/10/24
  * @time 17:14
- * @description 测试多边形等分、沿多边形边找点
+ * @description 测试多边形等分、沿多边形边找点、多边形边线offset
  */
 public class TestPolySplit extends PApplet {
     public void settings() {
@@ -31,7 +32,9 @@ public class TestPolySplit extends PApplet {
     ZPoint[] besides = new ZPoint[2];
     List<ZPoint> split;
 
-    int index = 0;
+    int count = 0;
+    int index;
+    ZLine offset;
     double step;
 
     public void setup() {
@@ -47,7 +50,7 @@ public class TestPolySplit extends PApplet {
         pts1[5] = new WB_Point(100, 100);
         poly = new WB_Polygon(pts1);
         pl = new WB_PolyLine(pts2);
-        besides = ZGeoMath.pointsOnEdgeByDist(test, poly, 500);
+        besides = ZGeoMath.pointsOnEdgeByDist(test, poly, 450);
 
         step = 50;
         split = ZGeoMath.splitWB_PolyLineEdgeByThreshold(pl, 90, 84);
@@ -56,12 +59,12 @@ public class TestPolySplit extends PApplet {
         for (ZPoint p : split) {
             println(WB_GeometryOp2D.contains2D(p.toWB_Point(), poly));
         }
-
+        index = count % poly.getNumberSegments();
+        println(index);
+        offset = ZGeoMath.offsetOnePolySegment(poly, index + 1, ((index + 1) % poly.getNumberSegments()) + 1, 30);
     }
 
     public void draw() {
-
-
         background(255);
         noFill();
         strokeWeight(1);
@@ -69,17 +72,19 @@ public class TestPolySplit extends PApplet {
         render.drawPolyLine2D(pl);
         pushStyle();
         fill(255, 0, 0);
-        render.drawPoint2D(poly.getSegment(index % poly.getNumberSegments()).getOrigin(), 10);
+        render.drawPoint2D(poly.getSegment(index).getOrigin(), 10);
         fill(0, 0, 255);
-        render.drawPoint2D(poly.getSegment(index % poly.getNumberSegments()).getEndpoint(), 10);
+        render.drawPoint2D(poly.getSegment(index).getEndpoint(), 10);
+
+        fill(0, 255, 0);
+        test.displayAsPoint(this);
+        for (ZPoint p : besides) {
+            p.displayAsPoint(this);
+        }
         popStyle();
         strokeWeight(4);
-        render.drawSegment2D(poly.getSegment(index % poly.getNumberSegments()));
-
-//        test.displayAsPoint(this);
-//        for (ZPoint p : besides) {
-//            p.displayAsPoint(this);
-//        }
+        render.drawSegment2D(poly.getSegment(index));
+        offset.display(this);
 
         for (ZPoint p : split) {
             p.displayAsPoint(this);
@@ -87,15 +92,14 @@ public class TestPolySplit extends PApplet {
     }
 
     public void mouseClicked() {
-        index = index + 1;
+        count++;
+        index = count % poly.getNumberSegments();
+        offset = ZGeoMath.offsetOnePolySegment(poly, index + 1, ((index + 1) % poly.getNumberSegments()) + 1, 30);
     }
 
     public void mouseDragged() {
         step = mouseX;
         split = ZGeoMath.splitWB_PolyLineEdgeByStep(poly, step);
         println("split: " + split.size());
-        for (ZPoint p : split) {
-            println(WB_GeometryOp2D.contains2D(p.toWB_Point(), poly));
-        }
     }
 }

@@ -3,7 +3,6 @@ package floors;
 import formInteractive.blockSplit.Split;
 import formInteractive.blockSplit.SplitBisector;
 import formInteractive.graphAdjusting.TrafficGraph;
-import formInteractive.graphAdjusting.TrafficNode;
 import geometry.*;
 import math.ZGeoMath;
 import processing.core.PApplet;

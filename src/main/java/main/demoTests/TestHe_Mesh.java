@@ -18,7 +18,7 @@ import java.util.List;
  * @project shopping_mall
  * @date 2020/11/7
  * @time 20:00
- * @description
+ * @description 测试hemesh的mesh以及union
  */
 public class TestHe_Mesh extends PApplet {
 

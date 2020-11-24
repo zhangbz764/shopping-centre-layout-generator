@@ -17,7 +17,7 @@ import java.util.List;
  * @project shopping_mall
  * @date 2020/10/21
  * @time 10:24
- * @description
+ * @description the inner control node
  */
 public class TrafficNodeTree extends TrafficNode {
     private final WB_Polygon boundary;
@@ -56,18 +56,36 @@ public class TrafficNodeTree extends TrafficNode {
      */
     @Override
     public void setJoints() {
-        if (this.getNeighbors() != null && this.getNeighbors().size() != 0) {
-            this.joints = new ArrayList<>();
-            if (this.isEnd()) {  // only has 1 neighbor, make its bisectors to an square cap
-                ZPoint reverse = this.sub(this.getNeighbors().get(0)).unit();
-                joints.add(this.add(reverse.rotate2D(Math.PI / 4).scaleTo(super.getRegionR())));
-                joints.add(this.add(reverse.rotate2D(Math.PI / -4).scaleTo(super.getRegionR())));
-            } else {  // 2 or more neighbors, re-order vectors and get each angular bisector
-                ZPoint[] order = ZGeoMath.sortPolarAngle(this.getVecUnitToNeighbors());
-                for (int i = 0; i < order.length; i++) {
-                    ZPoint bisector = ZGeoMath.getAngleBisectorOrdered(order[i], order[(i + 1) % order.length]);
-                    double sin = Math.abs(order[i].cross2D(bisector));
-                    joints.add(this.add(bisector.scaleTo(super.getRegionR() / sin)));
+        if (this.atrium == null) {
+            if (this.getNeighbors() != null && this.getNeighbors().size() != 0) {
+                this.joints = new ArrayList<>();
+                if (this.isEnd()) {  // only has 1 neighbor, make its bisectors to an square cap
+                    ZPoint reverse = this.sub(this.getNeighbors().get(0)).unit();
+                    joints.add(this.add(reverse.rotate2D(Math.PI / 4).scaleTo(super.getRegionR())));
+                    joints.add(this.add(reverse.rotate2D(Math.PI / -4).scaleTo(super.getRegionR())));
+                } else {  // 2 or more neighbors, re-order vectors and get each angular bisector
+                    ZPoint[] order = ZGeoMath.sortPolarAngle(this.getVecUnitToNeighbors());
+                    for (int i = 0; i < order.length; i++) {
+                        ZPoint bisector = ZGeoMath.getAngleBisectorOrdered(order[i], order[(i + 1) % order.length]);
+                        double sin = Math.abs(order[i].cross2D(bisector));
+                        joints.add(this.add(bisector.scaleTo(super.getRegionR() / sin)));
+                    }
+                }
+            }
+        } else {
+            if (this.getNeighbors() != null && this.getNeighbors().size() != 0) {
+                this.joints = new ArrayList<>();
+                if (this.isEnd()) {  // only has 1 neighbor, make its bisectors to an square cap
+                    ZPoint reverse = this.sub(this.getNeighbors().get(0)).unit();
+                    joints.add(this.add(reverse.rotate2D(Math.PI / 4).scaleTo(super.getRegionR())));
+                    joints.add(this.add(reverse.rotate2D(Math.PI / -4).scaleTo(super.getRegionR())));
+                } else {  // 2 or more neighbors, re-order vectors and get each angular bisector
+                    ZPoint[] order = ZGeoMath.sortPolarAngle(this.getVecUnitToNeighbors());
+                    for (int i = 0; i < order.length; i++) {
+                        ZPoint bisector = ZGeoMath.getAngleBisectorOrdered(order[i], order[(i + 1) % order.length]);
+                        double sin = Math.abs(order[i].cross2D(bisector));
+                        joints.add(this.add(bisector.scaleTo(super.getRegionR() / sin)));
+                    }
                 }
             }
         }
@@ -99,7 +117,11 @@ public class TrafficNodeTree extends TrafficNode {
      */
     @Override
     public void setAtrium() {
-        this.atrium = new Atrium(this);
+        if (this.getNeighbors() != null && this.getNeighbors().size() != 0) {
+            this.atrium = new Atrium(this);
+        } else {
+            System.out.println("can't generate an atrium here");
+        }
     }
 
     @Override
@@ -139,7 +161,7 @@ public class TrafficNodeTree extends TrafficNode {
             app.pushStyle();
             app.noFill();
             app.stroke(0, 0, 255);
-            this.atrium.display(render);
+            this.atrium.display(render, app);
             app.popStyle();
         }
     }

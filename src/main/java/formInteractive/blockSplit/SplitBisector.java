@@ -25,7 +25,6 @@ import java.util.List;
  * @date 2020/10/19
  * @time 14:56
  * @description split boundary by bisector joints
- * output a single public space polygon and a list of shop space polygons
  */
 public class SplitBisector implements Split {
     // boundary convert to jts LineString

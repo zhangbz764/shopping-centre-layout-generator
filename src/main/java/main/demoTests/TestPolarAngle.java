@@ -12,7 +12,7 @@ import java.util.List;
  * @project shopping_mall
  * @date 2020/10/20
  * @time 14:22
- * @description 测试极角排序
+ * @description 测试极角排序、角平分线等向量运算
  */
 public class TestPolarAngle extends PApplet {
     public void settings() {

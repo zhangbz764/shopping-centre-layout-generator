@@ -17,7 +17,7 @@ import java.util.List;
  * @project shopping_mall
  * @date 2020/10/12
  * @time 11:06
- * @description geometry from .3dm file
+ * @description input geometry from .3dm file
  */
 public class InputData {
     // geometries

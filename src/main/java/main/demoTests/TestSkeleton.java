@@ -14,7 +14,7 @@ import wblut.processing.WB_Render;
  * @project shopping_mall
  * @date 2020/10/31
  * @time 11:27
- * @description
+ * @description 测试ZSkeleton
  */
 public class TestSkeleton extends PApplet {
     public void settings() {

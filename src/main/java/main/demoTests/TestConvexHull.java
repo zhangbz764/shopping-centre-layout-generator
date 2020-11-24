@@ -20,9 +20,10 @@ import java.util.List;
  * @project shopping_mall
  * @date 2020/11/15
  * @time 20:48
- * @description
+ * @description 测试jts的convexhull、找凹点、直线多边形交点及排序
  */
 public class TestConvexHull extends PApplet {
+
     /* ------------- settings ------------- */
 
     public void settings() {
