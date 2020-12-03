@@ -98,13 +98,13 @@ public class SplitBisector implements Split {
     /*-------- print & draw --------*/
 
     @Override
-    public void display(JtsRender jrender, PApplet app) {
+    public void display(JtsRender jtsRender, PApplet app) {
         app.pushStyle();
         app.fill(255);
-        jrender.drawGeometry(publicBlockPoly);
+        jtsRender.drawGeometry(publicBlockPoly);
         for (Polygon p : shopBlockPolys) {
             app.fill(220);
-            jrender.drawGeometry(p);
+            jtsRender.drawGeometry(p);
         }
         app.popStyle();
     }
@@ -255,6 +255,13 @@ public class SplitBisector implements Split {
                 connections.add(new ZLine(startSelect[1], endSelect[0]).scaleTo(1.1));
             }
         }
+
+        for (TrafficNode treeNode : graph.getTreeNodes()) {
+            if (treeNode.getAtrium() != null) {
+                connections.addAll(treeNode.getAtrium().getOffsetSegmentsFromAtrium());
+            }
+        }
+
         return connections;
     }
 }

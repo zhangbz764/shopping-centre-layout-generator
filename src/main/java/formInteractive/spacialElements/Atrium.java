@@ -1,7 +1,6 @@
 package formInteractive.spacialElements;
 
 import formInteractive.graphAdjusting.TrafficNode;
-import geometry.ZEdge;
 import geometry.ZGeoFactory;
 import geometry.ZLine;
 import geometry.ZPoint;
@@ -21,10 +20,24 @@ import java.util.List;
  * @time 10:00
  * @description atrium in the public space of a shopping mall
  */
+
+// TODO: 2020/12/3 整理代码结构 
 public class Atrium {
+    // center node
     private TrafficNode center;
+
+    // boundary points by computing
+    private List<ZPoint> boundaryPoints;
+    private List<ZPoint> vecFromCenter;
+
+    // shape polygon
     private WB_Polygon polygon;
-    private List<ZLine> splitLineFromAtrium;
+
+    // offset line
+    private List<ZLine> offsetSegmentsFromAtrium;
+    private List<ZPoint> jointsFromAtrium;
+    private List<ControlPoint> controlPoints;
+    private int activeIndex = 0;
 
     private Escalator escalator;
 
@@ -32,7 +45,7 @@ public class Atrium {
 
     public Atrium(TrafficNode center) {
         this.center = center;
-        initAtrium(center);
+        initAtrium();
     }
 
     /* ------------- initializer ------------- */
@@ -41,56 +54,124 @@ public class Atrium {
      * @return void
      * @description main initializer
      */
-    public void initAtrium(TrafficNode center) {
-        this.splitLineFromAtrium = new ArrayList<>();
-        if (center.isEnd()) {
+    public void initAtrium() {
+        initControlPoints(center);
+        extractBoundaryPoints();
+        createPolygon(vecFromCenter, boundaryPoints);
+        findOffsetAndJoints(polygon, center.getLinkedEdges());
+    }
 
+    /* ------------- compute function ------------- */
+
+    /**
+     * @return void
+     * @description find control point for adjustment
+     */
+    private void initControlPoints(TrafficNode center) {
+        this.controlPoints = new ArrayList<>();
+        if (center.isEnd()) {
+            // end of a graph
+            ControlPoint pt1 = new ControlPoint(center, center.getVecUnitToNeighbor(0), center.getLinkedEdge(0).getLength() * 0.25);
+            ControlPoint pt2 = new ControlPoint(center, center.getVecUnitToNeighbor(0).scaleTo(-1), 0);
+            controlPoints.add(pt1);
+            controlPoints.add(pt2);
         } else {
-            List<ZPoint> verticalPoints = new ArrayList<>();
-            List<ZPoint> vecFromCenter = new ArrayList<>();
+            // on edge
             for (int i = 0; i < center.geiNeighborNum(); i++) {
-                ZPoint ptOnEdge = center.add(center.getVecUnitToNeighbor(i).scaleTo(center.getLinkedEdge(i).getLength() * 0.25));
-                ZPoint vertical1 = ptOnEdge.add(center.getVecUnitToNeighbor(i).rotate2D(Math.PI * 0.5).scaleTo(5));
-                ZPoint vertical2 = ptOnEdge.add(center.getVecUnitToNeighbor(i).rotate2D(Math.PI * -0.5).scaleTo(5));
-                verticalPoints.add(vertical1);
-                verticalPoints.add(vertical2);
-                vecFromCenter.add(vertical1.sub(center));
-                vecFromCenter.add(vertical2.sub(center));
+                ControlPoint pt = new ControlPoint(center, center.getVecUnitToNeighbor(i), center.getLinkedEdge(i).getLength() * 0.25);
+                controlPoints.add(pt);
             }
-            // larger than 180
+            // at convex point
             ZPoint[] sortedVec = ZGeoMath.sortPolarAngle(center.getVecUnitToNeighbors());
             for (int i = 0; i < sortedVec.length; i++) {
                 if (sortedVec[i].cross2D(sortedVec[(i + 1) % sortedVec.length]) < 0) {
                     ZPoint bisector = ZGeoMath.getAngleBisectorOrdered(sortedVec[i], sortedVec[(i + 1) % sortedVec.length]);
-                    double sin = Math.abs(sortedVec[i].cross2D(bisector));
-                    ZPoint point = center.add(bisector.scaleTo(5 / sin));
-                    verticalPoints.add(point);
-                    vecFromCenter.add(point.sub(center));
+                    ControlPoint pt = new ControlPoint(center, bisector, sortedVec[i]);
+                    controlPoints.add(pt);
                 }
             }
-            // sort polar angle to order polygon vertices
-            int[] order = ZGeoMath.sortPolarAngleIndices(vecFromCenter);
-            WB_Point[] polyPoints = new WB_Point[verticalPoints.size() + 1];
-            for (int i = 0; i < verticalPoints.size(); i++) {
-                polyPoints[i] = verticalPoints.get(order[i]).toWB_Point();
-            }
-            polyPoints[polyPoints.length - 1] = polyPoints[0];
-            this.polygon = ZGeoFactory.wbgf.createSimplePolygon(polyPoints);
-            // record offset segment as block boundary
-            for (int i = 1; i < polygon.getNumberOfPoints(); i++) {
-                ZPoint[] polySegment = new ZPoint[]{new ZPoint(polygon.getPoint(i)),
-                        new ZPoint(polygon.getPoint((i % (polygon.getNumberOfPoints() - 1)) + 1).sub(polygon.getPoint(i)))};
-                for (ZEdge edge : center.getLinkedEdges()) {
-                    if (!ZGeoMath.checkSegmentsIntersect(edge.toLinePD(), polySegment)) {
-                        splitLineFromAtrium.add(ZGeoMath.offsetOnePolySegment(polygon, i, (i % (polygon.getNumberOfPoints() - 1)) + 1, 5));
-                    }
-                }
-            }
+        }
+    }
 
+    /**
+     * @return void
+     * @description extract boundary points from control points
+     */
+    private void extractBoundaryPoints() {
+        // extract boundary points from control points
+        this.boundaryPoints = new ArrayList<>();
+        this.vecFromCenter = new ArrayList<>();
+        for (ControlPoint cp : controlPoints) {
+            for (ZPoint p : cp.polyPoints) {
+                boundaryPoints.add(p);
+                vecFromCenter.add(p.sub(center));
+            }
+        }
+    }
+
+    /**
+     * @return void
+     * @description sort vectors and create shape polygon
+     */
+    private void createPolygon(List<ZPoint> vecFromCenter, List<ZPoint> boundaryPoints) {
+        // sort polar angle to order polygon vertices
+        int[] order = ZGeoMath.sortPolarAngleIndices(vecFromCenter);
+        WB_Point[] polyPoints = new WB_Point[boundaryPoints.size() + 1];
+        for (int i = 0; i < boundaryPoints.size(); i++) {
+            polyPoints[i] = boundaryPoints.get(order[i]).toWB_Point();
+        }
+        polyPoints[polyPoints.length - 1] = polyPoints[0];
+        this.polygon = ZGeoFactory.wbgf.createSimplePolygon(polyPoints);
+    }
+
+    /**
+     * @return java.util.List<geometry.ZLine>
+     * @description record offset segment as block boundary
+     */
+    private void findOffsetAndJoints(WB_Polygon polygon, List<? extends ZLine> testLines) {
+        this.offsetSegmentsFromAtrium = new ArrayList<>();
+        this.jointsFromAtrium = new ArrayList<>();
+        for (int i = 0; i < polygon.getNumberSegments(); i++) {
+            boolean intersect = false;
+            for (ZLine testLine : testLines) {
+                if (ZGeoMath.checkWB_SegmentIntersect(testLine.toWB_Segment(), polygon.getSegment(i))) {
+                    intersect = true;
+                    break;
+                }
+            }
+            if (!intersect) {
+                offsetSegmentsFromAtrium.add(ZGeoMath.offsetWB_PolygonSegment(polygon, i, 5));
+            } else {
+                ZLine intersectOffset = ZGeoMath.offsetWB_PolygonSegment(polygon, i, 5);
+                jointsFromAtrium.add(intersectOffset.getPt0());
+                jointsFromAtrium.add(intersectOffset.getPt1());
+            }
         }
     }
 
     /* ------------- set & get (public) ------------- */
+
+    public void switchActiveControl() {
+        activeIndex = (activeIndex + 1) % controlPoints.size();
+    }
+
+    public void updateLength(double delta) {
+        controlPoints.get(activeIndex).updateDistOnEdge(delta);
+        extractBoundaryPoints();
+        createPolygon(vecFromCenter, boundaryPoints);
+        findOffsetAndJoints(polygon, center.getLinkedEdges());
+
+        System.out.println(controlPoints.get(activeIndex).distOnEdge);
+    }
+
+    public void updateWidth(double delta) {
+        controlPoints.get(activeIndex).updateDistFromEdge(delta);
+        extractBoundaryPoints();
+        createPolygon(vecFromCenter, boundaryPoints);
+        findOffsetAndJoints(polygon, center.getLinkedEdges());
+
+        System.out.println(controlPoints.get(activeIndex).distFromEdge);
+    }
 
     public void setCenter(TrafficNode center) {
         this.center = center;
@@ -100,28 +181,116 @@ public class Atrium {
         this.escalator = escalator;
     }
 
-    public void setPolygon(WB_Polygon polygon) {
-        this.polygon = polygon;
-    }
-
     public TrafficNode getCenter() {
         return center;
-    }
-
-    public Escalator getEscalator() {
-        return escalator;
     }
 
     public WB_Polygon getPolygon() {
         return polygon;
     }
 
+    public List<ZLine> getOffsetSegmentsFromAtrium() {
+        return offsetSegmentsFromAtrium;
+    }
+
+    public List<ZPoint> getJointsFromAtrium() {
+        return jointsFromAtrium;
+    }
+
+    public Escalator getEscalator() {
+        return escalator;
+    }
+
     /* ------------- draw ------------- */
 
     public void display(WB_Render3D render, PApplet app) {
+        app.strokeWeight(1);
         render.drawPolygonEdges2D(polygon);
-        for (ZLine line : splitLineFromAtrium) {
-            line.display(app);
+    }
+
+    public void displayActiveControl(PApplet app) {
+        app.strokeWeight(3);
+        controlPoints.get(activeIndex).display(app);
+    }
+
+    /* ------------- inner class ------------- */
+
+    private static class ControlPoint {
+        private int flag;
+        private ZPoint center;
+        private ZPoint moveDir;
+        private ZPoint oneEdgeVec = null;
+        private double distOnEdge;
+        private double distFromEdge = 5;
+        private ZPoint point;
+        private List<ZPoint> polyPoints;
+
+        // on edge
+        private ControlPoint(ZPoint center, ZPoint vec, double distOnEdge) {
+            this.flag = 0;
+            this.center = center;
+            this.moveDir = vec;
+            this.distOnEdge = distOnEdge;
+            System.out.println(distOnEdge);
+
+            this.point = this.center.add(moveDir.scaleTo(this.distOnEdge));
+            this.polyPoints = new ArrayList<>();
+            polyPoints.add(point.add(moveDir.rotate2D(Math.PI * 0.5).scaleTo(distFromEdge)));
+            polyPoints.add(point.add(moveDir.rotate2D(Math.PI * -0.5).scaleTo(distFromEdge)));
+        }
+
+        // at convex point
+        private ControlPoint(ZPoint center, ZPoint vec, ZPoint oneEdgeVec) {
+            this.flag = 1;
+            this.center = center;
+            this.moveDir = vec;
+            this.oneEdgeVec = oneEdgeVec;
+
+            double sin = Math.abs(this.oneEdgeVec.cross2D(moveDir));
+            this.point = this.center.add(moveDir.scaleTo(this.distFromEdge / sin));
+            this.polyPoints = new ArrayList<>();
+            polyPoints.add(this.point);
+        }
+
+        private void updateDistOnEdge(double delta) {
+            distOnEdge += delta;
+            if (flag == 0) {
+                this.point = this.center.add(moveDir.scaleTo(this.distOnEdge));
+                this.polyPoints = new ArrayList<>();
+                polyPoints.add(point.add(moveDir.rotate2D(Math.PI * 0.5).scaleTo(distFromEdge)));
+                polyPoints.add(point.add(moveDir.rotate2D(Math.PI * -0.5).scaleTo(distFromEdge)));
+            } else {
+                double sin = Math.abs(this.oneEdgeVec.cross2D(moveDir));
+                this.point = this.center.add(moveDir.scaleTo(this.distFromEdge / sin));
+                this.polyPoints = new ArrayList<>();
+                polyPoints.add(this.point);
+            }
+        }
+
+        private void updateDistFromEdge(double delta) {
+            distFromEdge += delta;
+            if (flag == 0) {
+                this.point = center.add(moveDir.scaleTo(this.distOnEdge));
+                this.polyPoints = new ArrayList<>();
+                polyPoints.add(point.add(moveDir.rotate2D(Math.PI * 0.5).scaleTo(distFromEdge)));
+                polyPoints.add(point.add(moveDir.rotate2D(Math.PI * -0.5).scaleTo(distFromEdge)));
+            } else {
+                double sin = Math.abs(this.oneEdgeVec.cross2D(moveDir));
+                this.point = center.add(moveDir.scaleTo(this.distFromEdge / sin));
+                this.polyPoints = new ArrayList<>();
+                polyPoints.add(this.point);
+            }
+        }
+
+        private ZPoint getPoint() {
+            return point;
+        }
+
+        private void display(PApplet app) {
+            if (polyPoints.size() == 2) {
+                app.line((float) polyPoints.get(0).x(), (float) polyPoints.get(0).y(), (float) polyPoints.get(1).x(), (float) polyPoints.get(1).y());
+            }
+            point.displayAsPoint(app, 5);
         }
     }
 }

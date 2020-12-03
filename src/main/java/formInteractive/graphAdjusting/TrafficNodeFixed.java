@@ -64,6 +64,11 @@ public class TrafficNodeFixed extends TrafficNode {
     }
 
     @Override
+    public void clearAtrium() {
+
+    }
+
+    @Override
     public List<ZPoint> getJoints() {
         return this.joints;
     }
@@ -80,6 +85,11 @@ public class TrafficNodeFixed extends TrafficNode {
 
     @Override
     public boolean hasAtrium() {
+        return false;
+    }
+
+    @Override
+    public boolean isAtriumActive() {
         return false;
     }
 

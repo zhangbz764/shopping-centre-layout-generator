@@ -5,7 +5,7 @@ import floors.Floor;
 import formInteractive.InputData;
 import formInteractive.SpacialFormGenerator;
 import processing.core.PApplet;
-import render.DisplayBasic;
+import render.ZDisplay;
 import render.JtsRender;
 import wblut.processing.WB_Render3D;
 
@@ -63,7 +63,6 @@ public class Test extends PApplet {
 
     public void draw() {
         background(255);
-
         gcam.begin2d();
         pushMatrix();
         scale(1, -1);
@@ -85,6 +84,7 @@ public class Test extends PApplet {
         rect(0, 0, 700, height);
         popStyle();
 
+        ZDisplay.drawAxis2D(this, 50);
         if (publicSpaceDraw) {
             publicSpaceGenerator.display(jtsRender, render, this);
         }
@@ -98,7 +98,7 @@ public class Test extends PApplet {
     }
 
     public void draw3D(JtsRender jtsRender, WB_Render3D render, PApplet app) {
-        DisplayBasic.drawAxis(this, 50);
+        ZDisplay.drawAxis3D(this, 50);
         if (floorDraw) {
             pushMatrix();
             for (Floor floor : floors) {
@@ -206,6 +206,12 @@ public class Test extends PApplet {
                     f.selectShop(mouseX, -1 * mouseY + height);
                 }
             }
+        }
+        if (publicSpaceAdjust && !floorAdjust && mouseButton == LEFT) {
+            publicSpaceGenerator.atriumEdit(mouseX, -1 * mouseY + height);
+        }
+        if (publicSpaceAdjust && !floorAdjust && mouseButton == RIGHT) {
+            publicSpaceGenerator.atriumEditEnd();
         }
     }
 

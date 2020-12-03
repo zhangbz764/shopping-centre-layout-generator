@@ -330,7 +330,7 @@ public class Floor {
 
     public void display(WB_Render3D render, JtsRender jtsRender, PApplet app) {
         displayBlock(jtsRender, app);
-        displaySkeleton(app);
+        //displaySkeleton(app);
         displayGraph(render, app);
         displayShop(render, app);
         displaySelected(render, app);
@@ -400,8 +400,6 @@ public class Floor {
                 + "\n" + "ATRIUM NUMBER : " + atriumNum
                 + "\n" + "ESCALATOR NUMBER : " + escalatorNum
                 + "\n" + "EVACUATION NUMBER : " + evacuationStairNum;
-
-
     }
 
 

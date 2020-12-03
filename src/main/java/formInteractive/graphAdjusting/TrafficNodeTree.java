@@ -23,6 +23,7 @@ public class TrafficNodeTree extends TrafficNode {
     private final WB_Polygon boundary;
     private List<ZPoint> joints;  // join points on bisectors
     private Atrium atrium;
+    private boolean atriumActive;
 
     /* ------------- constructor ------------- */
 
@@ -73,21 +74,7 @@ public class TrafficNodeTree extends TrafficNode {
                 }
             }
         } else {
-            if (this.getNeighbors() != null && this.getNeighbors().size() != 0) {
-                this.joints = new ArrayList<>();
-                if (this.isEnd()) {  // only has 1 neighbor, make its bisectors to an square cap
-                    ZPoint reverse = this.sub(this.getNeighbors().get(0)).unit();
-                    joints.add(this.add(reverse.rotate2D(Math.PI / 4).scaleTo(super.getRegionR())));
-                    joints.add(this.add(reverse.rotate2D(Math.PI / -4).scaleTo(super.getRegionR())));
-                } else {  // 2 or more neighbors, re-order vectors and get each angular bisector
-                    ZPoint[] order = ZGeoMath.sortPolarAngle(this.getVecUnitToNeighbors());
-                    for (int i = 0; i < order.length; i++) {
-                        ZPoint bisector = ZGeoMath.getAngleBisectorOrdered(order[i], order[(i + 1) % order.length]);
-                        double sin = Math.abs(order[i].cross2D(bisector));
-                        joints.add(this.add(bisector.scaleTo(super.getRegionR() / sin)));
-                    }
-                }
-            }
+            this.joints = atrium.getJointsFromAtrium();
         }
     }
 
@@ -109,8 +96,6 @@ public class TrafficNodeTree extends TrafficNode {
 //        }
 //    }
 
-    // TODO: 2020/11/15 中庭
-
     /**
      * @return void
      * @description initialize an atrium
@@ -125,6 +110,11 @@ public class TrafficNodeTree extends TrafficNode {
     }
 
     @Override
+    public void clearAtrium() {
+        this.atrium = null;
+    }
+
+    @Override
     public List<ZPoint> getJoints() {
         return this.joints;
     }
@@ -134,6 +124,7 @@ public class TrafficNodeTree extends TrafficNode {
         return "TrafficNodeTree";
     }
 
+    // ************ about atrium ************
     @Override
     public Atrium getAtrium() {
         return atrium;
@@ -141,7 +132,32 @@ public class TrafficNodeTree extends TrafficNode {
 
     @Override
     public boolean hasAtrium() {
-        return this.atrium == null;
+        return this.atrium != null;
+    }
+
+    @Override
+    public void setAtriumActive(boolean active) {
+        this.atriumActive = active;
+    }
+
+    @Override
+    public boolean isAtriumActive() {
+        return atriumActive;
+    }
+
+    @Override
+    public void switchAtriumControl() {
+        atrium.switchActiveControl();
+    }
+
+    @Override
+    public void updateAtriumLength(double delta) {
+        atrium.updateLength(delta);
+    }
+
+    @Override
+    public void updateAtriumWidth(double delta) {
+        atrium.updateWidth(delta);
     }
 
     /* ------------- draw -------------*/
@@ -160,8 +176,15 @@ public class TrafficNodeTree extends TrafficNode {
         if (this.atrium != null) {
             app.pushStyle();
             app.noFill();
-            app.stroke(0, 0, 255);
-            this.atrium.display(render, app);
+            if (atriumActive) {
+                app.stroke(255, 0, 0);
+                this.atrium.display(render, app);
+                app.stroke(0, 0, 255);
+                this.atrium.displayActiveControl(app);
+            } else {
+                app.stroke(255, 0, 0);
+                this.atrium.display(render, app);
+            }
             app.popStyle();
         }
     }

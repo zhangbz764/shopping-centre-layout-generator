@@ -10,6 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="commercial_street" target="7" />
       <module name="moduleTest" target="1.5" />
       <module name="shopping_mall" target="7" />
       <module name="untitled" target="7" />

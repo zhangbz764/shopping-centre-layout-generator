@@ -61,7 +61,7 @@ public class TestPolySplit extends PApplet {
         }
         index = count % poly.getNumberSegments();
         println(index);
-        offset = ZGeoMath.offsetOnePolySegment(poly, index + 1, ((index + 1) % poly.getNumberSegments()) + 1, 30);
+        offset = ZGeoMath.offsetWB_PolygonSegment(poly, index, 30);
     }
 
     public void draw() {
@@ -94,7 +94,7 @@ public class TestPolySplit extends PApplet {
     public void mouseClicked() {
         count++;
         index = count % poly.getNumberSegments();
-        offset = ZGeoMath.offsetOnePolySegment(poly, index + 1, ((index + 1) % poly.getNumberSegments()) + 1, 30);
+        offset = ZGeoMath.offsetWB_PolygonSegment(poly, index, 30);
     }
 
     public void mouseDragged() {

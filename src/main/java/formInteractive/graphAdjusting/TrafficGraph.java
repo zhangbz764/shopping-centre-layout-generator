@@ -30,6 +30,7 @@ public class TrafficGraph {
     // nodes and edges
     private final List<TrafficNode> fixedNodes, treeNodes;
     private List<ZEdge> fixedEdges, treeEdges;
+    private TrafficNode selectedNode;
 
     /* ------------- constructor ------------- */
 
@@ -122,43 +123,27 @@ public class TrafficGraph {
 
     public void resetActive() {
         for (TrafficNode n : fixedNodes) {
-            n.setActivate(false);
+            n.setActive(false);
         }
         for (TrafficNode n : treeNodes) {
-            n.setActivate(false);
+            n.setActive(false);
         }
     }
 
     public void setTreeNode(int pointerX, int pointerY) {
         for (TrafficNode n : treeNodes) {
             if (n.isMoused(pointerX, pointerY)) {
-                n.setActivate(true);
+                n.setActive(true);
                 n.setLastPosition(n.x(), n.y(), n.z());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
             }
-            if (n.isActivate()) {
+            if (n.isActive()) {
                 n.setLastPosition(n.x(), n.y(), n.z());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
-            }
-        }
-    }
-
-    public void addAtrium(int pointerX, int pointerY) {
-        for (TrafficNode n : treeNodes) {
-            if (n.isMoused(pointerX, pointerY)) {
-                n.setAtrium();
-            }
-        }
-    }
-
-    public void setAtrium() {
-        for (TrafficNode n : treeNodes) {
-            if (n.getAtrium() != null) {
-                n.setAtrium();
             }
         }
     }
@@ -166,13 +151,13 @@ public class TrafficGraph {
     public void setFixedNode(int pointerX, int pointerY) {
         for (TrafficNode n : fixedNodes) {
             if (n.isMoused(pointerX, pointerY)) {
-                n.setActivate(true);
+                n.setActive(true);
                 n.setLastPosition(n.x(), n.y(), n.z());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
             }
-            if (n.isActivate()) {
+            if (n.isActive()) {
                 n.setLastPosition(n.x(), n.y(), n.z());
                 n.setByRestriction(pointerX, pointerY);
                 init();
@@ -187,16 +172,6 @@ public class TrafficGraph {
             treeNodes.add(tree);
             init();
         }
-
-    }
-
-    public void removeTreeNode(int pointerX, int pointerY) {
-        for (int i = 0; i < treeNodes.size(); i++) {
-            if (treeNodes.get(i).isMoused(pointerX, pointerY)) {
-                treeNodes.remove(i--);
-                init();
-            }
-        }
     }
 
     public void addFixedNode(int pointerX, int pointerY, WB_Polygon boundary) {
@@ -206,11 +181,22 @@ public class TrafficGraph {
         init();
     }
 
+    public void removeTreeNode(int pointerX, int pointerY) {
+        for (int i = 0; i < treeNodes.size(); i++) {
+            if (treeNodes.get(i).isMoused(pointerX, pointerY)) {
+                treeNodes.remove(i);
+                init();
+                break;
+            }
+        }
+    }
+
     public void removeFixedNode(int pointerX, int pointerY) {
         for (int i = 0; i < fixedNodes.size(); i++) {
             if (fixedNodes.get(i).isMoused(pointerX, pointerY)) {
-                fixedNodes.remove(i--);
+                fixedNodes.remove(i);
                 init();
+                break;
             }
         }
     }
@@ -220,13 +206,98 @@ public class TrafficGraph {
             if (fixedNode.isMoused(pointerX, pointerY)) {
                 fixedNode.updateRegionR(r);
                 init();
+                break;
             }
         }
         for (TrafficNode treeNode : treeNodes) {
             if (treeNode.isMoused(pointerX, pointerY)) {
                 treeNode.updateRegionR(r);
                 init();
+                break;
             }
+        }
+    }
+
+    public void setAtrium() {
+        for (TrafficNode n : treeNodes) {
+            if (n.getAtrium() != null) {
+                n.setAtrium();
+            }
+        }
+    }
+
+    /**
+    * @return void
+    * @description add or remove an atrium at a tree node
+    */
+    public void addOrRemoveAtrium(int pointerX, int pointerY) {
+        for (TrafficNode n : treeNodes) {
+            if (n.isMoused(pointerX, pointerY)) {
+                if (!n.hasAtrium()) {
+                    n.setAtrium();
+                } else {
+                    n.clearAtrium();
+                }
+                init();
+                break;
+            }
+        }
+    }
+
+    /**
+    * @return void
+    * @description choose a node to adjust its atrium shape
+    */
+    public void chooseAtrium(int pointerX, int pointerY) {
+        if (selectedNode == null) {
+            // find which is selected
+            for (TrafficNode n : treeNodes) {
+                if (n.isMoused(pointerX, pointerY)) {
+                    if (n.hasAtrium()) {
+                        this.selectedNode = n;
+                        selectedNode.setAtriumActive(true);
+                    }
+                    break;
+                }
+            }
+        } else {
+            // if selected node exists
+            if (selectedNode.isMoused(pointerX, pointerY)) {
+                selectedNode.switchAtriumControl();
+            }
+        }
+    }
+
+    /**
+    * @return void
+    * @description clear the selected node
+    */
+    public void clearSelectAtrium() {
+        if (selectedNode != null) {
+            selectedNode.setAtriumActive(false);
+            selectedNode = null;
+        }
+    }
+
+    /**
+    * @return void
+    * @description update the length (along graph edge)
+    */
+    public void updateSelectedAtriumLength(double delta) {
+        if (selectedNode != null) {
+            selectedNode.updateAtriumLength(delta);
+            init();
+        }
+    }
+
+    /**
+    * @return void
+    * @description update the width (vertical to graph edge)
+    */
+    public void updateSelectedAtriumWidth(double delta) {
+        if (selectedNode != null) {
+            selectedNode.updateAtriumWidth(delta);
+            init();
         }
     }
 
@@ -238,7 +309,7 @@ public class TrafficGraph {
      */
     public void display(WB_Render3D render, PApplet app) {
         app.pushStyle();
-        app.pushStyle();
+        // draw edges
         app.stroke(24, 169, 222);
         app.strokeWeight(2);
         for (ZEdge e : treeEdges) {
@@ -248,7 +319,8 @@ public class TrafficGraph {
         for (ZEdge e : fixedEdges) {
             e.display(app);
         }
-        app.popStyle();
+        // draw nodes
+        app.noStroke();
         app.fill(255, 97, 136);
         for (TrafficNode n : treeNodes) {
             n.displayAsPoint(app);

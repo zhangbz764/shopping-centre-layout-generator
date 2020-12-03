@@ -18,7 +18,7 @@ import java.util.List;
  */
 public abstract class TrafficNode extends ZNode {
     private double regionR = 18;  // affect radius
-    private boolean activate = false;
+    private boolean active = false;
     private double[] lastPosition;
 
     /* ------------- constructor ------------- */
@@ -47,13 +47,28 @@ public abstract class TrafficNode extends ZNode {
         return pointerX > super.x() - super.r() && pointerX < super.x() + super.r() && pointerY > super.y() - super.r() && pointerY < super.y() + super.r();
     }
 
-    public void setActivate(boolean activate) {
-        this.activate = activate;
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
-    public boolean isActivate() {
-        return activate;
+    public boolean isActive() {
+        return active;
     }
+
+    // only in tree node
+    public void setAtriumActive(boolean active) {
+
+    }
+
+    public abstract boolean isAtriumActive();
+
+    public void switchAtriumControl() {
+
+    }
+
+    public void updateAtriumLength(double delta){}
+
+    public void updateAtriumWidth(double delta){}
 
     /* ------------- set & get (public) ------------- */
 
@@ -80,6 +95,8 @@ public abstract class TrafficNode extends ZNode {
     }
 
     public abstract void setAtrium();
+
+    public abstract void clearAtrium();
 
     public abstract Atrium getAtrium();
 

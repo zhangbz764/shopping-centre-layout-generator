@@ -131,8 +131,32 @@ public class SpacialFormGenerator {
         }
         // add an atrium to treeNode
         if (app.key == 'e' || app.key == 'E') {
-            floorGraph.addAtrium(pointerX, pointerY);
+            floorGraph.addOrRemoveAtrium(pointerX, pointerY);
         }
+        // increase atrium's length along edge
+        if (app.key == 'j' || app.key == 'J') {
+            floorGraph.updateSelectedAtriumLength(1);
+        }
+        // decrease atrium's length along edge
+        if (app.key == 'k' || app.key == 'K') {
+            floorGraph.updateSelectedAtriumLength(-1);
+        }
+        // increase atrium's width in vertical direction
+        if (app.key == 'u' || app.key == 'U') {
+            floorGraph.updateSelectedAtriumWidth(1);
+        }
+        // decrease atrium's width in vertical direction
+        if (app.key == 'i' || app.key == 'I') {
+            floorGraph.updateSelectedAtriumWidth(-1);
+        }
+    }
+
+    public void atriumEdit(int pointerX, int pointerY) {
+        floorGraph.chooseAtrium(pointerX, pointerY);
+    }
+
+    public void atriumEditEnd() {
+        floorGraph.clearSelectAtrium();
     }
 
     /* ------------- draw ------------- */

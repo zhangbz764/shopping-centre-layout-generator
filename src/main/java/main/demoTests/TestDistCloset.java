@@ -4,10 +4,7 @@ import geometry.ZLine;
 import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
-import wblut.geom.WB_GeometryOp;
-import wblut.geom.WB_Point;
-import wblut.geom.WB_PolyLine;
-import wblut.geom.WB_Polygon;
+import wblut.geom.*;
 import wblut.processing.WB_Render;
 
 /**
@@ -15,7 +12,7 @@ import wblut.processing.WB_Render;
  * @project shopping_mall
  * @date 2020/10/29
  * @time 15:34
- * @description 测试hemesh里的最近点计算、线段trim和extend计算
+ * @description 测试hemesh里的最近点计算、线段trim和extend计算，op里的检测线段二维相交
  */
 public class TestDistCloset extends PApplet {
     public void settings() {
@@ -45,7 +42,6 @@ public class TestDistCloset extends PApplet {
         pl = new WB_PolyLine(pts2);
 
         closet = WB_GeometryOp.getClosestPoint2D(origin, pl);
-        println(WB_GeometryOp.contains2D(origin, poly));
     }
 
     public void draw() {
@@ -57,6 +53,9 @@ public class TestDistCloset extends PApplet {
 
         ZLine seg = new ZLine(new ZPoint(100, 900), new ZPoint(mouseX, mouseY));
         ZLine extend = ZGeoMath.extendSegmentToPolygon(seg.toLinePD(), poly);
+
+        println(ZGeoMath.checkWB_SegmentIntersect(poly.getSegment(3),new WB_Segment(new WB_Point(100, 900),new WB_Point(mouseX, mouseY))));
+//        println(WB_GeometryOp.checkIntersection2DProper(poly.getPoint(3), poly.getPoint(4), new WB_Point(100, 900), new WB_Point(mouseX, mouseY)));
 
         if (extend != null) {
             extend.display(this);
