@@ -27,5 +27,8 @@ public class Main {
 
         /* 测试jts的convexhull、找凹点、直线多边形交点及排序 */
 //        PApplet.main("main.demoTests.TestConvexHull");
+
+        /* 测试campskeleton带洞 */
+//        PApplet.main("main.demoTests.TestCampSkeleton");
     }
 }

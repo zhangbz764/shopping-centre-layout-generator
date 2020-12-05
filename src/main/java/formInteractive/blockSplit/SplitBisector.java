@@ -71,7 +71,7 @@ public class SplitBisector implements Split {
     @Override
     public WB_Polygon getPublicBlockPoly() {
         if (this.publicBlockPoly != null) {
-            return ZTransform.JtsPolygonToWB_Polygon(this.publicBlockPoly);
+            return ZTransform.jtsPolygonToWB_Polygon(this.publicBlockPoly);
         } else {
             throw new NullPointerException("can't find public space block polygon");
         }
@@ -82,7 +82,7 @@ public class SplitBisector implements Split {
         if (this.shopBlockPolys != null && this.shopBlockPolys.size() != 0) {
             List<WB_Polygon> result = new ArrayList<>();
             for (Polygon p : shopBlockPolys) {
-                result.add(ZTransform.JtsPolygonToWB_Polygon(p));
+                result.add(ZTransform.jtsPolygonToWB_Polygon(p));
             }
             return result;
         } else {
@@ -132,6 +132,7 @@ public class SplitBisector implements Split {
         }
         allPolys.remove(publicBlockPoly);
         this.shopBlockPolys = (List<Polygon>) allPolys;
+        System.out.println("shopBlockPolys inner" + shopBlockPolys.get(0).getNumInteriorRing());
     }
 
     /**
@@ -224,21 +225,21 @@ public class SplitBisector implements Split {
             } else {
                 if (start.getNeighbors().size() == 1) {
                     ZLine cap = new ZLine(start.getJoints().get(0), start.getJoints().get(1));
-                    ZLine extend1 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt1(), cap.getDirection()}, boundary);
-                    ZLine extend2 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt0(), cap.getDirection().scaleTo(-1)}, boundary);
+//                    ZLine extend1 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt1(), cap.getDirection()}, boundary);
+//                    ZLine extend2 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt0(), cap.getDirection().scaleTo(-1)}, boundary);
                     connections.add(cap);
-                    assert extend1 != null && extend2 != null;
-                    connections.add(extend1.scaleTo(1.1));
-                    connections.add(extend2.scaleTo(1.1));
+//                    assert extend1 != null && extend2 != null;
+//                    connections.add(extend1.scaleTo(1.1));
+//                    connections.add(extend2.scaleTo(1.1));
                 }
                 if (end.getNeighbors().size() == 1) {
                     ZLine cap = new ZLine(end.getJoints().get(0), end.getJoints().get(1));
-                    ZLine extend1 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt1(), cap.getDirection()}, boundary);
-                    ZLine extend2 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt0(), cap.getDirection().scaleTo(-1)}, boundary);
+//                    ZLine extend1 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt1(), cap.getDirection()}, boundary);
+//                    ZLine extend2 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt0(), cap.getDirection().scaleTo(-1)}, boundary);
                     connections.add(cap);
-                    assert extend1 != null && extend2 != null;
-                    connections.add(extend1.scaleTo(1.1));
-                    connections.add(extend2.scaleTo(1.1));
+//                    assert extend1 != null && extend2 != null;
+//                    connections.add(extend1.scaleTo(1.1));
+//                    connections.add(extend2.scaleTo(1.1));
                 }
             }
         }
@@ -256,6 +257,7 @@ public class SplitBisector implements Split {
             }
         }
 
+        // add atrium offset edges
         for (TrafficNode treeNode : graph.getTreeNodes()) {
             if (treeNode.getAtrium() != null) {
                 connections.addAll(treeNode.getAtrium().getOffsetSegmentsFromAtrium());

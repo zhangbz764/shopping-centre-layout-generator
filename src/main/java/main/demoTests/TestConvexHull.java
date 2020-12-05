@@ -69,7 +69,7 @@ public class TestConvexHull extends PApplet {
         stroke(0);
 
         // 测试线与多段线交点
-        WB_Polygon newPoly = ZTransform.JtsPolygonToWB_Polygon((Polygon) polys.get(0));
+        WB_Polygon newPoly = ZTransform.jtsPolygonToWB_Polygon((Polygon) polys.get(0));
         ZLine ray = new ZLine(new ZPoint(650, 250), new ZPoint(mouseX, mouseY));
         ray.display(this);
         List<ZPoint> inters = ZGeoMath.rayPolygonIntersect2D(ray.toLinePD(), newPoly);

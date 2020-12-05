@@ -6,6 +6,7 @@ import org.locationtech.jts.operation.buffer.BufferOp;
 import org.locationtech.jts.operation.buffer.BufferParameters;
 import processing.core.PApplet;
 import render.JtsRender;
+import transform.ZTransform;
 
 /**
  * @author ZHANG Bai-zhou zhangbz
@@ -21,7 +22,7 @@ public class TestGeoRelation extends PApplet {
 
     GeometryFactory gf = new GeometryFactory();
     Polygon poly;
-    LineString ls ;
+    LineString ls;
     Geometry buffer;
     ZPoint mouse;
     JtsRender jrender;
@@ -30,21 +31,22 @@ public class TestGeoRelation extends PApplet {
         jrender = new JtsRender(this);
 
         Coordinate[] vertices = new Coordinate[6];
-        vertices[0] = new Coordinate(100, 100);
-        vertices[1] = new Coordinate(700, 100);
-        vertices[2] = new Coordinate(800, 400);
-        vertices[3] = new Coordinate(500, 800);
-        vertices[4] = new Coordinate(100, 600);
-        vertices[5] = new Coordinate(100, 100);
+        vertices[0] = new Coordinate(100, 100, 0);
+        vertices[1] = new Coordinate(700, 100, 0);
+        vertices[2] = new Coordinate(800, 400, 0);
+        vertices[3] = new Coordinate(500, 800, 0);
+        vertices[4] = new Coordinate(100, 600, 0);
+        vertices[5] = new Coordinate(100, 100, 0);
 
         Coordinate[] vertices2 = new Coordinate[5];
-        vertices2[0] = new Coordinate(100, 100);
-        vertices2[1] = new Coordinate(700, 100);
-        vertices2[2] = new Coordinate(800, 400);
-        vertices2[3] = new Coordinate(500, 800);
-        vertices2[4] = new Coordinate(100, 600);
+        vertices2[0] = new Coordinate(100, 100, 0);
+        vertices2[1] = new Coordinate(700, 100, 0);
+        vertices2[2] = new Coordinate(800, 400, 0);
+        vertices2[3] = new Coordinate(500, 800, 0);
+        vertices2[4] = new Coordinate(100, 600, 0);
 
         poly = gf.createPolygon(vertices);
+        println(ZTransform.jtsPolygonToWB_Polygon(poly).getNormal().zd());
         ls = gf.createLineString(vertices2);
 
         BufferOp bufferOp = new BufferOp(poly);
@@ -60,6 +62,9 @@ public class TestGeoRelation extends PApplet {
         jrender.drawGeometry(buffer);
         mouse.set(mouseX, mouseY);
         mouse.displayAsPoint(this);
+    }
+
+    public void mouseClicked() {
         println(poly.contains(mouse.toJtsPoint()));
     }
 

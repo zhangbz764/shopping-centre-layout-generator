@@ -48,7 +48,7 @@ public class Test extends PApplet {
         input.loadData(path, scale);
         publicSpaceGenerator = new SpacialFormGenerator(input);
 
-        floors = new Floor[3];
+        floors = new Floor[2];
         for (int i = 0; i < floors.length; i++) {
             println("generating floor " + (i + 1));
             if (i == 0) {
