@@ -1,6 +1,6 @@
 package formInteractive.graphAdjusting;
 
-import formInteractive.spacialElements.Atrium;
+import formInteractive.graphAdjusting.spacialElements.Atrium;
 import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
@@ -44,10 +44,10 @@ public class TrafficNodeTree extends TrafficNode {
      * @description set node location restricted in the boundary polygon
      */
     @Override
-    public void setByRestriction(double x, double y) {
-        WB_Point point = new WB_Point(x, y);
+    public void setByRestriction(double pointerX, double pointerY) {
+        WB_Point point = new WB_Point(pointerX, pointerY);
         if (WB_GeometryOp.contains2D(point, boundary) && WB_GeometryOp.getDistance2D(point, boundary) > this.getRegionR()) {
-            this.set(x, y);
+            this.set(pointerX, pointerY);
         }
     }
 

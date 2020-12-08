@@ -1,6 +1,6 @@
 package formInteractive.graphAdjusting;
 
-import formInteractive.spacialElements.Atrium;
+import formInteractive.graphAdjusting.spacialElements.Atrium;
 import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
@@ -42,8 +42,8 @@ public class TrafficNodeFixed extends TrafficNode {
      * @description set location to the closest point on boundary polygon
      */
     @Override
-    public void setByRestriction(double mouseX, double mouseY) {
-        WB_Point point = new WB_Point(mouseX, mouseY);
+    public void setByRestriction(double pointerX, double pointerY) {
+        WB_Point point = new WB_Point(pointerX, pointerY);
         this.set(WB_GeometryOp2D.getClosestPoint2D(point, ZTransform.WB_PolygonToPolyLine(boundary)));
     }
 

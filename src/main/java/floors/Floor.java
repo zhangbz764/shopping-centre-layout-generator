@@ -3,6 +3,7 @@ package floors;
 import formInteractive.blockSplit.Split;
 import formInteractive.blockSplit.SplitBisector;
 import formInteractive.graphAdjusting.TrafficGraph;
+import formInteractive.graphAdjusting.TrafficNode;
 import geometry.*;
 import math.ZGeoMath;
 import processing.core.PApplet;
@@ -85,6 +86,12 @@ public class Floor {
         this.selected2 = new ArrayList<>();
     }
 
+    /**
+     * update shop split
+     *
+     * @param mainGraph the main adjustable TrafficGraph
+     * @return void
+     */
     public void updateSplit(TrafficGraph mainGraph) {
         if (mainGraph.update) {
             setTrafficGraph(mainGraph);
@@ -105,8 +112,10 @@ public class Floor {
     /* ------------- generate & catch information ------------- */
 
     /**
+     * get data from split polygon
+     *
+     * @param
      * @return void
-     * @description get data from split polygon
      */
     private void catchSplit() {
         this.shopBlock = blockSplit.getShopBlockPolys();
@@ -121,8 +130,10 @@ public class Floor {
     }
 
     /**
+     * generate shop from voronoi
+     *
+     * @param
      * @return void
-     * @description generate shop from voronoi
      */
     private void initShop() {
         // shop generator
@@ -167,8 +178,10 @@ public class Floor {
     }
 
     /**
+     * calculate all statistics
+     *
+     * @param
      * @return void
-     * @description calculate statistics
      */
     private void getStatistics() {
         this.totalArea = Math.abs(boundary.getSignedArea()) / (scale * scale);
@@ -188,12 +201,15 @@ public class Floor {
         for (ZEdge e : trafficGraph.getFixedEdges()) {
             mainTrafficLength = mainTrafficLength + e.getLength() / scale;
         }
+
         getShopStatistics();
     }
 
     /**
+     * calculate statistics of shop
+     *
+     * @param
      * @return void
-     * @description calculate statistics
      */
     public void getShopStatistics() {
         this.shopNum = allInitCells.size();
@@ -206,15 +222,18 @@ public class Floor {
             }
             shopAreas.add(cellArea);
         }
-//        this.maxShopArea = Collections.max(shopAreas);
-//        this.minShopArea = Collections.min(shopAreas);
+        this.maxShopArea = Collections.max(shopAreas);
+        this.minShopArea = Collections.min(shopAreas);
     }
 
     /* ------------- select & update ------------- */
 
     /**
+     * select shop to union by mouse
+     *
+     * @param pointerX x
+     * @param pointerY y
      * @return void
-     * @description select shop to union by mouse
      */
     public void selectShop(int pointerX, int pointerY) {
         WB_Point pointer = new WB_Point(pointerX, pointerY);
@@ -247,16 +266,20 @@ public class Floor {
     }
 
     /**
+     * clear select
+     *
+     * @param
      * @return void
-     * @description clear select
      */
     public void clearSelect() {
         this.selected2.clear();
     }
 
     /**
+     * union selected polygon
+     *
+     * @param
      * @return void
-     * @description union polygon, generate new mesh
      */
     public void updateShop() {
         if (selected2.size() > 1) {
@@ -378,11 +401,21 @@ public class Floor {
     }
 
     public void displaySkeleton(PApplet app) {
+        app.pushStyle();
         for (ZSkeleton skeleton : skeletons) {
-            skeleton.display(app);
+//            skeleton.display(app);
+            skeleton.displayTopEdges(app);
+            skeleton.displayExtendedRidges(app);
         }
+        app.popStyle();
     }
 
+    /**
+     * convert statistics to String
+     *
+     * @param
+     * @return java.lang.String
+     */
     public String getTextInfo() {
         return floorNum + " F"
                 + "\n"
@@ -394,6 +427,12 @@ public class Floor {
                 + "\n" + "MIN SHOP AREA : " + String.format("%.2f", minShopArea) + " m2";
     }
 
+    /**
+     * convert statistics to String
+     *
+     * @param
+     * @return java.lang.String
+     */
     public String getTextInfo2() {
         return "\n"
                 + "\n" + "TRAFFIC LENGTH : " + String.format("%.2f", mainTrafficLength) + " m"

@@ -38,9 +38,11 @@ public class SpacialFormGenerator {
     /* ------------- initialize & get (public) ------------- */
 
     /**
-     * @return void
-     * @description initialize generator with input file & tree graph
-     */
+    * initialize generator with input file & tree graph
+    *
+    * @param input input geometry
+    * @return void
+    */
     public void init(InputData input) {
         // catch input data
         this.input = input;
@@ -77,9 +79,12 @@ public class SpacialFormGenerator {
     /* ------------- mouse & key interaction at TRAFFIC GRAPH STEP ------------- */
 
     /**
-     * @return void
-     * @description update tree node location and graph, split polygon
-     */
+    * update tree node location and graph, split polygon
+    *
+    * @param pointerX x
+    * @param pointerY y
+    * @return void
+    */
     public void dragUpdate(int pointerX, int pointerY) {
         mainGraph.setTreeNode(pointerX, pointerY);
         mainGraph.setFixedNode(pointerX, pointerY);
@@ -88,18 +93,24 @@ public class SpacialFormGenerator {
     }
 
     /**
-     * @return void
-     * @description reset fixed node to not active
-     */
+    * reset fixed node to not active
+    *
+    * @param
+    * @return void
+    */
     public void releaseUpdate() {
         mainGraph.resetActive();
         floorGraph.resetActive();
     }
 
     /**
-     * @return void
-     * @description all keyboard interaction
-     */
+    * all keyboard interaction
+    *
+    * @param pointerX x
+    * @param pointerY y
+    * @param app PApplet
+    * @return void
+    */
     public void keyUpdate(int pointerX, int pointerY, PApplet app) {
         // add a TrafficNode to graph
         if (app.key == 'a' || app.key == 'A') {
@@ -141,20 +152,33 @@ public class SpacialFormGenerator {
         if (app.key == 'k' || app.key == 'K') {
             floorGraph.updateSelectedAtriumLength(-1);
         }
-        // increase atrium's width in vertical direction
+        // increase atrium's width perpendicular to linked edge
         if (app.key == 'u' || app.key == 'U') {
             floorGraph.updateSelectedAtriumWidth(1);
         }
-        // decrease atrium's width in vertical direction
+        // decrease atrium's width perpendicular to linked edge
         if (app.key == 'i' || app.key == 'I') {
             floorGraph.updateSelectedAtriumWidth(-1);
         }
     }
 
+    /**
+    * start editing atrium
+    *
+    * @param pointerX x
+    * @param pointerY y
+    * @return void
+    */
     public void atriumEdit(int pointerX, int pointerY) {
         floorGraph.chooseAtrium(pointerX, pointerY);
     }
 
+    /**
+    * atrium editing end
+    *
+    * @param
+    * @return void
+    */
     public void atriumEditEnd() {
         floorGraph.clearSelectAtrium();
     }

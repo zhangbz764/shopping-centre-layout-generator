@@ -6,6 +6,7 @@ import math.ZGeoMath;
 import math.ZMath;
 import org.locationtech.jts.geom.LineString;
 import processing.core.PApplet;
+import wblut.geom.WB_GeometryFactory;
 import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render3D;
@@ -56,8 +57,10 @@ public class TrafficGraph {
     /* ------------- initialize & get (public) ------------- */
 
     /**
+     * initialize adjacency matrix and tree, including fixed nodes if necessary
+     *
+     * @param
      * @return void
-     * @description initialize adjacency matrix and tree, including fixed nodes if necessary
      */
     public void init() {
         update = true; // changed
@@ -96,6 +99,12 @@ public class TrafficGraph {
         return fixedEdges;
     }
 
+    /**
+     * clear all fixed nodes
+     *
+     * @param
+     * @return void
+     */
     public void clearFixed() {
         for (TrafficNode fixed : fixedNodes) {
             fixed.getNeighbors().get(0).removeNeighbor(fixed);
@@ -105,8 +114,10 @@ public class TrafficGraph {
     }
 
     /**
+     * transform all edges to a list of LineStrings
+     *
+     * @param
      * @return java.util.List<org.locationtech.jts.geom.LineString>
-     * @description transform all edges to a list of LineStrings
      */
     public List<LineString> toLineStrings() {
         List<LineString> ls = new ArrayList<>();
@@ -121,6 +132,12 @@ public class TrafficGraph {
 
     /* ------------- move, add & remove (public) ------------- */
 
+    /**
+     * reset all nodes' status
+     *
+     * @param
+     * @return void
+     */
     public void resetActive() {
         for (TrafficNode n : fixedNodes) {
             n.setActive(false);
@@ -130,6 +147,13 @@ public class TrafficGraph {
         }
     }
 
+    /**
+     * set a tree node by restriction (should be within the boundary polygon)
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return void
+     */
     public void setTreeNode(int pointerX, int pointerY) {
         for (TrafficNode n : treeNodes) {
             if (n.isMoused(pointerX, pointerY)) {
@@ -148,6 +172,13 @@ public class TrafficGraph {
         }
     }
 
+    /**
+     * set a tree node by restriction (should be on the boundary edges)
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return void
+     */
     public void setFixedNode(int pointerX, int pointerY) {
         for (TrafficNode n : fixedNodes) {
             if (n.isMoused(pointerX, pointerY)) {
@@ -166,6 +197,14 @@ public class TrafficGraph {
         }
     }
 
+    /**
+     * add a tree node by restriction (should be within the boundary polygon)
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @param boundary boundary polygon
+     * @return void
+     */
     public void addTreeNode(int pointerX, int pointerY, WB_Polygon boundary) {
         TrafficNodeTree tree = new TrafficNodeTree(pointerX, pointerY, boundary);
         if (WB_GeometryOp.contains2D(tree.toWB_Point(), boundary) && WB_GeometryOp.getDistance2D(tree.toWB_Point(), boundary) > tree.getRegionR()) {
@@ -174,6 +213,14 @@ public class TrafficGraph {
         }
     }
 
+    /**
+     * add a fixed node by restriction (should be on the boundary edges)
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @param boundary boundary polygon
+     * @return void
+     */
     public void addFixedNode(int pointerX, int pointerY, WB_Polygon boundary) {
         TrafficNodeFixed fixed = new TrafficNodeFixed(pointerX, pointerY, boundary);
         fixed.setByRestriction(pointerX, pointerY);
@@ -181,6 +228,13 @@ public class TrafficGraph {
         init();
     }
 
+    /**
+     * remove a tree node
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return void
+     */
     public void removeTreeNode(int pointerX, int pointerY) {
         for (int i = 0; i < treeNodes.size(); i++) {
             if (treeNodes.get(i).isMoused(pointerX, pointerY)) {
@@ -191,6 +245,13 @@ public class TrafficGraph {
         }
     }
 
+    /**
+     * remove a fixed node
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return void
+     */
     public void removeFixedNode(int pointerX, int pointerY) {
         for (int i = 0; i < fixedNodes.size(); i++) {
             if (fixedNodes.get(i).isMoused(pointerX, pointerY)) {
@@ -201,6 +262,14 @@ public class TrafficGraph {
         }
     }
 
+    /**
+     * update control radius of node
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @param r        radius delta
+     * @return void
+     */
     public void changeR(int pointerX, int pointerY, double r) {
         for (TrafficNode fixedNode : fixedNodes) {
             if (fixedNode.isMoused(pointerX, pointerY)) {
@@ -218,6 +287,12 @@ public class TrafficGraph {
         }
     }
 
+    /**
+     * set a atrium for tree node
+     *
+     * @param
+     * @return void
+     */
     public void setAtrium() {
         for (TrafficNode n : treeNodes) {
             if (n.getAtrium() != null) {
@@ -227,9 +302,12 @@ public class TrafficGraph {
     }
 
     /**
-    * @return void
-    * @description add or remove an atrium at a tree node
-    */
+     * add or remove an atrium at a tree node
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return void
+     */
     public void addOrRemoveAtrium(int pointerX, int pointerY) {
         for (TrafficNode n : treeNodes) {
             if (n.isMoused(pointerX, pointerY)) {
@@ -245,9 +323,12 @@ public class TrafficGraph {
     }
 
     /**
-    * @return void
-    * @description choose a node to adjust its atrium shape
-    */
+     * choose a node to adjust its atrium shape
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return void
+     */
     public void chooseAtrium(int pointerX, int pointerY) {
         if (selectedNode == null) {
             // find which is selected
@@ -269,9 +350,11 @@ public class TrafficGraph {
     }
 
     /**
-    * @return void
-    * @description clear the selected node
-    */
+     * clear the selected node
+     *
+     * @param
+     * @return void
+     */
     public void clearSelectAtrium() {
         if (selectedNode != null) {
             selectedNode.setAtriumActive(false);
@@ -280,9 +363,11 @@ public class TrafficGraph {
     }
 
     /**
-    * @return void
-    * @description update the length (along graph edge)
-    */
+     * update the length (along graph edge)
+     *
+     * @param delta delta length
+     * @return void
+     */
     public void updateSelectedAtriumLength(double delta) {
         if (selectedNode != null) {
             selectedNode.updateAtriumLength(delta);
@@ -291,9 +376,11 @@ public class TrafficGraph {
     }
 
     /**
-    * @return void
-    * @description update the width (vertical to graph edge)
-    */
+     * update the width (perpendicular to linked edge)
+     *
+     * @param delta delta length
+     * @return void
+     */
     public void updateSelectedAtriumWidth(double delta) {
         if (selectedNode != null) {
             selectedNode.updateAtriumWidth(delta);
@@ -304,8 +391,11 @@ public class TrafficGraph {
     /* ------------- draw -------------*/
 
     /**
+     * draw all nodes and edges
+     *
+     * @param render
+     * @param app
      * @return void
-     * @description draw all nodes and edges
      */
     public void display(WB_Render3D render, PApplet app) {
         app.pushStyle();
@@ -336,8 +426,12 @@ public class TrafficGraph {
     }
 
     /**
+     * draw neighbor nodes of one node where mouse at
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @param app
      * @return void
-     * @description draw neighbor nodes of one node where mouse at
      */
     public void displayNeighbor(int pointerX, int pointerY, PApplet app) {
         for (TrafficNode n : treeNodes) {
@@ -350,8 +444,10 @@ public class TrafficGraph {
     /* ------------- compute the graph as minimum spanning tree (private) ------------- */
 
     /**
+     * initialize adjacency matrix of all nodes
+     *
+     * @param
      * @return void
-     * @description initialize adjacency matrix of all nodes
      */
     private void matrixInit() {
         this.matrix = new double[treeNodes.size()][treeNodes.size()];
@@ -367,8 +463,10 @@ public class TrafficGraph {
     }
 
     /**
+     * compute minimum spanning tree
+     *
+     * @param
      * @return void
-     * @description compute minimum spanning tree
      */
     private void getTree() {
         treeEdges = new ArrayList<>();
@@ -419,8 +517,10 @@ public class TrafficGraph {
     }
 
     /**
+     * add edges from entries to their nearest node
+     *
+     * @param
      * @return void
-     * @description add edges from entries to their nearest node
      */
     private void getFixedLink() {
         fixedEdges = new ArrayList<>();
@@ -431,8 +531,11 @@ public class TrafficGraph {
     }
 
     /**
-     * @return publicSpace.TreeNode
-     * @description find the nearest node
+     * find the nearest node
+     *
+     * @param curr  one node
+     * @param other other nodes
+     * @return formInteractive.graphAdjusting.TrafficNode
      */
     private TrafficNode getNearestNode(TrafficNode curr, List<TrafficNode> other) {
         double[] dist = new double[other.size()];
@@ -444,8 +547,10 @@ public class TrafficGraph {
     }
 
     /**
+     * set node relations and join point on each bisector
+     *
+     * @param
      * @return void
-     * @description set node relations and join point on each bisector
      */
     private void setRelations() {
         // clear current node relationship

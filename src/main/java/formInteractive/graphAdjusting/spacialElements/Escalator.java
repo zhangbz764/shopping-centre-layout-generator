@@ -1,4 +1,4 @@
-package formInteractive.spacialElements;
+package formInteractive.graphAdjusting.spacialElements;
 
 /**
  * @author ZHANG Bai-zhou zhangbz

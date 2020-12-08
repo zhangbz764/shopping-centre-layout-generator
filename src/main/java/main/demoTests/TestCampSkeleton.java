@@ -26,7 +26,7 @@ import java.util.List;
  * @project shopping_mall
  * @date 2020/12/5
  * @time 14:33
- * @description 测试campskeleton带洞
+ * @description 测试ZSkeleton带洞
  */
 public class TestCampSkeleton extends PApplet {
 

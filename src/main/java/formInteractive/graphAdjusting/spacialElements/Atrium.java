@@ -1,4 +1,4 @@
-package formInteractive.spacialElements;
+package formInteractive.graphAdjusting.spacialElements;
 
 import formInteractive.graphAdjusting.TrafficNode;
 import geometry.ZGeoFactory;
@@ -51,9 +51,11 @@ public class Atrium {
     /* ------------- initializer ------------- */
 
     /**
-     * @return void
-     * @description main initializer
-     */
+    * main initializer of an atrium
+    *
+    * @param
+    * @return void
+    */
     public void initAtrium() {
         initControlPoints(center);
         extractBoundaryPoints();
@@ -64,9 +66,11 @@ public class Atrium {
     /* ------------- compute function ------------- */
 
     /**
-     * @return void
-     * @description find control point for adjustment
-     */
+    * find control point for adjustment
+    *
+    * @param center input TrafficNode
+    * @return void
+    */
     private void initControlPoints(TrafficNode center) {
         this.controlPoints = new ArrayList<>();
         if (center.isEnd()) {
@@ -94,9 +98,11 @@ public class Atrium {
     }
 
     /**
-     * @return void
-     * @description extract boundary points from control points
-     */
+    * extract boundary points from control points
+    *
+    * @param
+    * @return void
+    */
     private void extractBoundaryPoints() {
         // extract boundary points from control points
         this.boundaryPoints = new ArrayList<>();
@@ -110,9 +116,12 @@ public class Atrium {
     }
 
     /**
-     * @return void
-     * @description sort vectors and create shape polygon
-     */
+    * sort vectors and create atrium shape polygon
+    *
+    * @param vecFromCenter vectors to sort
+    * @param boundaryPoints all points
+    * @return void
+    */
     private void createPolygon(List<ZPoint> vecFromCenter, List<ZPoint> boundaryPoints) {
         // sort polar angle to order polygon vertices
         int[] order = ZGeoMath.sortPolarAngleIndices(vecFromCenter);
@@ -125,9 +134,12 @@ public class Atrium {
     }
 
     /**
-     * @return java.util.List<geometry.ZLine>
-     * @description record offset segment as block boundary
-     */
+    * record offset segment as block boundary
+    *
+    * @param polygon input polygon
+    * @param testLines lines to check intersection
+    * @return void
+    */
     private void findOffsetAndJoints(WB_Polygon polygon, List<? extends ZLine> testLines) {
         this.offsetSegmentsFromAtrium = new ArrayList<>();
         this.jointsFromAtrium = new ArrayList<>();
@@ -140,9 +152,9 @@ public class Atrium {
                 }
             }
             if (!intersect) {
-                offsetSegmentsFromAtrium.add(ZGeoMath.offsetWB_PolygonSegment(polygon, i, 5));
+                offsetSegmentsFromAtrium.add(ZGeoMath.offsetWB_PolygonSegment(polygon, i, 7));
             } else {
-                ZLine intersectOffset = ZGeoMath.offsetWB_PolygonSegment(polygon, i, 5);
+                ZLine intersectOffset = ZGeoMath.offsetWB_PolygonSegment(polygon, i, 7);
                 jointsFromAtrium.add(intersectOffset.getPt0());
                 jointsFromAtrium.add(intersectOffset.getPt1());
             }
@@ -221,7 +233,7 @@ public class Atrium {
         private ZPoint moveDir;
         private ZPoint oneEdgeVec = null;
         private double distOnEdge;
-        private double distFromEdge = 5;
+        private double distFromEdge = 10;
         private ZPoint point;
         private List<ZPoint> polyPoints;
 

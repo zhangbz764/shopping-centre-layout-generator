@@ -1,6 +1,6 @@
 package formInteractive.graphAdjusting;
 
-import formInteractive.spacialElements.Atrium;
+import formInteractive.graphAdjusting.spacialElements.Atrium;
 import geometry.ZNode;
 import geometry.ZPoint;
 import processing.core.PApplet;
@@ -40,13 +40,22 @@ public abstract class TrafficNode extends ZNode {
     /* ------------- mouse interaction ------------- */
 
     /**
-     * @return boolean
-     * @description test whether mouse is in the node (square)
-     */
+    * test whether mouse is in the node (square)
+    *
+    * @param pointerX x
+    * @param pointerY y
+    * @return boolean
+    */
     public boolean isMoused(int pointerX, int pointerY) {
         return pointerX > super.x() - super.r() && pointerX < super.x() + super.r() && pointerY > super.y() - super.r() && pointerY < super.y() + super.r();
     }
 
+    /**
+    * set active status of this node
+    *
+    * @param active boolean
+    * @return void
+    */
     public void setActive(boolean active) {
         this.active = active;
     }
@@ -55,27 +64,63 @@ public abstract class TrafficNode extends ZNode {
         return active;
     }
 
-    // only in tree node
+    // only for tree node
+    /**
+    * set atrium active status of this node
+    *
+    * @param active boolean
+    * @return void
+    */
     public void setAtriumActive(boolean active) {
 
     }
 
     public abstract boolean isAtriumActive();
 
+    /**
+    * switch control point of atrium
+    *
+    * @param
+    * @return void
+    */
     public void switchAtriumControl() {
 
     }
 
+    /**
+    * update atrium length along linked edge
+    *
+    * @param delta length delta
+    * @return void
+    */
     public void updateAtriumLength(double delta){}
 
+    /**
+    * update atrium width perpendicular to linked edge
+    *
+    * @param delta width delta
+    * @return void
+    */
     public void updateAtriumWidth(double delta){}
 
     /* ------------- set & get (public) ------------- */
 
+    /**
+    * set control radius of node
+    *
+    * @param r radius
+    * @return void
+    */
     public void setRegionR(double r) {
         this.regionR = r;
     }
 
+    /**
+    * update control radius of node
+    *
+    * @param r radius delta
+    * @return void
+    */
     public void updateRegionR(double r) {
         setRegionR(regionR + r);
     }
@@ -84,10 +129,33 @@ public abstract class TrafficNode extends ZNode {
         return this.regionR;
     }
 
-    public abstract void setByRestriction(double mouseX, double mouseY);
+    /**
+    * set the node by restriction
+    * tree node should be within the boundary polygon
+    * fixed node should be on the boundary edges
+    *
+    * @param pointerX x
+    * @param pointerY y
+    * @return void
+    */
+    public abstract void setByRestriction(double pointerX, double pointerY);
 
+    /**
+    * set joints to split boundary
+    *
+    * @param
+    * @return void
+    */
     public abstract void setJoints();
 
+    /**
+    * record last position
+    *
+    * @param x x
+    * @param y y
+    * @param z z
+    * @return void
+    */
     public void setLastPosition(double x, double y, double z) {
         this.lastPosition[0] = x;
         this.lastPosition[1] = y;

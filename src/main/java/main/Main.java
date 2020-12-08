@@ -5,7 +5,7 @@ import processing.core.PApplet;
 public class Main {
     public static void main(String[] args) {
         /* 主程序 */
-        PApplet.main("main.Test");
+//        PApplet.main("main.Test");
 
         /* 测试极角排序、角平分线等向量运算 */
 //        PApplet.main("main.demoTests.TestPolarAngle");
@@ -28,7 +28,10 @@ public class Main {
         /* 测试jts的convexhull、找凹点、直线多边形交点及排序 */
 //        PApplet.main("main.demoTests.TestConvexHull");
 
-        /* 测试campskeleton带洞 */
+        /* 测试ZSkeleton带洞 */
 //        PApplet.main("main.demoTests.TestCampSkeleton");
+
+        /* 测试几种subdivision */
+        PApplet.main("main.demoTests.TestSubdivision");
     }
 }

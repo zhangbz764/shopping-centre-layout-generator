@@ -132,7 +132,6 @@ public class SplitBisector implements Split {
         }
         allPolys.remove(publicBlockPoly);
         this.shopBlockPolys = (List<Polygon>) allPolys;
-        System.out.println("shopBlockPolys inner" + shopBlockPolys.get(0).getNumInteriorRing());
     }
 
     /**
@@ -212,7 +211,6 @@ public class SplitBisector implements Split {
             }
 
             // add cap if tree node is an dead end
-            // if no fixed node, extend the cap to the boundary intersection (scale 1.1)
             if (graph.getFixedNodes().size() >= 1) {
                 if (start.getLinkedEdgeNum() == 1) {
                     ZLine cap = new ZLine(start.getJoints().get(0), start.getJoints().get(1));
@@ -225,21 +223,11 @@ public class SplitBisector implements Split {
             } else {
                 if (start.getNeighbors().size() == 1) {
                     ZLine cap = new ZLine(start.getJoints().get(0), start.getJoints().get(1));
-//                    ZLine extend1 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt1(), cap.getDirection()}, boundary);
-//                    ZLine extend2 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt0(), cap.getDirection().scaleTo(-1)}, boundary);
                     connections.add(cap);
-//                    assert extend1 != null && extend2 != null;
-//                    connections.add(extend1.scaleTo(1.1));
-//                    connections.add(extend2.scaleTo(1.1));
                 }
                 if (end.getNeighbors().size() == 1) {
                     ZLine cap = new ZLine(end.getJoints().get(0), end.getJoints().get(1));
-//                    ZLine extend1 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt1(), cap.getDirection()}, boundary);
-//                    ZLine extend2 = ZGeoMath.extendSegmentToPolygon(new ZPoint[]{cap.getPt0(), cap.getDirection().scaleTo(-1)}, boundary);
                     connections.add(cap);
-//                    assert extend1 != null && extend2 != null;
-//                    connections.add(extend1.scaleTo(1.1));
-//                    connections.add(extend2.scaleTo(1.1));
                 }
             }
         }
