@@ -3,7 +3,6 @@ package floors;
 import formInteractive.blockSplit.Split;
 import formInteractive.blockSplit.SplitBisector;
 import formInteractive.graphAdjusting.TrafficGraph;
-import formInteractive.graphAdjusting.TrafficNode;
 import geometry.*;
 import math.ZGeoMath;
 import processing.core.PApplet;
@@ -17,11 +16,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * class for floors in the shopping mall
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/11/9
  * @time 10:49
- * @description class for floors in the shopping mall
  */
 public class Floor {
     // input

@@ -13,11 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * the inner control node
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/21
  * @time 10:24
- * @description the inner control node
  */
 public class TrafficNodeTree extends TrafficNode {
     private final WB_Polygon boundary;

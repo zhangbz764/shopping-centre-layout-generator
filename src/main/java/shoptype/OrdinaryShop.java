@@ -4,11 +4,12 @@ import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 
 /**
+ * ordinary shop (普通商铺)
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/31
  * @time 21:59
- * @description ordinary shop (普通商铺)
  */
 public class OrdinaryShop extends Shop {
 

@@ -10,11 +10,12 @@ import wblut.processing.WB_Render3D;
 import java.util.List;
 
 /**
+ * an abstract class of control node in the plan of shopping mall
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/25
  * @time 13:25
- * @description an abstract class of control node in the plan of shopping mall
  */
 public abstract class TrafficNode extends ZNode {
     private double regionR = 18;  // affect radius

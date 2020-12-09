@@ -13,11 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * main control of public space spacial form
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/12
  * @time 8:30
- * @description main control of public space spacial form
  */
 public class SpacialFormGenerator {
     // geometry input 3dm file

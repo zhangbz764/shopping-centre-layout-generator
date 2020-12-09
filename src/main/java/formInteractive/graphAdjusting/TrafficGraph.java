@@ -6,7 +6,6 @@ import math.ZGeoMath;
 import math.ZMath;
 import org.locationtech.jts.geom.LineString;
 import processing.core.PApplet;
-import wblut.geom.WB_GeometryFactory;
 import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render3D;
@@ -16,11 +15,12 @@ import java.util.List;
 
 
 /**
+ * generate minimum spanning tree from a series of input ZNodes
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/11
  * @time 14:59
- * @description generate minimum spanning tree from a series of input ZNodes
  */
 public class TrafficGraph {
     private static final float MAXVALUE = Float.MAX_VALUE;

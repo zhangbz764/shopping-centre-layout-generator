@@ -14,11 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * atrium in the public space of a shopping mall
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/12
  * @time 10:00
- * @description atrium in the public space of a shopping mall
  */
 
 // TODO: 2020/12/3 整理代码结构 

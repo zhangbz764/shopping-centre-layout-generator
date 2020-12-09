@@ -20,6 +20,9 @@
             </plugin>
         </plugins>
     </build>
+    <modules>
+        <module>../../../AAA_Study/202010_HuaianUrbanDesign/codes</module>
+    </modules>
 
     <dependencies>
         <dependency>

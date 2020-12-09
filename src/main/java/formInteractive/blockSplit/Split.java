@@ -8,11 +8,12 @@ import wblut.geom.WB_Polygon;
 import java.util.List;
 
 /**
+ * an interface of block split in shopping mall
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/30
  * @time 11:13
- * @description an interface of block split in shopping mall
  */
 public interface Split {
     public void init(WB_Polygon boundary, TrafficGraph graph);

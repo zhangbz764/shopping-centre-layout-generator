@@ -13,11 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * the control node on the boundary (represents entries)
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/25
  * @time 13:34
- * @description the control node on the boundary (represents entries)
  */
 public class TrafficNodeFixed extends TrafficNode {
     private final WB_Polygon boundary;

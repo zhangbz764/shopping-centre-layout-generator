@@ -20,11 +20,12 @@ import java.util.Collection;
 import java.util.List;
 
 /**
+ * split boundary by bisector joints
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/19
  * @time 14:56
- * @description split boundary by bisector joints
  */
 public class SplitBisector implements Split {
     // boundary convert to jts LineString

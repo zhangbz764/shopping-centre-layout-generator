@@ -6,11 +6,12 @@ import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render3D;
 
 /**
+ * abstract class of a shop
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/11/9
  * @time 22:44
- * @description abstract class of a shop
  */
 public abstract class Shop {
     private WB_Point location;

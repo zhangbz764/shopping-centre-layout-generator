@@ -4,11 +4,12 @@ import formInteractive.graphAdjusting.TrafficGraph;
 import wblut.geom.WB_Polygon;
 
 /**
+ * generator of a series of floors
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/11/20
  * @time 0:36
- * @description
  */
 public class FloorGenerator {
     Floor[] floors;

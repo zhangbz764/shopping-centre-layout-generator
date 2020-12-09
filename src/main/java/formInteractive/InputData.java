@@ -13,11 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * input geometry from .3dm file
+ *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2020/10/12
  * @time 11:06
- * @description input geometry from .3dm file
  */
 public class InputData {
     // geometries
