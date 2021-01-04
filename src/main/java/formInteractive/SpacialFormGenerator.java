@@ -4,6 +4,7 @@ import formInteractive.graphAdjusting.TrafficGraph;
 import formInteractive.graphAdjusting.TrafficNode;
 import formInteractive.graphAdjusting.TrafficNodeFixed;
 import formInteractive.graphAdjusting.TrafficNodeTree;
+import main.ImportData;
 import processing.core.PApplet;
 import render.JtsRender;
 import wblut.geom.WB_Point;
@@ -22,7 +23,7 @@ import java.util.List;
  */
 public class SpacialFormGenerator {
     // geometry input 3dm file
-    private InputData input;
+    private ImportData input;
 
     // traffic mini spanning tree
     private TrafficGraph mainGraph;
@@ -30,7 +31,7 @@ public class SpacialFormGenerator {
 
     /* ------------- constructor ------------- */
 
-    public SpacialFormGenerator(InputData input) {
+    public SpacialFormGenerator(ImportData input) {
         System.out.println("* GENERATING PUBLIC SPACE *");
 
         init(input);
@@ -44,7 +45,7 @@ public class SpacialFormGenerator {
     * @param input input geometry
     * @return void
     */
-    public void init(InputData input) {
+    public void init(ImportData input) {
         // catch input data
         this.input = input;
         System.out.println("** ADJUSTING TRAFFIC GRAPH AND SPLITTING BLOCKS **");

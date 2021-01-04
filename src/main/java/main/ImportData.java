@@ -1,4 +1,4 @@
-package formInteractive;
+package main;
 
 import igeo.ICurve;
 import igeo.IG;
@@ -20,7 +20,7 @@ import java.util.List;
  * @date 2020/10/12
  * @time 11:06
  */
-public class InputData {
+public class ImportData {
     // geometries
     private WB_Polygon inputBoundary;
     private List<WB_Point> inputEntries;
@@ -31,17 +31,20 @@ public class InputData {
 
     /* ------------- constructor ------------- */
 
-    public InputData() {
+    public ImportData() {
 
     }
 
     /* ------------- loader & get (public) ------------- */
 
     /**
+     * load geometry from .3dm file
+     *
+     * @param path  3dm file path
+     * @param scale scale
      * @return void
-     * @description load geometry from .3dm file
      */
-    public void loadData(String path,double scale) {
+    public void loadData(String path, double scale) {
         System.out.println("** LOADING FILE **");
         IG.init();
         IG.open(path);
@@ -50,17 +53,17 @@ public class InputData {
         this.inputEntries = new ArrayList<>();
         IPoint[] entries = IG.layer("entry").points();
         for (IPoint p : entries) {
-            inputEntries.add(ZTransform.IPointToWB(p,scale));
+            inputEntries.add(ZTransform.IPointToWB(p, scale));
         }
         // load inner nodes
         this.inputInnerNodes = new ArrayList<>();
         IPoint[] inners = IG.layer("inner").points();
         for (IPoint p : inners) {
-            inputInnerNodes.add(ZTransform.IPointToWB(p,scale));
+            inputInnerNodes.add(ZTransform.IPointToWB(p, scale));
         }
         // load boundary polygon
         ICurve[] boundary = IG.layer("boundary").curves();
-        this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0],scale);
+        this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0], scale);
 
         // print
         assert inputBoundary != null;

@@ -21,7 +21,7 @@
         </plugins>
     </build>
     <modules>
-        <module>../../../AAA_Study/202010_HuaianUrbanDesign/codes</module>
+        <module>../../../AAA_Study/202010_HuaianUrbanDesign/commercial_street</module>
     </modules>
 
     <dependencies>

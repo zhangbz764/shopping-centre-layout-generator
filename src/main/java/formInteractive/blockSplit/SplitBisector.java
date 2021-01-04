@@ -142,15 +142,11 @@ public class SplitBisector implements Split {
     private void setNodeJoints(TrafficGraph graph) {
         // set treeNodes joint point
         for (TrafficNode n : graph.getTreeNodes()) {
-            if (n.isMoved()) {
-                n.setJoints();
-            }
+            n.setJoints();
         }
         // set fixedNodes joint point
         for (TrafficNode n : graph.getFixedNodes()) {
-            if (n.isMoved()) {
-                n.setJoints();
-            }
+            n.setJoints();
         }
     }
 

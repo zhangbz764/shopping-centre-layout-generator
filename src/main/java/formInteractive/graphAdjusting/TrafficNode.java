@@ -18,7 +18,8 @@ import java.util.List;
  * @time 13:25
  */
 public abstract class TrafficNode extends ZNode {
-    private double regionR = 18;  // affect radius
+    private static double originalRegionR = 5;
+    private double regionR = originalRegionR;  // affect radius
     private boolean active = false;
     private double[] lastPosition;
 
@@ -41,22 +42,22 @@ public abstract class TrafficNode extends ZNode {
     /* ------------- mouse interaction ------------- */
 
     /**
-    * test whether mouse is in the node (square)
-    *
-    * @param pointerX x
-    * @param pointerY y
-    * @return boolean
-    */
+     * test whether mouse is in the node (square)
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return boolean
+     */
     public boolean isMoused(int pointerX, int pointerY) {
-        return pointerX > super.x() - super.r() && pointerX < super.x() + super.r() && pointerY > super.y() - super.r() && pointerY < super.y() + super.r();
+        return pointerX > super.xd() - super.rd() && pointerX < super.xd() + super.rd() && pointerY > super.yd() - super.rd() && pointerY < super.yd() + super.rd();
     }
 
     /**
-    * set active status of this node
-    *
-    * @param active boolean
-    * @return void
-    */
+     * set active status of this node
+     *
+     * @param active boolean
+     * @return void
+     */
     public void setActive(boolean active) {
         this.active = active;
     }
@@ -66,12 +67,13 @@ public abstract class TrafficNode extends ZNode {
     }
 
     // only for tree node
+
     /**
-    * set atrium active status of this node
-    *
-    * @param active boolean
-    * @return void
-    */
+     * set atrium active status of this node
+     *
+     * @param active boolean
+     * @return void
+     */
     public void setAtriumActive(boolean active) {
 
     }
@@ -79,49 +81,55 @@ public abstract class TrafficNode extends ZNode {
     public abstract boolean isAtriumActive();
 
     /**
-    * switch control point of atrium
-    *
-    * @param
-    * @return void
-    */
+     * switch control point of atrium
+     *
+     * @param
+     * @return void
+     */
     public void switchAtriumControl() {
 
     }
 
     /**
-    * update atrium length along linked edge
-    *
-    * @param delta length delta
-    * @return void
-    */
-    public void updateAtriumLength(double delta){}
+     * update atrium length along linked edge
+     *
+     * @param delta length delta
+     * @return void
+     */
+    public void updateAtriumLength(double delta) {
+    }
 
     /**
-    * update atrium width perpendicular to linked edge
-    *
-    * @param delta width delta
-    * @return void
-    */
-    public void updateAtriumWidth(double delta){}
+     * update atrium width perpendicular to linked edge
+     *
+     * @param delta width delta
+     * @return void
+     */
+    public void updateAtriumWidth(double delta) {
+    }
 
     /* ------------- set & get (public) ------------- */
 
+    public static void setOriginalRegionR(double originalRegionR) {
+        TrafficNode.originalRegionR = originalRegionR;
+    }
+
     /**
-    * set control radius of node
-    *
-    * @param r radius
-    * @return void
-    */
+     * set control radius of node
+     *
+     * @param r radius
+     * @return void
+     */
     public void setRegionR(double r) {
         this.regionR = r;
     }
 
     /**
-    * update control radius of node
-    *
-    * @param r radius delta
-    * @return void
-    */
+     * update control radius of node
+     *
+     * @param r radius delta
+     * @return void
+     */
     public void updateRegionR(double r) {
         setRegionR(regionR + r);
     }
@@ -131,32 +139,32 @@ public abstract class TrafficNode extends ZNode {
     }
 
     /**
-    * set the node by restriction
-    * tree node should be within the boundary polygon
-    * fixed node should be on the boundary edges
-    *
-    * @param pointerX x
-    * @param pointerY y
-    * @return void
-    */
+     * set the node by restriction
+     * tree node should be within the boundary polygon
+     * fixed node should be on the boundary edges
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return void
+     */
     public abstract void setByRestriction(double pointerX, double pointerY);
 
     /**
-    * set joints to split boundary
-    *
-    * @param
-    * @return void
-    */
+     * set joints to split boundary
+     *
+     * @param
+     * @return void
+     */
     public abstract void setJoints();
 
     /**
-    * record last position
-    *
-    * @param x x
-    * @param y y
-    * @param z z
-    * @return void
-    */
+     * record last position
+     *
+     * @param x x
+     * @param y y
+     * @param z z
+     * @return void
+     */
     public void setLastPosition(double x, double y, double z) {
         this.lastPosition[0] = x;
         this.lastPosition[1] = y;
@@ -175,8 +183,9 @@ public abstract class TrafficNode extends ZNode {
 
     public abstract String getNodeType();
 
+    @Deprecated
     public boolean isMoved() {
-        return this.x() != lastPosition[0] || this.y() != lastPosition[1] || this.z() != lastPosition[2];
+        return this.xd() != lastPosition[0] || this.yd() != lastPosition[1] || this.zd() != lastPosition[2];
     }
 
     /* ------------- draw -------------*/

@@ -2,7 +2,6 @@ package formInteractive.graphAdjusting;
 
 import geometry.ZEdge;
 import geometry.ZPoint;
-import math.ZGeoMath;
 import math.ZMath;
 import org.locationtech.jts.geom.LineString;
 import processing.core.PApplet;
@@ -158,13 +157,13 @@ public class TrafficGraph {
         for (TrafficNode n : treeNodes) {
             if (n.isMoused(pointerX, pointerY)) {
                 n.setActive(true);
-                n.setLastPosition(n.x(), n.y(), n.z());
+                n.setLastPosition(n.xd(), n.yd(), n.zd());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
             }
             if (n.isActive()) {
-                n.setLastPosition(n.x(), n.y(), n.z());
+                n.setLastPosition(n.xd(), n.yd(), n.zd());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
@@ -183,13 +182,13 @@ public class TrafficGraph {
         for (TrafficNode n : fixedNodes) {
             if (n.isMoused(pointerX, pointerY)) {
                 n.setActive(true);
-                n.setLastPosition(n.x(), n.y(), n.z());
+                n.setLastPosition(n.xd(), n.yd(), n.zd());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
             }
             if (n.isActive()) {
-                n.setLastPosition(n.x(), n.y(), n.z());
+                n.setLastPosition(n.xd(), n.yd(), n.zd());
                 n.setByRestriction(pointerX, pointerY);
                 init();
                 break;
@@ -207,6 +206,7 @@ public class TrafficGraph {
      */
     public void addTreeNode(int pointerX, int pointerY, WB_Polygon boundary) {
         TrafficNodeTree tree = new TrafficNodeTree(pointerX, pointerY, boundary);
+        tree.setRegionR(6);
         if (WB_GeometryOp.contains2D(tree.toWB_Point(), boundary) && WB_GeometryOp.getDistance2D(tree.toWB_Point(), boundary) > tree.getRegionR()) {
             treeNodes.add(tree);
             init();
@@ -223,6 +223,7 @@ public class TrafficGraph {
      */
     public void addFixedNode(int pointerX, int pointerY, WB_Polygon boundary) {
         TrafficNodeFixed fixed = new TrafficNodeFixed(pointerX, pointerY, boundary);
+        fixed.setRegionR(6);
         fixed.setByRestriction(pointerX, pointerY);
         fixedNodes.add(fixed);
         init();
@@ -578,14 +579,13 @@ public class TrafficGraph {
         }
     }
 
-    // TODO: 2020/11/22  沿graph找点
-    public List<ZPoint> pointsOnGraphByDist(final ZPoint origin, final double step) {
-        List<ZEdge> allEdges = treeEdges;
-        allEdges.addAll(fixedEdges);
-        TrafficNode[] startAndEnd = (TrafficNode[]) ZGeoMath.pointOnWhichZEdge(origin, allEdges);
-        if (startAndEnd[0] != null) {
-
-        }
+    /**
+     * 找到graph上某节点开始点沿边移动一定距离后的若干个点
+     *
+     * @param dist 距离
+     * @return java.util.List<geometry.ZPoint>
+     */
+    public List<ZPoint> pointsOnGraphByDist(final TrafficNode node, final double dist) {
         return null;
     }
 }

@@ -8,7 +8,6 @@ import math.ZGeoMath;
 import processing.core.PApplet;
 import render.JtsRender;
 import wblut.geom.*;
-import wblut.hemesh.HE_Face;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
@@ -25,25 +24,22 @@ import java.util.List;
  */
 public class Floor {
     // input
-    private int floorNum;
-    private TrafficGraph trafficGraph;
-    private WB_Polygon boundary;
-    private WB_AABB boundaryAABB;
-    private double span = 8;
-    private double scale = 2;
+    private int floorNum; // 层数
+    private TrafficGraph trafficGraph; // 动线
+    private WB_Polygon boundary; // 外轮廓
+    private double span = 8; // 店铺跨度
+    private double scale = 2; // 缩放比例
 
     // split block, could be variable types
     private Split blockSplit;
-    private List<WB_Polygon> shopBlock;
-    private WB_Polygon publicBlock;
-    private List<ZSkeleton> skeletons;
-    private List<WB_Polygon> allInitCells;
-//    private HE_Mesh[] meshes;
+    private List<WB_Polygon> shopBlock; // 初始店铺分区
+    private WB_Polygon publicBlock; // 公共分区
+    private List<ZSkeleton> skeletons; // 分区直骨架
+    private List<WB_Polygon> allCells; // 初步剖分结果
 
     // select and union
-    private List<List<HE_Face>> selected;
-    private List<WB_Polygon> selected2;
-    private List<WB_Polygon> advicePolys;
+    private List<WB_Polygon> selected; // 手动选择的店铺
+    private List<WB_Polygon> advicePolys; // 不合法店铺
 
     // statistics
     private double totalArea; // 当前层总面积
@@ -58,7 +54,7 @@ public class Floor {
     private int evacuationStairNum = 0; // 疏散楼梯个数
     private int escalatorNum = 0; // 客用扶梯个数
 
-    public boolean activate;
+    public boolean activate; // 激活编辑开关
 
     /* ------------- constructor & initialize ------------- */
 
@@ -79,11 +75,7 @@ public class Floor {
         initShop();
         // statistics
         getStatistics();
-//        this.selected = new ArrayList<>();
-//        for (WB_Polygon p : shopBlock) {
-//            selected.add(new ArrayList<HE_Face>());
-//        }
-        this.selected2 = new ArrayList<>();
+        this.selected = new ArrayList<>();
     }
 
     /**
@@ -101,11 +93,7 @@ public class Floor {
             initShop();
             getStatistics();
 
-//            this.selected = new ArrayList<>();
-//            for (WB_Polygon p : shopBlock) {
-//                selected.add(new ArrayList<HE_Face>());
-//            }
-            this.selected2 = new ArrayList<>();
+            this.selected = new ArrayList<>();
         }
     }
 
@@ -160,21 +148,105 @@ public class Floor {
                 voronois.add(voronoi);
             }
         }
-        this.allInitCells = new ArrayList<>();
+        this.allCells = new ArrayList<>();
         for (WB_Voronoi2D wb_voronoi2D : voronois) {
             for (WB_VoronoiCell2D cell : wb_voronoi2D.getCells()) {
-                allInitCells.add(cell.getPolygon());
+                allCells.add(cell.getPolygon());
             }
         }
-//        // convert to mesh
-//        this.meshes = new HE_Mesh[shopBlock.size()];
-//        for (int i = 0; i < voronois.size(); i++) {
-//            List<WB_Polygon> cellPolygons = new ArrayList<>();
-//            for (WB_VoronoiCell2D cell : voronois.get(i).getCells()) {
-//                cellPolygons.add(cell.getPolygon());
-//            }
-//            meshes[i] = new HEC_FromPolygons(cellPolygons).create();
-//        }
+    }
+
+    /* ------------- select & update ------------- */
+
+    /**
+     * select shop to union by mouse
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return void
+     */
+    public void selectShop(int pointerX, int pointerY) {
+        WB_Point pointer = new WB_Point(pointerX, pointerY);
+        for (WB_Polygon cell : allCells) {
+            if (WB_GeometryOp2D.contains2D(pointer, cell)) {
+                if (!selected.contains(cell)) {
+                    selected.add(cell);
+                } else {
+                    selected.remove(cell);
+                }
+                break;
+            }
+        }
+    }
+
+    /**
+     * clear select
+     *
+     * @param
+     * @return void
+     */
+    public void clearSelect() {
+        this.selected.clear();
+    }
+
+    /**
+     * union selected polygon
+     *
+     * @param
+     * @return void
+     */
+    public void updateShop() {
+        if (selected.size() > 1) {
+            // remove faces
+            allCells.removeAll(selected);
+            // union faces
+            List<WB_Polygon> union = new ArrayList<>();
+            union.add(selected.get(0));
+            for (int i = 1; i < selected.size(); i++) {
+                union = ZGeoFactory.wbgf.unionPolygons2D(selected.get(i), union);
+            }
+            allCells.addAll(union);
+        }
+        clearSelect();
+        getShopStatistics();
+    }
+
+    /* ------------- setter & getter ------------- */
+
+    public void setFloorNum(int floorNum) {
+        this.floorNum = floorNum;
+    }
+
+    public void setTrafficGraph(TrafficGraph graph) {
+        this.trafficGraph = graph;
+    }
+
+    public void setBoundary(WB_Polygon boundary) {
+        this.boundary = boundary;
+    }
+
+    public void setSpan(double span) {
+        this.span = span;
+    }
+
+    public void setScale(double scale) {
+        this.scale = scale;
+    }
+
+    public int getFloorNum() {
+        return floorNum;
+    }
+
+    public TrafficGraph getTrafficGraph() {
+        return this.trafficGraph;
+    }
+
+    public WB_Polygon getBoundary() {
+        return boundary;
+    }
+
+    public List<WB_Polygon> getAllCells() {
+        return allCells;
     }
 
     /**
@@ -190,10 +262,7 @@ public class Floor {
             shopArea = shopArea + Math.abs(p.getSignedArea()) / (scale * scale);
         }
         this.shopRatio = shopArea / totalArea;
-//        this.shopNum = 0;
-//        for (HE_Mesh m : meshes) {
-//            shopNum = shopNum + m.getNumberOfFaces();
-//        }
+
         this.mainTrafficLength = 0;
         for (ZEdge e : trafficGraph.getTreeEdges()) {
             mainTrafficLength = mainTrafficLength + e.getLength() / scale;
@@ -212,141 +281,18 @@ public class Floor {
      * @return void
      */
     public void getShopStatistics() {
-        this.shopNum = allInitCells.size();
+        this.shopNum = allCells.size();
         this.advicePolys = new ArrayList<>();
         List<Double> shopAreas = new ArrayList<>();
         for (int i = 0; i < shopNum; i++) {
-            double cellArea = Math.abs(allInitCells.get(i).getSignedArea()) / (scale * scale);
+            double cellArea = Math.abs(allCells.get(i).getSignedArea()) / (scale * scale);
             if (cellArea > 3000 || cellArea < 80) {
-                advicePolys.add(allInitCells.get(i));
+                advicePolys.add(allCells.get(i));
             }
             shopAreas.add(cellArea);
         }
         this.maxShopArea = Collections.max(shopAreas);
         this.minShopArea = Collections.min(shopAreas);
-    }
-
-    /* ------------- select & update ------------- */
-
-    /**
-     * select shop to union by mouse
-     *
-     * @param pointerX x
-     * @param pointerY y
-     * @return void
-     */
-    public void selectShop(int pointerX, int pointerY) {
-        WB_Point pointer = new WB_Point(pointerX, pointerY);
-        for (WB_Polygon cell : allInitCells) {
-            if (WB_GeometryOp2D.contains2D(pointer, cell)) {
-                if (!selected2.contains(cell)) {
-                    selected2.add(cell);
-                } else {
-                    selected2.remove(cell);
-                }
-                break;
-            }
-        }
-
-//        for (int i = 0; i < shopBlock.size(); i++) {
-//            if (WB_GeometryOp2D.contains2D(pointer, shopBlock.get(i))) {
-//                for (HE_Face face : meshes[i].getFaces()) {
-//                    if (WB_GeometryOp2D.contains2D(pointer, face.getPolygon())) {
-//                        if (!selected.get(i).contains(face)) {
-//                            selected.get(i).add(face);
-//                        } else {
-//                            selected.get(i).remove(face);
-//                        }
-//                        break;
-//                    }
-//                }
-//                break;
-//            }
-//        }
-    }
-
-    /**
-     * clear select
-     *
-     * @param
-     * @return void
-     */
-    public void clearSelect() {
-        this.selected2.clear();
-    }
-
-    /**
-     * union selected polygon
-     *
-     * @param
-     * @return void
-     */
-    public void updateShop() {
-        if (selected2.size() > 1) {
-            // remove faces
-            allInitCells.removeAll(selected2);
-            // union faces
-            List<WB_Polygon> union = new ArrayList<>();
-            union.add(selected2.get(0));
-            for (int i = 1; i < selected2.size(); i++) {
-                union = ZGeoFactory.wbgf.unionPolygons2D(selected2.get(i), union);
-            }
-            allInitCells.addAll(union);
-        }
-        clearSelect();
-        getShopStatistics();
-//        for (int i = 0; i < selected.size(); i++) {
-//            if (selected.get(i).size() > 1) {
-//                // union faces
-//                List<WB_Polygon> union = new ArrayList<>();
-//                union.add(selected.get(i).get(0).getPolygon());
-//                for (int j = 1; j < selected.get(i).size(); j++) {
-//                    union = ZGeoFactory.wbgf.unionPolygons2D(selected.get(i).get(j).getPolygon(), union);
-//                }
-//
-//                // remove face
-//                meshes[i].removeFaces(selected.get(i));
-//                // create new mesh
-//                List<WB_Polygon> newPolygons = meshes[i].getPolygonList();
-//                newPolygons.addAll(union);
-//                meshes[i] = new HEC_FromPolygons(newPolygons).create();
-//            }
-//            selected.get(i).clear();
-//        }
-    }
-
-    /* ------------- set & get ------------- */
-
-    public void setFloorNum(int floorNum) {
-        this.floorNum = floorNum;
-    }
-
-    public void setTrafficGraph(TrafficGraph graph) {
-        this.trafficGraph = graph;
-    }
-
-    public void setBoundary(WB_Polygon boundary) {
-        this.boundary = boundary;
-    }
-
-    public int getFloorNum() {
-        return floorNum;
-    }
-
-    public TrafficGraph getTrafficGraph() {
-        return this.trafficGraph;
-    }
-
-    public WB_Polygon getBoundary() {
-        return boundary;
-    }
-
-    public void setSpan(double span) {
-        this.span = span;
-    }
-
-    public void setScale(double scale) {
-        this.scale = scale;
     }
 
     /* ------------- draw ------------- */
@@ -363,14 +309,9 @@ public class Floor {
         app.pushStyle();
         app.fill(18, 109, 86);
         app.noStroke();
-        for (WB_Polygon p : selected2) {
+        for (WB_Polygon p : selected) {
             render.drawPolygonEdges2D(p);
         }
-//        for (List<HE_Face> eachSelect : selected) {
-//            for (HE_Face f : eachSelect) {
-//                render.drawFace(f);
-//            }
-//        }
         app.popStyle();
     }
 
@@ -379,16 +320,13 @@ public class Floor {
         app.stroke(0);
         app.strokeWeight(3);
         app.fill(220);
-        for (WB_Polygon p : allInitCells) {
+        for (WB_Polygon p : allCells) {
             render.drawPolygonEdges2D(p);
         }
         app.fill(255, 0, 0, 100);
         for (WB_Polygon p : advicePolys) {
             render.drawPolygonEdges2D(p);
         }
-//        for (HE_Mesh mesh : meshes) {
-//            render.drawEdges(mesh);
-//        }
         app.popStyle();
     }
 
@@ -440,6 +378,4 @@ public class Floor {
                 + "\n" + "ESCALATOR NUMBER : " + escalatorNum
                 + "\n" + "EVACUATION NUMBER : " + evacuationStairNum;
     }
-
-
 }

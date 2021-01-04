@@ -1,6 +1,5 @@
 package shoptype;
 
-import processing.core.PApplet;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render3D;
@@ -25,9 +24,8 @@ public abstract class Shop {
     }
 
     public Shop(WB_Point location, WB_Polygon shape) {
-        this.location = location;
-        this.shape = shape;
-        this.area = Math.abs(shape.getSignedArea());
+        setLocation(location);
+        setShape(shape);
     }
 
     /* ------------- set & get ------------- */
@@ -59,7 +57,12 @@ public abstract class Shop {
         render.drawPolygonEdges2D(shape);
     }
 
-    public void displayText(PApplet app) {
-        app.text((char) area, location.xf(), location.yf());
+    @Override
+    public String toString() {
+        return "Shop{" +
+                "location=" + location +
+                ", shape=" + shape +
+                ", area=" + area +
+                '}';
     }
 }

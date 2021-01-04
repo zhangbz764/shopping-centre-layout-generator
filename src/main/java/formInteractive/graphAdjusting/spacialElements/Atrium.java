@@ -35,11 +35,16 @@ public class Atrium {
     private WB_Polygon polygon;
 
     // offset line
+    private List<ZLine> mainSegmentsOfAtrium;
     private List<ZLine> offsetSegmentsFromAtrium;
     private List<ZPoint> jointsFromAtrium;
     private List<ControlPoint> controlPoints;
     private int activeIndex = 0;
 
+    private static double corridorWidth = 2.4;
+    private double distFromEdge = 4;
+
+    // escalator
     private Escalator escalator;
 
     /* ------------- constructor ------------- */
@@ -52,11 +57,10 @@ public class Atrium {
     /* ------------- initializer ------------- */
 
     /**
-    * main initializer of an atrium
-    *
-    * @param
-    * @return void
-    */
+     * main initializer of an atrium
+     *
+     * @return void
+     */
     public void initAtrium() {
         initControlPoints(center);
         extractBoundaryPoints();
@@ -67,11 +71,11 @@ public class Atrium {
     /* ------------- compute function ------------- */
 
     /**
-    * find control point for adjustment
-    *
-    * @param center input TrafficNode
-    * @return void
-    */
+     * find control point for adjustment
+     *
+     * @param center input TrafficNode
+     * @return void
+     */
     private void initControlPoints(TrafficNode center) {
         this.controlPoints = new ArrayList<>();
         if (center.isEnd()) {
@@ -99,11 +103,10 @@ public class Atrium {
     }
 
     /**
-    * extract boundary points from control points
-    *
-    * @param
-    * @return void
-    */
+     * extract boundary points from control points
+     *
+     * @return void
+     */
     private void extractBoundaryPoints() {
         // extract boundary points from control points
         this.boundaryPoints = new ArrayList<>();
@@ -117,12 +120,12 @@ public class Atrium {
     }
 
     /**
-    * sort vectors and create atrium shape polygon
-    *
-    * @param vecFromCenter vectors to sort
-    * @param boundaryPoints all points
-    * @return void
-    */
+     * sort vectors and create atrium shape polygon
+     *
+     * @param vecFromCenter  vectors to sort
+     * @param boundaryPoints all points
+     * @return void
+     */
     private void createPolygon(List<ZPoint> vecFromCenter, List<ZPoint> boundaryPoints) {
         // sort polar angle to order polygon vertices
         int[] order = ZGeoMath.sortPolarAngleIndices(vecFromCenter);
@@ -135,13 +138,14 @@ public class Atrium {
     }
 
     /**
-    * record offset segment as block boundary
-    *
-    * @param polygon input polygon
-    * @param testLines lines to check intersection
-    * @return void
-    */
+     * record offset segment as block boundary
+     *
+     * @param polygon   input polygon
+     * @param testLines lines to check intersection
+     * @return void
+     */
     private void findOffsetAndJoints(WB_Polygon polygon, List<? extends ZLine> testLines) {
+        this.mainSegmentsOfAtrium = new ArrayList<>();
         this.offsetSegmentsFromAtrium = new ArrayList<>();
         this.jointsFromAtrium = new ArrayList<>();
         for (int i = 0; i < polygon.getNumberSegments(); i++) {
@@ -153,37 +157,47 @@ public class Atrium {
                 }
             }
             if (!intersect) {
-                offsetSegmentsFromAtrium.add(ZGeoMath.offsetWB_PolygonSegment(polygon, i, 7));
+                mainSegmentsOfAtrium.add(new ZLine(polygon.getSegment(i)));
+                offsetSegmentsFromAtrium.add(ZGeoMath.offsetWB_PolygonSegment(polygon, i, corridorWidth));
             } else {
-                ZLine intersectOffset = ZGeoMath.offsetWB_PolygonSegment(polygon, i, 7);
+                ZLine intersectOffset = ZGeoMath.offsetWB_PolygonSegment(polygon, i, corridorWidth);
                 jointsFromAtrium.add(intersectOffset.getPt0());
                 jointsFromAtrium.add(intersectOffset.getPt1());
             }
         }
     }
 
-    /* ------------- set & get (public) ------------- */
+    /* ------------- setter & getter (public) ------------- */
 
     public void switchActiveControl() {
         activeIndex = (activeIndex + 1) % controlPoints.size();
     }
 
+    /**
+     * update the atrium's length along the traffic graph
+     *
+     * @param delta update distance
+     * @return void
+     */
     public void updateLength(double delta) {
         controlPoints.get(activeIndex).updateDistOnEdge(delta);
         extractBoundaryPoints();
         createPolygon(vecFromCenter, boundaryPoints);
         findOffsetAndJoints(polygon, center.getLinkedEdges());
-
-        System.out.println(controlPoints.get(activeIndex).distOnEdge);
     }
 
+    /**
+     * update the atrium's width perpendicular to the traffic graph
+     *
+     * @param delta update distance
+     * @return void
+     */
     public void updateWidth(double delta) {
-        controlPoints.get(activeIndex).updateDistFromEdge(delta);
+        distFromEdge += delta;
+        controlPoints.get(activeIndex).updateDistFromEdge();
         extractBoundaryPoints();
         createPolygon(vecFromCenter, boundaryPoints);
         findOffsetAndJoints(polygon, center.getLinkedEdges());
-
-        System.out.println(controlPoints.get(activeIndex).distFromEdge);
     }
 
     public void setCenter(TrafficNode center) {
@@ -194,12 +208,20 @@ public class Atrium {
         this.escalator = escalator;
     }
 
+    public static void setCorridorWidth(double corridorWidth) {
+        Atrium.corridorWidth = corridorWidth;
+    }
+
     public TrafficNode getCenter() {
         return center;
     }
 
     public WB_Polygon getPolygon() {
         return polygon;
+    }
+
+    public List<ZLine> getMainSegmentsOfAtrium() {
+        return mainSegmentsOfAtrium;
     }
 
     public List<ZLine> getOffsetSegmentsFromAtrium() {
@@ -226,15 +248,17 @@ public class Atrium {
         controlPoints.get(activeIndex).display(app);
     }
 
-    /* ------------- inner class ------------- */
-
-    private static class ControlPoint {
+    /**
+     * inner class
+     *
+     * @return
+     */
+    private class ControlPoint {
         private int flag;
         private ZPoint center;
         private ZPoint moveDir;
         private ZPoint oneEdgeVec = null;
         private double distOnEdge;
-        private double distFromEdge = 10;
         private ZPoint point;
         private List<ZPoint> polyPoints;
 
@@ -244,7 +268,6 @@ public class Atrium {
             this.center = center;
             this.moveDir = vec;
             this.distOnEdge = distOnEdge;
-            System.out.println(distOnEdge);
 
             this.point = this.center.add(moveDir.scaleTo(this.distOnEdge));
             this.polyPoints = new ArrayList<>();
@@ -260,11 +283,17 @@ public class Atrium {
             this.oneEdgeVec = oneEdgeVec;
 
             double sin = Math.abs(this.oneEdgeVec.cross2D(moveDir));
-            this.point = this.center.add(moveDir.scaleTo(this.distFromEdge / sin));
+            this.point = this.center.add(moveDir.scaleTo(distFromEdge / sin));
             this.polyPoints = new ArrayList<>();
             polyPoints.add(this.point);
         }
 
+        /**
+         * update the atrium's length along the traffic graph
+         *
+         * @param delta update distance
+         * @return void
+         */
         private void updateDistOnEdge(double delta) {
             distOnEdge += delta;
             if (flag == 0) {
@@ -274,14 +303,18 @@ public class Atrium {
                 polyPoints.add(point.add(moveDir.rotate2D(Math.PI * -0.5).scaleTo(distFromEdge)));
             } else {
                 double sin = Math.abs(this.oneEdgeVec.cross2D(moveDir));
-                this.point = this.center.add(moveDir.scaleTo(this.distFromEdge / sin));
+                this.point = this.center.add(moveDir.scaleTo(distFromEdge / sin));
                 this.polyPoints = new ArrayList<>();
                 polyPoints.add(this.point);
             }
         }
 
-        private void updateDistFromEdge(double delta) {
-            distFromEdge += delta;
+        /**
+         * update the atrium's width perpendicular to the traffic graph
+         *
+         * @return void
+         */
+        private void updateDistFromEdge() {
             if (flag == 0) {
                 this.point = center.add(moveDir.scaleTo(this.distOnEdge));
                 this.polyPoints = new ArrayList<>();
@@ -289,19 +322,21 @@ public class Atrium {
                 polyPoints.add(point.add(moveDir.rotate2D(Math.PI * -0.5).scaleTo(distFromEdge)));
             } else {
                 double sin = Math.abs(this.oneEdgeVec.cross2D(moveDir));
-                this.point = center.add(moveDir.scaleTo(this.distFromEdge / sin));
+                this.point = center.add(moveDir.scaleTo(distFromEdge / sin));
                 this.polyPoints = new ArrayList<>();
                 polyPoints.add(this.point);
             }
         }
 
+        // getter
         private ZPoint getPoint() {
             return point;
         }
 
+        // draw
         private void display(PApplet app) {
             if (polyPoints.size() == 2) {
-                app.line((float) polyPoints.get(0).x(), (float) polyPoints.get(0).y(), (float) polyPoints.get(1).x(), (float) polyPoints.get(1).y());
+                app.line(polyPoints.get(0).xf(), polyPoints.get(0).yf(), polyPoints.get(1).xf(), polyPoints.get(1).yf());
             }
             point.displayAsPoint(app, 5);
         }
