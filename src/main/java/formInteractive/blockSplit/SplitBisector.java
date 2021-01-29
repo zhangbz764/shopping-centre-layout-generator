@@ -101,10 +101,10 @@ public class SplitBisector implements Split {
     @Override
     public void display(JtsRender jtsRender, PApplet app) {
         app.pushStyle();
-        app.fill(255);
+        app.fill(130);
         jtsRender.drawGeometry(publicBlockPoly);
         for (Polygon p : shopBlockPolys) {
-            app.fill(220);
+            app.fill(200);
             jtsRender.drawGeometry(p);
         }
         app.popStyle();
@@ -179,8 +179,8 @@ public class SplitBisector implements Split {
                 }
                 return selectJoint(curr, newLineDir);
             } else {
-                ZPoint closet_pos_v = ZGeoMath.findClosetVec(lineDir, pos);
-                ZPoint closet_neg_v = ZGeoMath.findClosetVec(lineDir, neg);
+                ZPoint closet_pos_v = ZGeoMath.getClosetVec(lineDir, pos);
+                ZPoint closet_neg_v = ZGeoMath.getClosetVec(lineDir, neg);
                 return new ZPoint[]{curr.add(closet_pos_v), curr.add(closet_neg_v)};
             }
         } else {

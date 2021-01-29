@@ -2,6 +2,7 @@ package shoptype;
 
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render;
 import wblut.processing.WB_Render3D;
 
 /**
@@ -53,7 +54,7 @@ public abstract class Shop {
 
     /* ------------- draw ------------- */
 
-    public void display(WB_Render3D render) {
+    public void display(WB_Render render) {
         render.drawPolygonEdges2D(shape);
     }
 

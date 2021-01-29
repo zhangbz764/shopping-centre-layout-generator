@@ -4,11 +4,14 @@ import formInteractive.blockSplit.Split;
 import formInteractive.blockSplit.SplitBisector;
 import formInteractive.graphAdjusting.TrafficGraph;
 import geometry.*;
+import main.MallConstant;
 import math.ZGeoMath;
+import math.ZMath;
 import processing.core.PApplet;
+import processing.core.PConstants;
 import render.JtsRender;
 import wblut.geom.*;
-import wblut.processing.WB_Render3D;
+import wblut.processing.WB_Render;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,7 +31,7 @@ public class Floor {
     private TrafficGraph trafficGraph; // 动线
     private WB_Polygon boundary; // 外轮廓
     private double span = 8; // 店铺跨度
-    private double scale = 2; // 缩放比例
+    private double scale = MallConstant.SCALE; // 缩放比例
 
     // split block, could be variable types
     private Split blockSplit;
@@ -39,15 +42,23 @@ public class Floor {
 
     // select and union
     private List<WB_Polygon> selected; // 手动选择的店铺
-    private List<WB_Polygon> advicePolys; // 不合法店铺
+    private List<WB_Polygon> invalid; // 不合法店铺
+    private List<WB_Polygon> anchor; // 主力店铺
+    private List<WB_Polygon> subAnchor; // 次主力店铺
+    private List<WB_Polygon> ordinaryShop; // 普通商铺
 
     // statistics
     private double totalArea; // 当前层总面积
     private double shopArea; // 店铺面积
     private int shopNum; // 店铺数量
     private double shopRatio; // 得铺率
-    private double maxShopArea; // 最大店铺面积
-    private double minShopArea; // 最小店铺面积
+
+    private double maxArea;
+    private double minArea;
+    private double invalidArea = 0; // 不合法店铺面积
+    private double ordinaryArea = 0; // 普通商铺面积
+    private double subAnchorArea = 0; // 次主力店铺面积
+    private double anchorArea = 0; // 主力店铺面积
 
     private double mainTrafficLength; // 主流线总长度
     private int atriumNum = 0; // 中庭个数
@@ -78,6 +89,8 @@ public class Floor {
         this.selected = new ArrayList<>();
     }
 
+    /* ------------- member function ------------- */
+
     /**
      * update shop split
      *
@@ -96,8 +109,6 @@ public class Floor {
             this.selected = new ArrayList<>();
         }
     }
-
-    /* ------------- generate & catch information ------------- */
 
     /**
      * get data from split polygon
@@ -124,6 +135,25 @@ public class Floor {
      * @return void
      */
     private void initShop() {
+//        if (this.publicBlock != null) {
+//            if (floorNum == 1) {
+//                // find non-boundary public block edge
+//                List<ZLine> nonBoundary = new ArrayList<>();
+//                for (int i = 0; i < publicBlock.getNumberSegments(); i++) {
+//                    ZPoint start = new ZPoint(publicBlock.getSegment(i).getOrigin());
+//                    ZPoint end = new ZPoint(publicBlock.getSegment(i).getEndpoint());
+//                    if (!(ZGeoMath.checkPointOnPolygonEdge(start, boundary) && ZGeoMath.checkPointOnPolygonEdge(end, boundary))) {
+//                        nonBoundary.add(new ZLine(publicBlock.getSegment(i)));
+//                    }
+//                }
+//            } else {
+//                List<ZPoint> splitResult = ZGeoMath.splitWB_PolyLineEdgeByStep(publicBlock, MallConstant.MID_SHOP_WIDTH * MallConstant.SCALE);
+//                for (ZPoint p : splitResult) {
+//                    WB_Point closest = WB_GeometryOp.getClosestPoint2D(p.toWB_Point(), boundary);
+//                }
+//            }
+//        }
+
         // shop generator
         List<WB_Voronoi2D> voronois = new ArrayList<>();
         for (int i = 0; i < skeletons.size(); i++) {
@@ -282,55 +312,85 @@ public class Floor {
      */
     public void getShopStatistics() {
         this.shopNum = allCells.size();
-        this.advicePolys = new ArrayList<>();
-        List<Double> shopAreas = new ArrayList<>();
+        this.invalid = new ArrayList<>();
+        this.ordinaryShop = new ArrayList<>();
+        this.anchor = new ArrayList<>();
+        this.subAnchor = new ArrayList<>();
+
+        invalidArea = 0; // 不合法店铺面积
+        ordinaryArea = 0; // 普通商铺面积
+        subAnchorArea = 0; // 次主力店铺面积
+        anchorArea = 0; // 主力店铺面积
+
+        List<Double> allArea = new ArrayList<>();
         for (int i = 0; i < shopNum; i++) {
             double cellArea = Math.abs(allCells.get(i).getSignedArea()) / (scale * scale);
-            if (cellArea > 3000 || cellArea < 80) {
-                advicePolys.add(allCells.get(i));
+            if (cellArea < 80) {
+                invalid.add(allCells.get(i));
+                this.invalidArea += cellArea;
+            } else {
+                if (cellArea >= 80 && cellArea <= 300) {
+                    ordinaryShop.add(allCells.get(i)); // 普通商铺
+                    this.ordinaryArea += cellArea;
+                } else if (cellArea > 300 && cellArea <= 2000) {
+                    subAnchor.add(allCells.get(i)); // 次主力店
+                    this.subAnchorArea += cellArea;
+                } else {
+                    anchor.add(allCells.get(i)); // 主力店
+                    this.anchorArea += cellArea;
+                }
             }
-            shopAreas.add(cellArea);
+            allArea.add(cellArea);
         }
-        this.maxShopArea = Collections.max(shopAreas);
-        this.minShopArea = Collections.min(shopAreas);
+        this.minArea = Collections.min(allArea);
+        this.maxArea = Collections.max(allArea);
     }
 
     /* ------------- draw ------------- */
 
-    public void display(WB_Render3D render, JtsRender jtsRender, PApplet app) {
+    public void display(WB_Render render, JtsRender jtsRender, PApplet app) {
         displayBlock(jtsRender, app);
-        displaySkeleton(app);
+//        displaySkeleton(app);
         displayGraph(render, app);
         displayShop(render, app);
         displaySelected(render, app);
     }
 
-    public void displaySelected(WB_Render3D render, PApplet app) {
+    public void displaySelected(WB_Render render, PApplet app) {
         app.pushStyle();
-        app.fill(18, 109, 86);
-        app.noStroke();
+        app.noFill();
+        app.stroke(0, 255, 0);
+        app.strokeWeight(3);
         for (WB_Polygon p : selected) {
             render.drawPolygonEdges2D(p);
         }
         app.popStyle();
     }
 
-    public void displayShop(WB_Render3D render, PApplet app) {
+    public void displayShop(WB_Render render, PApplet app) {
         app.pushStyle();
         app.stroke(0);
         app.strokeWeight(3);
         app.fill(220);
-        for (WB_Polygon p : allCells) {
+        for (WB_Polygon p : ordinaryShop) {
             render.drawPolygonEdges2D(p);
         }
-        app.fill(255, 0, 0, 100);
-        for (WB_Polygon p : advicePolys) {
+        app.fill(170, 214, 223);
+        for (WB_Polygon p : subAnchor) {
+            render.drawPolygonEdges2D(p);
+        }
+        app.fill(195, 137, 136);
+        for (WB_Polygon p : anchor) {
+            render.drawPolygonEdges2D(p);
+        }
+        app.fill(0, 100);
+        for (WB_Polygon p : invalid) {
             render.drawPolygonEdges2D(p);
         }
         app.popStyle();
     }
 
-    public void displayGraph(WB_Render3D render, PApplet app) {
+    public void displayGraph(WB_Render render, PApplet app) {
         trafficGraph.display(render, app);
     }
 
@@ -349,20 +409,65 @@ public class Floor {
     }
 
     /**
+     * description
+     *
+     * @param app
+     * @param x
+     * @param y
+     * @return void
+     */
+    public void displayStats(PApplet app, float x, float y) {
+        app.pushStyle();
+        app.pushMatrix();
+        app.translate(x, y);
+        app.noStroke();
+
+        app.fill(220);
+        app.rect(0, 0, (float) ZMath.mapToRegion(ordinaryArea, 0, shopArea, 0, 100), 15);
+        app.arc(200, 30, 100, 100,
+                0, (float) ((ordinaryArea / shopArea) * Math.PI * 2),
+                PConstants.PIE
+        );
+
+        app.fill(170, 214, 223);
+        app.rect(0, 20, (float) ZMath.mapToRegion(subAnchorArea, 0, shopArea, 0, 100), 15);
+        app.arc(200, 30, 100, 100,
+                (float) ((ordinaryArea / shopArea) * Math.PI * 2), (float) (((ordinaryArea + subAnchorArea) / shopArea) * Math.PI * 2),
+                PConstants.PIE
+        );
+
+        app.fill(195, 137, 136);
+        app.rect(0, 40, (float) ZMath.mapToRegion(anchorArea, 0, shopArea, 0, 100), 15);
+        app.arc(200, 30, 100, 100,
+                (float) (((ordinaryArea + subAnchorArea) / shopArea) * Math.PI * 2), (float) (((ordinaryArea + subAnchorArea + anchorArea) / shopArea) * Math.PI * 2),
+                PConstants.PIE
+        );
+
+        app.fill(0, 100);
+        app.rect(0, 60, (float) ZMath.mapToRegion(invalidArea, 0, shopArea, 0, 100), 15);
+        app.arc(200, 30, 100, 100,
+                (float) (((ordinaryArea + subAnchorArea + anchorArea) / shopArea) * Math.PI * 2), (float) (((ordinaryArea + subAnchorArea + anchorArea + invalidArea) / shopArea) * Math.PI * 2),
+                PConstants.PIE
+        );
+
+        app.popMatrix();
+        app.popStyle();
+    }
+
+    /**
      * convert statistics to String
      *
      * @param
      * @return java.lang.String
      */
     public String getTextInfo() {
-        return floorNum + " F"
-                + "\n"
-                + "\n" + "TOTAL AREA : " + String.format("%.2f", totalArea) + " m2"
-                + "\n" + "SHOP AREA : " + String.format("%.2f", shopArea) + " m2"
-                + "\n" + "SHOP NUMBER : " + shopNum
-                + "\n" + "RATIO : " + String.format("%.2f", shopRatio * 100) + " %"
-                + "\n" + "MAX SHOP AREA : " + String.format("%.2f", maxShopArea) + " m2"
-                + "\n" + "MIN SHOP AREA : " + String.format("%.2f", minShopArea) + " m2";
+        return "本层建筑面积 : " + String.format("%.2f", totalArea) + " ㎡"
+                + "\n" + "可租赁面积 : " + String.format("%.2f", shopArea) + " ㎡"
+                + "\n" + "商铺总数量 : " + shopNum
+                + "\n" + "得铺率 : " + String.format("%.2f", shopRatio * 100) + " %"
+                + "\n" + "最小区域面积 : " + String.format("%.2f", minArea) + " ㎡"
+                + "\n" + "最大区域面积 : " + String.format("%.2f", maxArea) + " ㎡"
+                + "\n" + "动线长度 : " + String.format("%.2f", mainTrafficLength) + " m";
     }
 
     /**
@@ -372,10 +477,12 @@ public class Floor {
      * @return java.lang.String
      */
     public String getTextInfo2() {
-        return "\n"
-                + "\n" + "TRAFFIC LENGTH : " + String.format("%.2f", mainTrafficLength) + " m"
-                + "\n" + "ATRIUM NUMBER : " + atriumNum
-                + "\n" + "ESCALATOR NUMBER : " + escalatorNum
-                + "\n" + "EVACUATION NUMBER : " + evacuationStairNum;
+        String info = "普通商铺"
+                + "\n" + "次主力店"
+                + "\n" + "主力店";
+        if (invalidArea != 0) {
+            info += "\n" + "不合法区域";
+        }
+        return info;
     }
 }

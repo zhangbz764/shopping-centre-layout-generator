@@ -4,10 +4,12 @@ import formInteractive.graphAdjusting.TrafficNode;
 import geometry.ZGeoFactory;
 import geometry.ZLine;
 import geometry.ZPoint;
+import main.MallConstant;
 import math.ZGeoMath;
 import processing.core.PApplet;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
@@ -22,7 +24,6 @@ import java.util.List;
  * @time 10:00
  */
 
-// TODO: 2020/12/3 整理代码结构 
 public class Atrium {
     // center node
     private TrafficNode center;
@@ -41,8 +42,8 @@ public class Atrium {
     private List<ControlPoint> controlPoints;
     private int activeIndex = 0;
 
-    private static double corridorWidth = 2.4;
-    private double distFromEdge = 4;
+    private static double corridorWidth = MallConstant.ATRIUM_CORRIDOR_WIDTH * MallConstant.SCALE;
+    private double distFromEdge = MallConstant.ATRIUM_WIDTH * 0.5 * MallConstant.SCALE;
 
     // escalator
     private Escalator escalator;
@@ -68,7 +69,7 @@ public class Atrium {
         findOffsetAndJoints(polygon, center.getLinkedEdges());
     }
 
-    /* ------------- compute function ------------- */
+    /* ------------- member function ------------- */
 
     /**
      * find control point for adjustment
@@ -80,14 +81,29 @@ public class Atrium {
         this.controlPoints = new ArrayList<>();
         if (center.isEnd()) {
             // end of a graph
-            ControlPoint pt1 = new ControlPoint(center, center.getVecUnitToNeighbor(0), center.getLinkedEdge(0).getLength() * 0.25);
+            ControlPoint pt1 = new ControlPoint(center, center.getVecUnitToNeighbor(0), center.getLinkedEdge(0).getLength() * 0.35);
             ControlPoint pt2 = new ControlPoint(center, center.getVecUnitToNeighbor(0).scaleTo(-1), 0);
             controlPoints.add(pt1);
             controlPoints.add(pt2);
-        } else {
+        } else if (center.getLinkedEdgeNum() == 2) {
             // on edge
             for (int i = 0; i < center.geiNeighborNum(); i++) {
-                ControlPoint pt = new ControlPoint(center, center.getVecUnitToNeighbor(i), center.getLinkedEdge(i).getLength() * 0.25);
+                ControlPoint pt = new ControlPoint(center, center.getVecUnitToNeighbor(i), center.getLinkedEdge(i).getLength() * 0.35);
+                controlPoints.add(pt);
+            }
+            // at convex point
+            ZPoint[] sortedVec = ZGeoMath.sortPolarAngle(center.getVecUnitToNeighbors());
+            for (int i = 0; i < sortedVec.length; i++) {
+                if (sortedVec[i].cross2D(sortedVec[(i + 1) % sortedVec.length]) < 0) {
+                    ZPoint bisector = ZGeoMath.getAngleBisectorOrdered(sortedVec[i], sortedVec[(i + 1) % sortedVec.length]);
+                    ControlPoint pt = new ControlPoint(center, bisector, sortedVec[i]);
+                    controlPoints.add(pt);
+                }
+            }
+        } else if (center.getLinkedEdgeNum() > 2) {
+            // on edge
+            for (int i = 0; i < center.geiNeighborNum(); i++) {
+                ControlPoint pt = new ControlPoint(center, center.getVecUnitToNeighbor(i), center.getLinkedEdge(i).getLength() * 0.3);
                 controlPoints.add(pt);
             }
             // at convex point
@@ -157,6 +173,7 @@ public class Atrium {
                 }
             }
             if (!intersect) {
+//                System.out.println(i + "  " + polygon.getSegment(i).getLength());
                 mainSegmentsOfAtrium.add(new ZLine(polygon.getSegment(i)));
                 offsetSegmentsFromAtrium.add(ZGeoMath.offsetWB_PolygonSegment(polygon, i, corridorWidth));
             } else {
@@ -167,8 +184,11 @@ public class Atrium {
         }
     }
 
-    /* ------------- setter & getter (public) ------------- */
-
+    /**
+     * switch the active control point
+     *
+     * @return void
+     */
     public void switchActiveControl() {
         activeIndex = (activeIndex + 1) % controlPoints.size();
     }
@@ -199,6 +219,16 @@ public class Atrium {
         createPolygon(vecFromCenter, boundaryPoints);
         findOffsetAndJoints(polygon, center.getLinkedEdges());
     }
+
+    public void addOrRemoveEscalator() {
+        if (this.escalator == null) {
+            this.escalator = new Escalator(this);
+        } else {
+            this.escalator = null;
+        }
+    }
+
+    /* ------------- setter & getter (public) ------------- */
 
     public void setCenter(TrafficNode center) {
         this.center = center;
@@ -238,10 +268,16 @@ public class Atrium {
 
     /* ------------- draw ------------- */
 
-    public void display(WB_Render3D render, PApplet app) {
+    public void display(WB_Render render, PApplet app) {
         app.strokeWeight(1);
         render.drawPolygonEdges2D(polygon);
+        if (this.escalator != null) {
+            escalator.displayShape(render, app);
+            escalator.displayCoverRegion(app);
+        }
     }
+
+
 
     public void displayActiveControl(PApplet app) {
         app.strokeWeight(3);

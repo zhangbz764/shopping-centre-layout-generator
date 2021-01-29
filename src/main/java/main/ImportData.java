@@ -7,6 +7,7 @@ import processing.core.PApplet;
 import transform.ZTransform;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
@@ -53,13 +54,13 @@ public class ImportData {
         this.inputEntries = new ArrayList<>();
         IPoint[] entries = IG.layer("entry").points();
         for (IPoint p : entries) {
-            inputEntries.add(ZTransform.IPointToWB(p, scale));
+            inputEntries.add(ZTransform.IPointToWB_Point(p, scale));
         }
         // load inner nodes
         this.inputInnerNodes = new ArrayList<>();
         IPoint[] inners = IG.layer("inner").points();
         for (IPoint p : inners) {
-            inputInnerNodes.add(ZTransform.IPointToWB(p, scale));
+            inputInnerNodes.add(ZTransform.IPointToWB_Point(p, scale));
         }
         // load boundary polygon
         ICurve[] boundary = IG.layer("boundary").curves();
@@ -100,7 +101,7 @@ public class ImportData {
      * @return void
      * @description draw input geometries
      */
-    public void display(WB_Render3D render, PApplet app) {
+    public void display(WB_Render render, PApplet app) {
         app.pushStyle();
         app.fill(255);
         app.strokeWeight(4);

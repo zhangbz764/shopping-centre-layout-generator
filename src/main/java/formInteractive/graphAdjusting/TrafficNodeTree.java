@@ -7,6 +7,7 @@ import processing.core.PApplet;
 import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
+import wblut.processing.WB_Render;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
@@ -173,7 +174,7 @@ public class TrafficNodeTree extends TrafficNode {
     }
 
     @Override
-    public void displayAtrium(WB_Render3D render, PApplet app) {
+    public void displayAtrium(WB_Render render, PApplet app) {
         if (this.atrium != null) {
             app.pushStyle();
             app.noFill();

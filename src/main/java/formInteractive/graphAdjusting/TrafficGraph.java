@@ -2,12 +2,13 @@ package formInteractive.graphAdjusting;
 
 import geometry.ZEdge;
 import geometry.ZPoint;
+import main.MallConstant;
 import math.ZMath;
 import org.locationtech.jts.geom.LineString;
 import processing.core.PApplet;
 import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Polygon;
-import wblut.processing.WB_Render3D;
+import wblut.processing.WB_Render;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,7 +59,6 @@ public class TrafficGraph {
     /**
      * initialize adjacency matrix and tree, including fixed nodes if necessary
      *
-     * @param
      * @return void
      */
     public void init() {
@@ -206,9 +206,16 @@ public class TrafficGraph {
      */
     public void addTreeNode(int pointerX, int pointerY, WB_Polygon boundary) {
         TrafficNodeTree tree = new TrafficNodeTree(pointerX, pointerY, boundary);
-        tree.setRegionR(6);
+        tree.setRegionR(MallConstant.MAIN_TRAFFIC_WIDTH * 0.5 * MallConstant.SCALE);
         if (WB_GeometryOp.contains2D(tree.toWB_Point(), boundary) && WB_GeometryOp.getDistance2D(tree.toWB_Point(), boundary) > tree.getRegionR()) {
             treeNodes.add(tree);
+            init();
+        }
+    }
+
+    public void addTreeNode(TrafficNode treeNode, WB_Polygon boundary) {
+        if (WB_GeometryOp.contains2D(treeNode.toWB_Point(), boundary) && WB_GeometryOp.getDistance2D(treeNode.toWB_Point(), boundary) > treeNode.getRegionR()) {
+            treeNodes.add(treeNode);
             init();
         }
     }
@@ -223,9 +230,14 @@ public class TrafficGraph {
      */
     public void addFixedNode(int pointerX, int pointerY, WB_Polygon boundary) {
         TrafficNodeFixed fixed = new TrafficNodeFixed(pointerX, pointerY, boundary);
-        fixed.setRegionR(6);
+        fixed.setRegionR(MallConstant.MAIN_TRAFFIC_WIDTH * 0.5 * MallConstant.SCALE);
         fixed.setByRestriction(pointerX, pointerY);
         fixedNodes.add(fixed);
+        init();
+    }
+
+    public void addFixedNode(TrafficNode fixedNode) {
+        fixedNodes.add(fixedNode);
         init();
     }
 
@@ -353,7 +365,6 @@ public class TrafficGraph {
     /**
      * clear the selected node
      *
-     * @param
      * @return void
      */
     public void clearSelectAtrium() {
@@ -389,6 +400,12 @@ public class TrafficGraph {
         }
     }
 
+    public void addOrRemoveAtriumEscalator() {
+        if (selectedNode != null) {
+            selectedNode.getAtrium().addOrRemoveEscalator();
+        }
+    }
+
     /* ------------- draw -------------*/
 
     /**
@@ -398,7 +415,7 @@ public class TrafficGraph {
      * @param app
      * @return void
      */
-    public void display(WB_Render3D render, PApplet app) {
+    public void display(WB_Render render, PApplet app) {
         app.pushStyle();
         // draw edges
         app.stroke(24, 169, 222);

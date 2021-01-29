@@ -2,6 +2,7 @@ package formInteractive.graphAdjusting.spacialElements;
 
 import geometry.ZLine;
 import geometry.ZPoint;
+import main.MallConstant;
 import processing.core.PApplet;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
@@ -18,16 +19,14 @@ import java.util.List;
  * @time 10:07
  */
 public class Escalator {
-    private double scale = 1;
-
     private ZPoint location; // base point
     private ZPoint dir; // escalator direction
-    private double width = 3.3;
-    private double length = 14;
+    private double width = 3.6 * MallConstant.SCALE;
+    private double length = 14 * MallConstant.SCALE;
     private ZLine atriumEdge = null; // base edge of atrium
     private WB_Polygon shape; // final shape rectangle
 
-    private static double serviceRadius = 50;
+    private static double serviceRadius = MallConstant.ESCALATOR_RADIUS * MallConstant.SCALE;
 
     /* ------------- constructor ------------- */
 
@@ -43,7 +42,7 @@ public class Escalator {
     /* ------------- member function ------------- */
 
     /**
-     * initialize the shape of escalator
+     * initialize the +shape of escalator
      *
      * @param atrium input atrium to generate
      * @return void
@@ -103,7 +102,6 @@ public class Escalator {
     }
 
     public void setScale(double scale) {
-        this.scale = scale;
         this.width *= scale;
         this.length *= scale;
     }
@@ -115,16 +113,20 @@ public class Escalator {
     /* ------------- draw ------------- */
 
     public void displayShape(WB_Render render, PApplet app) {
-        app.noFill();
-        app.stroke(200);
-        app.strokeWeight(1);
-        render.drawPolygonEdges2D(shape);
+        if (shape != null) {
+            app.noFill();
+            app.stroke(200);
+            app.strokeWeight(1);
+            render.drawPolygonEdges2D(shape);
+        }
     }
 
     public void displayCoverRegion(PApplet app) {
-        app.noFill();
-        app.stroke(255, 0, 0);
-        app.strokeWeight(2.5f);
-        app.ellipse(location.xf(), location.yf(), (float) (serviceRadius * scale), (float) (serviceRadius * scale));
+        if (shape != null) {
+            app.noFill();
+            app.stroke(255, 0, 0);
+            app.strokeWeight(1.5f);
+            app.ellipse(location.xf(), location.yf(), (float) (serviceRadius * 2), (float) (serviceRadius * 2));
+        }
     }
 }

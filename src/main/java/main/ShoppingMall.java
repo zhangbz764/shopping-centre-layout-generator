@@ -4,16 +4,30 @@ import Guo_Cam.CameraController;
 import floors.Floor;
 import formInteractive.SpacialFormGenerator;
 import processing.core.PApplet;
+import processing.core.PFont;
 import render.JtsRender;
-import render.ZDisplay;
-import wblut.processing.WB_Render3D;
+import render.ZRender;
+import wblut.processing.WB_Render;
 
 public class ShoppingMall extends PApplet {
+    public void setStats() {
+        MallConstant.SCALE = 2;
+
+        MallConstant.MAIN_TRAFFIC_WIDTH = 18; // 主动线初始宽度
+        MallConstant.SUB_TRAFFIC_WIDTH = 7; // 次动线初始宽度
+        MallConstant.SIMPLE_SHOP_WIDTH = 8.5; // 小店铺宽度
+
+        MallConstant.ATRIUM_WIDTH = 12; // 中庭宽度
+        MallConstant.ATRIUM_CORRIDOR_WIDTH = 3.6; //中庭两侧走道宽度
+    }
+
     // model scale from input file
     private final static double scale = 2;
 
     // input file
-    public final String path = "E:\\AAA_Project\\202009_Shuishi\\codefiles\\1029.3dm";
+    public final String inputPath = "E:\\AAA_Project\\202009_Shuishi\\codefiles\\1029.3dm";
+    public final String outputPath = "E:\\AAA_Project\\202009_Shuishi\\codefiles\\output.3dm";
+
     public final ImportData input = new ImportData();
 
     // generate elements
@@ -27,9 +41,10 @@ public class ShoppingMall extends PApplet {
     public boolean floorDraw = true;
 
     // utils
-    public WB_Render3D render;
+    public WB_Render render;
     public JtsRender jtsRender;
     public CameraController gcam;
+    public PFont font;
 
     /* ------------- settings ------------- */
 
@@ -40,14 +55,17 @@ public class ShoppingMall extends PApplet {
     /* ------------- setup ------------- */
 
     public void setup() {
-        render = new WB_Render3D(this);
+        setStats();
+
+        render = new WB_Render(this);
         jtsRender = new JtsRender(this);
         gcam = new CameraController(this);
+        font = createFont("E:\\0_myjars\\fonts\\simhei.ttf", 15);
 
-        input.loadData(path, scale);
+        input.loadData(inputPath, scale);
         publicSpaceGenerator = new SpacialFormGenerator(input);
 
-        floors = new Floor[3];
+        floors = new Floor[4];
         for (int i = 0; i < floors.length; i++) {
             println("generating floor " + (i + 1));
             if (i == 0) {
@@ -75,7 +93,7 @@ public class ShoppingMall extends PApplet {
         draw3D(jtsRender, render, this);
     }
 
-    public void draw2D(JtsRender jtsRender, WB_Render3D render, PApplet app) {
+    public void draw2D(JtsRender jtsRender, WB_Render render, PApplet app) {
         // "background"
         pushStyle();
         noStroke();
@@ -83,10 +101,10 @@ public class ShoppingMall extends PApplet {
         rect(0, 0, 700, height);
         popStyle();
 
-        ZDisplay.drawAxis2D(this, 50);
-        if (publicSpaceDraw) {
-            publicSpaceGenerator.display(jtsRender, render, this);
-        }
+        ZRender.drawAxis2D(this, 50);
+//        if (publicSpaceDraw) {
+//            publicSpaceGenerator.display(jtsRender, render, this);
+//        }
         if (floorDraw) {
             for (Floor f : floors) {
                 if (f.activate) {
@@ -96,8 +114,8 @@ public class ShoppingMall extends PApplet {
         }
     }
 
-    public void draw3D(JtsRender jtsRender, WB_Render3D render, PApplet app) {
-        ZDisplay.drawAxis3D(this, 50);
+    public void draw3D(JtsRender jtsRender, WB_Render render, PApplet app) {
+        gcam.drawSystem(500);
         if (floorDraw) {
             pushMatrix();
             for (Floor floor : floors) {
@@ -112,7 +130,7 @@ public class ShoppingMall extends PApplet {
 
     public void showInstruction() {
         pushStyle();
-        textSize(15);
+        textFont(font);
         fill(0);
         showInstructions1();
         showInstructions2();
@@ -122,22 +140,23 @@ public class ShoppingMall extends PApplet {
 
     public void showInstructions1() {
         if (publicSpaceAdjust) {
-            String title = "INSTRUCTIONS";
+            textSize(15);
+            String title = "操作说明";
             text(title, 30, 30);
-            StringBuilder operation = new StringBuilder("Press '.' to enable FLOOR adjustment"
-                    + "\n" + "This will also lock the PUBLIC SPACE adjustment"
+            StringBuilder operation = new StringBuilder("'.' 开启店铺编辑模式，并锁定现有修改"
+                    + "\n" + "当前为交通动线编辑模式"
                     + "\n"
-                    + "\n" + "Hold right button to drag a node"
-                    + "\n" + "Press 'r' to reload input file"
-                    + "\n" + "Press 'a' to add a tree node at mouse location"
-                    + "\n" + "Press 's' to remove a tree node at mouse location"
-                    + "\n" + "Press 'q' to add a node at mouse location"
-                    + "\n" + "Press 'w' to remove a node at mouse location"
-                    + "\n" + "Press 'z' to increase node region radius"
-                    + "\n" + "Press 'x' to decrease node region radius"
+                    + "\n" + "按住鼠标右键拖拽控制点"
+                    + "\n" + "'r' 重新载入模型"
+                    + "\n" + "'a' 增加内部控制点"
+                    + "\n" + "'s' 移除内部控制点"
+                    + "\n" + "'q' 增加边界出入口点"
+                    + "\n" + "'w' 移除边界出入口点"
+                    + "\n" + "'e' 增加或删除中庭"
+                    + "\n" + "'f' 增加或删除扶梯"
                     + "\n");
             for (int i = 0; i < floors.length; i++) {
-                String s = "\n" + "Press '" + (i + 1) + "' to switch to " + (i + 1) + "F";
+                String s = "\n" + (i + 1) + "' 切换到 " + (i + 1) + "层视图";
                 operation.append(s);
             }
             text(operation.toString(), 30, 70);
@@ -147,16 +166,17 @@ public class ShoppingMall extends PApplet {
     public void showInstructions2() {
         if (floorDraw) {
             if (floorAdjust) {
-                String title = "INSTRUCTIONS";
+                textSize(15);
+                String title = "操作说明";
                 text(title, 30, 30);
-                StringBuilder operation = new StringBuilder("Press ',' to enable PUBLIC SPACE adjustment"
-                        + "\n" + "This will also dismiss and lock the FLOOR adjustment"
+                StringBuilder operation = new StringBuilder("',' 开启交通动线编辑模式，并移除现有修改"
+                        + "\n" + "当前为店铺编辑模式"
                         + "\n"
-                        + "\n" + "Right click a shop to pick it"
-                        + "\n" + "Press 'u' to union all the picked shops"
+                        + "\n" + "单击右键选中店铺"
+                        + "\n" + "'u' 合并所选区域"
                         + "\n");
                 for (int i = 0; i < floors.length; i++) {
-                    String s = "\n" + "Press '" + (i + 1) + "' to switch to " + (i + 1) + "F";
+                    String s = "\n" + (i + 1) + "' 切换到 " + (i + 1) + "层视图";
                     operation.append(s);
                 }
                 text(operation.toString(), 30, 70);
@@ -168,8 +188,12 @@ public class ShoppingMall extends PApplet {
         if (floorDraw) {
             for (Floor f : floors) {
                 if (f.activate) {
+                    textSize(30);
+                    text(f.getFloorNum() + " 层", 600, 70);
+                    textSize(15);
                     text(f.getTextInfo(), 30, 750);
-                    text(f.getTextInfo2(), 350, 750);
+                    text(f.getTextInfo2(), 300, 750);
+                    f.displayStats(this, 400, 737);
                 }
             }
         }
@@ -262,7 +286,7 @@ public class ShoppingMall extends PApplet {
 
         // reload input file
         if (key == 'r' || key == 'R') {
-            input.loadData(path, scale);
+            input.loadData(inputPath, scale);
             publicSpaceGenerator.init(input);
             floors = new Floor[3];
             for (int i = 0; i < floors.length; i++) {

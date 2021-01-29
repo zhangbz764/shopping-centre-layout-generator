@@ -74,5 +74,8 @@
     <orderEntry type="library" name="Maven: org.apache.xmlgraphics:batik-transcoder:1.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.xmlgraphics:batik-anim:1.10" level="project" />
     <orderEntry type="module" module-name="Ztools" />
+    <orderEntry type="library" name="jswarm-pso_2_08" level="application" />
+    <orderEntry type="module" module-name="LargestRectangle" />
+    <orderEntry type="library" name="dashedlines" level="application" />
   </component>
 </module>

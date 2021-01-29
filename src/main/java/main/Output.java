@@ -1,5 +1,8 @@
 package main;
 
+import floors.Floor;
+import igeo.IG;
+
 /**
  * output all generated model
  *
@@ -9,21 +12,21 @@ package main;
  * @time 16:08
  */
 public class Output {
-    private String outputPath;
 
     /* ------------- constructor ------------- */
 
-    public Output(String outputPath){
-        this.outputPath = outputPath;
+    public Output(String outputPath) {
+
     }
 
     /* ------------- setter ------------- */
 
-    public void setOutputPath(String outputPath) {
-        this.outputPath = outputPath;
-    }
 
     /* ------------- member function ------------- */
+
+    private void saveFloors(Floor floor){
+
+    }
 
     public void outputJPG() {
         System.out.println("** STARTING FILE OUTPUT **");
@@ -35,8 +38,8 @@ public class Output {
 
     }
 
-    public void output3DM() {
-
+    public void output3DM(String path) {
+        IG.save(path);
     }
 
     public void outputDXF() {

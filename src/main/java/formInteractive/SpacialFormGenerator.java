@@ -5,9 +5,11 @@ import formInteractive.graphAdjusting.TrafficNode;
 import formInteractive.graphAdjusting.TrafficNodeFixed;
 import formInteractive.graphAdjusting.TrafficNodeTree;
 import main.ImportData;
+import main.MallConstant;
 import processing.core.PApplet;
 import render.JtsRender;
 import wblut.geom.WB_Point;
+import wblut.processing.WB_Render;
 import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
@@ -40,26 +42,32 @@ public class SpacialFormGenerator {
     /* ------------- initialize & get (public) ------------- */
 
     /**
-    * initialize generator with input file & tree graph
-    *
-    * @param input input geometry
-    * @return void
-    */
+     * initialize generator with input file & tree graph
+     *
+     * @param input input geometry
+     * @return void
+     */
     public void init(ImportData input) {
         // catch input data
         this.input = input;
         System.out.println("** ADJUSTING TRAFFIC GRAPH AND SPLITTING BLOCKS **");
 
         // compute traffic mini spanning tree, nodes input from input data
-        List<TrafficNode> innerNodes = new ArrayList<>();
-        List<TrafficNode> innerNodes2 = new ArrayList<>();
+        List<TrafficNode> innerNodes = new ArrayList<>(); // main graph
+        List<TrafficNode> innerNodes2 = new ArrayList<>(); // floor graph
         for (WB_Point p : this.input.getInputInnerNodes()) {
-            innerNodes.add(new TrafficNodeTree(p, this.input.getInputBoundary()));
-            innerNodes2.add(new TrafficNodeTree(p, this.input.getInputBoundary()));
+            TrafficNode treeNode1 = new TrafficNodeTree(p, this.input.getInputBoundary());
+            TrafficNode treeNode2 = new TrafficNodeTree(p, this.input.getInputBoundary());
+            treeNode1.setRegionR(MallConstant.MAIN_TRAFFIC_WIDTH * 0.5 * MallConstant.SCALE);
+            treeNode2.setRegionR(MallConstant.MAIN_TRAFFIC_WIDTH * 0.5 * MallConstant.SCALE);
+            innerNodes.add(treeNode1);
+            innerNodes2.add(treeNode2);
         }
         List<TrafficNode> entryNodes = new ArrayList<>();
         for (WB_Point p : this.input.getInputEntries()) {
-            entryNodes.add(new TrafficNodeFixed(p, this.input.getInputBoundary()));
+            TrafficNode fixedNode = new TrafficNodeFixed(p, this.input.getInputBoundary());
+            fixedNode.setRegionR(MallConstant.MAIN_TRAFFIC_WIDTH * 0.5 * MallConstant.SCALE);
+            entryNodes.add(fixedNode);
         }
         this.mainGraph = new TrafficGraph(innerNodes, entryNodes);
         this.floorGraph = new TrafficGraph(innerNodes2, new ArrayList<TrafficNode>());
@@ -81,12 +89,12 @@ public class SpacialFormGenerator {
     /* ------------- mouse & key interaction at TRAFFIC GRAPH STEP ------------- */
 
     /**
-    * update tree node location and graph, split polygon
-    *
-    * @param pointerX x
-    * @param pointerY y
-    * @return void
-    */
+     * update tree node location and graph, split polygon
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return void
+     */
     public void dragUpdate(int pointerX, int pointerY) {
         mainGraph.setTreeNode(pointerX, pointerY);
         mainGraph.setFixedNode(pointerX, pointerY);
@@ -95,24 +103,24 @@ public class SpacialFormGenerator {
     }
 
     /**
-    * reset fixed node to not active
-    *
-    * @param
-    * @return void
-    */
+     * reset fixed node to not active
+     *
+     * @param
+     * @return void
+     */
     public void releaseUpdate() {
         mainGraph.resetActive();
         floorGraph.resetActive();
     }
 
     /**
-    * all keyboard interaction
-    *
-    * @param pointerX x
-    * @param pointerY y
-    * @param app PApplet
-    * @return void
-    */
+     * all keyboard interaction
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @param app      PApplet
+     * @return void
+     */
     public void keyUpdate(int pointerX, int pointerY, PApplet app) {
         // add a TrafficNode to graph
         if (app.key == 'a' || app.key == 'A') {
@@ -146,6 +154,10 @@ public class SpacialFormGenerator {
         if (app.key == 'e' || app.key == 'E') {
             floorGraph.addOrRemoveAtrium(pointerX, pointerY);
         }
+        // add an atrium to treeNode
+        if (app.key == 'f' || app.key == 'F') {
+            floorGraph.addOrRemoveAtriumEscalator();
+        }
         // increase atrium's length along edge
         if (app.key == 'j' || app.key == 'J') {
             floorGraph.updateSelectedAtriumLength(1);
@@ -165,38 +177,38 @@ public class SpacialFormGenerator {
     }
 
     /**
-    * start editing atrium
-    *
-    * @param pointerX x
-    * @param pointerY y
-    * @return void
-    */
+     * start editing atrium
+     *
+     * @param pointerX x
+     * @param pointerY y
+     * @return void
+     */
     public void atriumEdit(int pointerX, int pointerY) {
         floorGraph.chooseAtrium(pointerX, pointerY);
     }
 
     /**
-    * atrium editing end
-    *
-    * @param
-    * @return void
-    */
+     * atrium editing end
+     *
+     * @param
+     * @return void
+     */
     public void atriumEditEnd() {
         floorGraph.clearSelectAtrium();
     }
 
     /* ------------- draw ------------- */
 
-    public void display(JtsRender jrender, WB_Render3D render, PApplet app) {
+    public void display(JtsRender jtsRender, WB_Render render, PApplet app) {
         displayInputData(render, app);
         displayGraph(render, app);
     }
 
-    private void displayInputData(WB_Render3D render, PApplet app) {
+    private void displayInputData(WB_Render render, PApplet app) {
         input.display(render, app);
     }
 
-    private void displayGraph(WB_Render3D render, PApplet app) {
+    private void displayGraph(WB_Render render, PApplet app) {
         mainGraph.display(render, app);
     }
 
