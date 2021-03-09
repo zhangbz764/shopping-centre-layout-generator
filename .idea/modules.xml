@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../../../0_myjars/LargestRectangle/LargestRectangle.iml" filepath="$PROJECT_DIR$/../../../0_myjars/LargestRectangle/LargestRectangle.iml" />
       <module fileurl="file://$PROJECT_DIR$/../../../AAA_Study/0_JavaTools/Ztools/Ztools.iml" filepath="$PROJECT_DIR$/../../../AAA_Study/0_JavaTools/Ztools/Ztools.iml" />
       <module fileurl="file://$PROJECT_DIR$/../../../AAA_Study/202010_HuaianUrbanDesign/commercial_street/commercial_street.iml" filepath="$PROJECT_DIR$/../../../AAA_Study/202010_HuaianUrbanDesign/commercial_street/commercial_street.iml" />
       <module fileurl="file://$PROJECT_DIR$/shopping_mall.iml" filepath="$PROJECT_DIR$/shopping_mall.iml" />

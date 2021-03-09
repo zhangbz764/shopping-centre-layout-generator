@@ -14,6 +14,8 @@
     <orderEntry type="library" name="guo_cam" level="application" />
     <orderEntry type="library" name="igeo" level="application" />
     <orderEntry type="library" name="gurobi903" level="application" />
+    <orderEntry type="library" name="jswarm-pso_2_08" level="application" />
+    <orderEntry type="library" name="dashedlines" level="application" />
     <orderEntry type="library" name="Maven: org.processing:core:3.3.7" level="project" />
     <orderEntry type="library" name="Maven: org.jogamp.gluegen:gluegen-rt-main:2.3.2" level="project" />
     <orderEntry type="library" name="Maven: org.jogamp.gluegen:gluegen-rt:2.3.2" level="project" />
@@ -74,8 +76,5 @@
     <orderEntry type="library" name="Maven: org.apache.xmlgraphics:batik-transcoder:1.10" level="project" />
     <orderEntry type="library" name="Maven: org.apache.xmlgraphics:batik-anim:1.10" level="project" />
     <orderEntry type="module" module-name="Ztools" />
-    <orderEntry type="library" name="jswarm-pso_2_08" level="application" />
-    <orderEntry type="module" module-name="LargestRectangle" />
-    <orderEntry type="library" name="dashedlines" level="application" />
   </component>
 </module>

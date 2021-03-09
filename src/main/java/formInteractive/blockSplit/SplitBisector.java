@@ -179,9 +179,9 @@ public class SplitBisector implements Split {
                 }
                 return selectJoint(curr, newLineDir);
             } else {
-                ZPoint closet_pos_v = ZGeoMath.getClosetVec(lineDir, pos);
-                ZPoint closet_neg_v = ZGeoMath.getClosetVec(lineDir, neg);
-                return new ZPoint[]{curr.add(closet_pos_v), curr.add(closet_neg_v)};
+                ZPoint closest_pos_v = ZGeoMath.getclosestVec(lineDir, pos);
+                ZPoint closest_neg_v = ZGeoMath.getclosestVec(lineDir, neg);
+                return new ZPoint[]{curr.add(closest_pos_v), curr.add(closest_neg_v)};
             }
         } else {
             return null;
