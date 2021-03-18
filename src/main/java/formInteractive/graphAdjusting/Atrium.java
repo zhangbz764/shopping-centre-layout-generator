@@ -1,6 +1,5 @@
-package formInteractive.graphAdjusting.spacialElements;
+package formInteractive.graphAdjusting;
 
-import formInteractive.graphAdjusting.TrafficNode;
 import geometry.ZGeoFactory;
 import geometry.ZLine;
 import geometry.ZPoint;
@@ -10,7 +9,6 @@ import processing.core.PApplet;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
-import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
 import java.util.List;

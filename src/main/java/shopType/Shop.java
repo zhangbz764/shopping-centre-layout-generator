@@ -1,9 +1,8 @@
-package shoptype;
+package shopType;
 
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
-import wblut.processing.WB_Render3D;
 
 /**
  * abstract class of a shop

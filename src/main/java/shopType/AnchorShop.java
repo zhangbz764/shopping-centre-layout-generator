@@ -1,4 +1,4 @@
-package shoptype;
+package shopType;
 
 /**
  * anchor shop (主力店)

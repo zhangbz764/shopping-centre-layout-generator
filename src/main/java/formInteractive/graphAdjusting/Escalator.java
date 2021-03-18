@@ -1,4 +1,4 @@
-package formInteractive.graphAdjusting.spacialElements;
+package formInteractive.graphAdjusting;
 
 import geometry.ZLine;
 import geometry.ZPoint;

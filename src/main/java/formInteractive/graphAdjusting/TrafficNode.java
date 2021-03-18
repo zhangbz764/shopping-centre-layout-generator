@@ -1,12 +1,10 @@
 package formInteractive.graphAdjusting;
 
-import formInteractive.graphAdjusting.spacialElements.Atrium;
 import geometry.ZNode;
 import geometry.ZPoint;
 import processing.core.PApplet;
 import wblut.geom.WB_Point;
 import wblut.processing.WB_Render;
-import wblut.processing.WB_Render3D;
 
 import java.util.List;
 

@@ -1,6 +1,5 @@
 package formInteractive.graphAdjusting;
 
-import formInteractive.graphAdjusting.spacialElements.Atrium;
 import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;
@@ -8,7 +7,6 @@ import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
-import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +20,7 @@ import java.util.List;
  * @time 10:24
  */
 public class TrafficNodeTree extends TrafficNode {
-    private final WB_Polygon boundary;
+    private WB_Polygon boundary;
     private List<ZPoint> joints;  // join points on bisectors
     private Atrium atrium;
     private boolean atriumActive;
@@ -31,15 +29,23 @@ public class TrafficNodeTree extends TrafficNode {
 
     public TrafficNodeTree(double x, double y, WB_Polygon boundary) {
         super(x, y);
-        this.boundary = boundary;
+        setBoundary(boundary);
     }
 
     public TrafficNodeTree(WB_Point p, WB_Polygon boundary) {
         super(p);
-        this.boundary = boundary;
+        setBoundary(boundary);
     }
 
-    /* ------------- set & get ------------- */
+    public TrafficNodeTree(WB_Point p) {
+        super(p);
+    }
+
+    /* ------------- setter & getter ------------- */
+
+    public void setBoundary(WB_Polygon boundary) {
+        this.boundary = boundary;
+    }
 
     /**
      * @return void

@@ -1,4 +1,4 @@
-package shoptype;
+package shopType;
 
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;

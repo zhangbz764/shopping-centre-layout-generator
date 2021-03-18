@@ -9,6 +9,10 @@ import render.JtsRender;
 import render.ZRender;
 import wblut.processing.WB_Render;
 
+import java.io.File;
+import java.net.URL;
+import java.util.Objects;
+
 public class ShoppingMall extends PApplet {
     public void setStats() {
         MallConstant.SCALE = 2;
@@ -25,8 +29,12 @@ public class ShoppingMall extends PApplet {
     private final static double scale = 2;
 
     // input file
-    public final String inputPath = "E:\\AAA_Project\\202009_Shuishi\\codefiles\\1029.3dm";
-    public final String outputPath = "E:\\AAA_Project\\202009_Shuishi\\codefiles\\output.3dm";
+    public String inputPath;
+
+//    public final String outputPath =
+//            Objects.requireNonNull(
+//                    this.getClass().getClassLoader().getResource("")
+//            ).getPath() + "output.3dm";
 
     public final ImportData input = new ImportData();
 
@@ -55,7 +63,10 @@ public class ShoppingMall extends PApplet {
     /* ------------- setup ------------- */
 
     public void setup() {
+        this.inputPath = "./src/main/resources/mall_test.3dm";
+
         setStats();
+
 
         render = new WB_Render(this);
         jtsRender = new JtsRender(this);

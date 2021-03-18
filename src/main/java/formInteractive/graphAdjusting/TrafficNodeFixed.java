@@ -1,6 +1,5 @@
 package formInteractive.graphAdjusting;
 
-import formInteractive.graphAdjusting.spacialElements.Atrium;
 import geometry.ZPoint;
 import math.ZGeoMath;
 import processing.core.PApplet;

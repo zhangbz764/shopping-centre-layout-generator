@@ -6,15 +6,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="archijson" />
         <module name="Ztools" />
-        <module name="commercial_street" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel>
-      <module name="commercial_street" target="7" />
-      <module name="shopping_mall" target="7" />
-      <module name="untitled" target="7" />
-      <module name="Ztools" target="7" />
+    <bytecodeTargetLevel target="8">
+      <module name="archijson" target="8" />
+      <module name="shopping_mall" target="8" />
+      <module name="Ztools" target="8" />
     </bytecodeTargetLevel>
   </component>
 </project>
