@@ -17,11 +17,11 @@ public class MallShow extends PApplet {
 
     public void settings () {
         size(600, 800, P3D);
-        server = new MallServer();
     }
 
     public void setup() {
         cam = new CameraController(this, 1000);
+        server = new MallServer();
     }
 
     public void draw() {

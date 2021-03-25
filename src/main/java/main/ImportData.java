@@ -8,7 +8,6 @@ import transform.ZTransform;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
-import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
 import java.util.List;

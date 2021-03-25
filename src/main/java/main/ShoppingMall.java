@@ -9,10 +9,6 @@ import render.JtsRender;
 import render.ZRender;
 import wblut.processing.WB_Render;
 
-import java.io.File;
-import java.net.URL;
-import java.util.Objects;
-
 public class ShoppingMall extends PApplet {
     public void setStats() {
         MallConstant.SCALE = 2;

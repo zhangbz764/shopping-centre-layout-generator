@@ -2,7 +2,6 @@ package formInteractive.atrium;
 
 import geometry.ZPoint;
 import math.ZGeoMath;
-import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 

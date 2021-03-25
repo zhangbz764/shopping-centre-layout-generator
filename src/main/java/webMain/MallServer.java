@@ -1,7 +1,6 @@
 package webMain;
 
 import com.google.gson.Gson;
-
 import converter.WB_Converter;
 import geometry.BaseGeometry;
 import geometry.Plane;
@@ -10,9 +9,11 @@ import geometry.Vertices;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import main.ArchiJSON;
+import wblut.geom.WB_Polygon;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * description
@@ -23,7 +24,6 @@ import java.util.ArrayList;
  * @time 17:49
  */
 public class MallServer {
-
     private static final int PORT = 27781;
     private Socket socket;
     public MallGenerator generator;
@@ -37,10 +37,10 @@ public class MallServer {
                 this.setupServer();
                 System.out.println("Socket connected to " + args[0]);
             } else {
-                String uri = "http://127.0.0.1:" + PORT;
-                socket = IO.socket(uri);
+                String url = "http://127.0.0.1:" + PORT;
+                socket = IO.socket(url);
                 this.setupServer();
-                System.out.println("Socket connected to " + uri);
+                System.out.println("Socket connected to " + url);
             }
 
         } catch (URISyntaxException e) {
@@ -50,35 +50,45 @@ public class MallServer {
 
     /* ------------- member function ------------- */
 
+    /**
+    * receiving, converting, processing and returning data
+    *
+    * @return void
+    */
     public void setupServer() {
+        Gson gson = new Gson();
+
         generator = new MallGenerator();
         generator.init();
-        Gson gson = new Gson();
 
         socket.connect();
 
         socket.on("bts:receiveGeometry", args -> {
-            // receive
+            // receiving
             ArchiJSON archijson = gson.fromJson(args[0].toString(), ArchiJSON.class);
             archijson.parseGeometryElements(gson);
-//            System.out.println(archijson);
 
             // converting
-            System.out.println("geo num received -> " + archijson.getGeometries().size());
-            generator.innerNode_receive = WB_Converter.toWB_Point((Vertices) archijson.getGeometries().get(0));
-            generator.polyAtrium_receive = new ArrayList<>();
-            for (int i = 1; i < archijson.getGeometries().size(); i++) {
+            int atriumNum = archijson.getProperties().getAtriumNum(); // 中庭图元个数
+            double bufferDist = archijson.getProperties().getBufferDist(); // 偏移距离
+
+            generator.setInnerNode_receive(
+                    WB_Converter.toWB_Point((Vertices) archijson.getGeometries().get(0))
+            );
+            List<WB_Polygon> polyAtrium_receive = new ArrayList<>();
+            for (int i = 1; i < atriumNum + 1; i++) {
                 BaseGeometry g = archijson.getGeometries().get(i);
                 if (g instanceof Segments) {
-                    generator.polyAtrium_receive.add(WB_Converter.toWB_Polygon((Segments) g));
+                    polyAtrium_receive.add(WB_Converter.toWB_Polygon((Segments) g));
                 } else if (g instanceof Plane) {
-                    generator.polyAtrium_receive.add(WB_Converter.toWB_Polygon((Plane) g));
+                    polyAtrium_receive.add(WB_Converter.toWB_Polygon((Plane) g));
                 }
             }
+            generator.setPolyAtrium_receive(polyAtrium_receive);
 
             // processing
             generator.generateGraph();
-            generator.generateBuffer();
+            generator.generateBuffer(bufferDist);
 
             // return
             ArchiJSON json = generator.toArchiJSON(archijson.getId(), gson);

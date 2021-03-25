@@ -10,7 +10,6 @@ import processing.core.PApplet;
 import render.JtsRender;
 import wblut.geom.WB_Point;
 import wblut.processing.WB_Render;
-import wblut.processing.WB_Render3D;
 
 import java.util.ArrayList;
 import java.util.List;
