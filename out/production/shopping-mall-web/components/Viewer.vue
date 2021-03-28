@@ -17,9 +17,9 @@
     
     </div>
     
-    <ViewSelectCard
+    <OptionCard
       style="position:fixed;bottom:64px;left:0px;right:0px;margin-left: auto;"
-    ></ViewSelectCard>
+    ></OptionCard>
     
     <template style="background:#ffffff;">
       <div id="container" class="d-flex justify-sm-center">
@@ -32,15 +32,20 @@
 
 <script>
 import InfoCard from "@/components/InfoCard";
-import ViewSelectCard from "@/components/ViewSelectCard";
+import OptionCard from "@/components/OptionCard";
 
 export default {
   name: 'Viewer',
-  components: {ViewSelectCard, InfoCard},
+  components: {OptionCard, InfoCard},
   data: () => ({}),
   mounted() {
-    const test = require('@/examples' + this.$route.path + '.js');
-    test.main();
+    if (this.$route.path === '/') {
+      const index = require('@/index.js');
+      index.main();
+    } else {
+      const examples = require('@/examples' + this.$route.path + '.js');
+      examples.main();
+    }
   },
   
 }

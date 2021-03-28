@@ -63,7 +63,20 @@ public class MallServer {
 
         socket.connect();
 
+        socket.on("ftb:receiveBuffer", args ->{
+            System.out.println("receiving");
+            // receiving
+            ArchiJSON archijson = gson.fromJson(args[0].toString(), ArchiJSON.class);
+            archijson.parseGeometryElements(gson);
+
+
+            // return
+            ArchiJSON json = generator.toArchiJSON2(archijson.getId(), gson);
+            socket.emit("btf:sendPartition", gson.toJson(json));
+        });
+
         socket.on("bts:receiveGeometry", args -> {
+            System.out.println("receiving");
             // receiving
             ArchiJSON archijson = gson.fromJson(args[0].toString(), ArchiJSON.class);
             archijson.parseGeometryElements(gson);
@@ -72,6 +85,7 @@ public class MallServer {
             int atriumNum = archijson.getProperties().getAtriumNum(); // 中庭图元个数
             double bufferDist = archijson.getProperties().getBufferDist(); // 偏移距离
 
+            System.out.println(atriumNum);
             generator.setInnerNode_receive(
                     WB_Converter.toWB_Point((Vertices) archijson.getGeometries().get(0))
             );
@@ -94,5 +108,6 @@ public class MallServer {
             ArchiJSON json = generator.toArchiJSON(archijson.getId(), gson);
             socket.emit("stb:sendGeometry", gson.toJson(json));
         });
+
     }
 }

@@ -39,6 +39,7 @@
               :value="info.position[ti]"
               dense
               outlined
+              :readonly="!updateFlag"
               @change="updateScene"></v-text-field>
           </v-col>
         
@@ -59,10 +60,10 @@
             <v-text-field
               :ref="ti"
               :label="ti"
-              :rules="[rules.number]"
               :value="info.model[ti]"
               dense
               outlined
+              :readonly="!updateFlag"
               @change="updateScene"></v-text-field>
           </v-col>
         </v-row>
@@ -115,12 +116,14 @@
 </template>
 
 <script>
-// import {updateObject} from "@/index";
 
 export default {
   name: "InfoCard",
   data() {
     return {
+      updateFlag: false,
+      updateObject: function () {
+      },
       show: false,
       info: {
         uuid: 'uuid',
@@ -140,23 +143,45 @@ export default {
   mounted() {
     window.InfoCard = this;
     this.hideInfoCard(this.show);
+    this.init();
   },
   methods: {
+    init() {
+      if (this.$route.path === '/') {
+        const index = require('@/index.js');
+        if (index.updateObject !== undefined) {
+          this.updateFlag = true;
+          this.updateObject = index.updateObject;
+        }
+        // index.updateObject(this.info.uuid, this.info.model);
+      } else {
+        const examples = require('@/examples' + this.$route.path + '.js');
+        if (examples.updateObject !== undefined) {
+          this.updateFlag = true;
+          this.updateObject = examples.updateObject;
+        }
+        // examples.updateObject(this.info.uuid, this.info.model);
+      }
+    },
     hideInfoCard(isShow) {
       this.show = isShow;
       let e = document.getElementById('info-card');
       e.style.display = isShow ? "block" : "none";
     },
     updateScene() {
-      console.log(this.$refs)
-      for (let k of Object.keys(this.info.position)) {
-        this.info.position[k] = Number(this.$refs[k][0].lazyValue);
-      }
+      if (this.updateFlag) {
+        console.log(this.$refs)
+        for (let k of Object.keys(this.info.position)) {
+          this.info.position[k] = Number(this.$refs[k][0].lazyValue);
+        }
       
-      for (let k of Object.keys(this.info.model)) {
-        this.info.model[k] = Number(this.$refs[k][0].lazyValue);
+        for (let k of Object.keys(this.info.model)) {
+          this.info.model[k] = Number(this.$refs[k][0].lazyValue);
+        }
+        this.updateObject(this.info.uuid, this.info.model);
       }
-      // updateObject(this.info.uuid, this.info.model);
+    
+    
     },
     
   }

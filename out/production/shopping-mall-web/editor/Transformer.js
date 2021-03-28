@@ -55,7 +55,7 @@ const Transformer = function (_scene, _renderer, _camera) {
       o.position.x = Math.round(o.position.x);
       o.position.y = Math.round(o.position.y);
       o.position.z = Math.round(o.position.z);
-      
+  
       if (o.toInfoCard !== undefined) {
         o.toInfoCard();
         return;
@@ -64,9 +64,15 @@ const Transformer = function (_scene, _renderer, _camera) {
       window.InfoCard.info.position = o.position;
       window.InfoCard.info.model = {};
       window.InfoCard.info.properties = {type: o.type, matrix: o.matrix.elements};
-      
+  
+    } else {
+      // clear info card
+      window.InfoCard.info.uuid = "uuid";
+      window.InfoCard.info.position = {};
+      window.InfoCard.info.model = {};
+      window.InfoCard.info.properties = {};
     }
-    
+  
   }
   
   function toList(group) {
@@ -77,34 +83,61 @@ const Transformer = function (_scene, _renderer, _camera) {
     }
   }
   
+  function highlightCurrent(object) {
+    if (object) {
+      window.highlightObject = toList(object);
+    } else {
+      window.highlightObject = window.objects;
+    }
+  }
+  
+  // eslint-disable-next-line no-unused-vars
+  function objectChanged(o) {
+    // console.log(o)
+  }
+  
+  // eslint-disable-next-line no-unused-vars
+  function draggingChanged(o, event) {
+    // event: true - dragging start, false - dragging end
+    // console.log(o);
+  }
+  
+  // eslint-disable-next-line no-unused-vars
+  function deleteChanged(o) {
+  
+  }
+  
   function init() {
     control = new TransformControls(_camera, _renderer.domElement);
-  
+    
     control.addEventListener('object-changed',
       function (event) {
-        if (control.object !== undefined) {
-          scope.object = control.object;
+        scope.object = control.object;
+        addToInfoCard(event.value);
+        // highlightCurrent(control.object);
+        if (control.object) {
           window.highlightObject = toList(control.object);
-        
-          /* ---------- add to info card ---------- */
-          addToInfoCard(event.value);
         } else {
           window.highlightObject = window.objects;
         }
+        scope.objectChanged(control.object);
+        
       });
     
     control.addEventListener('dragging-changed', function (event) {
       addDraggingFlag(scope.object, event.value);
       dragged = !event.value;
-      
+  
+      scope.draggingChanged(scope.object, event.value);
+  
       if (event.value === true) {
         clonedObject = new THREE.Group();
         setCloneObject(control.object);
       } else {
-        
+    
         control.object.updateMatrix();
         addToInfoCard(control.object);
-  
+    
         if (copy) {
           applyTransformGroup(clonedObject);
           while (clonedObject.children.length > 0) {
@@ -289,7 +322,7 @@ const Transformer = function (_scene, _renderer, _camera) {
         scope._dragFrames.enabled = false;
     }
   }
-  
+
   
   function deleteObject(object) {
     if (object === undefined) return;
@@ -297,6 +330,14 @@ const Transformer = function (_scene, _renderer, _camera) {
     if (!object.isGroup) {
       console.log(object)
       object.parent.remove(object);
+      // console.log(_scene.getObjectById(parseInt(object.uuid)))
+      // if(_scene.getObjectById(object.uuid) !== undefined)
+      try {
+        _scene.remove(object)
+      } catch (e) {
+        console.log(e)
+      }
+      scope.deleteChanged(object);
     } else {
       while (object.children.length > 0) {
         object.children.forEach((item) => {
@@ -403,7 +444,7 @@ const Transformer = function (_scene, _renderer, _camera) {
         control.setMode("translate");
         scope.mode = 0;
         break;
-      
+  
       case 69: // E
         control.setMode("rotate");
         scope.mode = 1;
@@ -437,21 +478,22 @@ const Transformer = function (_scene, _renderer, _camera) {
       case 109: // -, _, num-
         control.setSize(Math.max(control.size - 0.1, 0.1));
         break;
-      
+  
       case 18: // alt
         copy = !copy;
         break;
-      
+  
       case 32: // space bar
         clear();
-        
+    
         break;
-      
+  
+      case 68: // D
       case 46: // delete
         deleteSelected();
-  
+    
         break;
-      
+  
       case 16: // shift
         shiftDown = true;
     }
@@ -541,6 +583,11 @@ const Transformer = function (_scene, _renderer, _camera) {
   this.applyTransform = applyTransformGroup;
   this.clear = clear;
   this.deleteSelected = deleteSelected;
+  
+  this.highlightCurrent = highlightCurrent;
+  this.objectChanged = objectChanged;
+  this.draggingChanged = draggingChanged;
+  this.deleteChanged = deleteChanged;
   
   this.translateionSnap = 100;
   this.rotationSnap = 15;

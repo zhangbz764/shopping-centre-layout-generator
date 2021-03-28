@@ -21,7 +21,9 @@ const Viewport = function () {
   function init() {
     window.layer = 0;
     window.objects = [];
-  
+    window.searchSceneByUUID = function (uuid) {
+      return scene.getObjectByProperty('uuid', uuid);
+    }
     /* ---------- renderer ---------- */
     renderer.domElement.tabIndex = 0;
     renderer.autoClear = false;
@@ -30,7 +32,7 @@ const Viewport = function () {
   
     /* ---------- dom ---------- */
     addToDOM();
-    
+  
     /* ---------- gui ---------- */
     gui.initGUI();
     addGUI(gui.gui);
@@ -147,6 +149,7 @@ const Viewport = function () {
   }
   
   function onDocumentKeyDown(event) {
+    // console.log('viewport key down');
     switch (event.keyCode) {
       case 16: // Shift
         controller.enablePan = true;

@@ -156,10 +156,9 @@ public class MallGenerator {
         // initializing
         ArchiJSON json = new ArchiJSON();
         json.setId(clientID);
-
-        // converting to json
         List<JsonElement> elements = new ArrayList<>();
 
+        // converting to json
 //        Vertices vertices = WB_Converter.toVertices(fixedNodes);
 //        elements.add(gson.toJsonTree(vertices));
         for (WB_Segment seg : graphSegments) {
@@ -191,8 +190,31 @@ public class MallGenerator {
             elements.add(gson.toJsonTree(bufferControlPointsEach));
         }
 
+        // setup json
         json.setGeometryElements(elements);
+        System.out.println("send to front");
+        return json;
+    }
 
+    public ArchiJSON toArchiJSON2(String clientID, Gson gson) {
+        // initializing
+        ArchiJSON json = new ArchiJSON();
+        json.setId(clientID);
+        List<JsonElement> elements = new ArrayList<>();
+
+        // converting to json
+        WB_Polygon boundary = input.getInputBoundary();
+        WB_Point[] newPoint = new WB_Point[boundary.getNumberOfShellPoints()];
+        for (int i = 0; i < boundary.getNumberOfShellPoints(); i++) {
+            newPoint[i] = boundary.getPoint(i).translate(100, 100, 0);
+        }
+        WB_Polygon newBoundary = new WB_Polygon(newPoint);
+        Segments poly = WB_Converter.toSegments(newBoundary);
+        elements.add(gson.toJsonTree(poly));
+
+        // setup json
+        json.setGeometryElements(elements);
+        System.out.println("send to front");
         return json;
     }
 

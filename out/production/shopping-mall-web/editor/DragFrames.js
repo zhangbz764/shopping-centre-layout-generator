@@ -25,7 +25,7 @@ import * as THREE from 'three'
  */
 
 /**
- *
+ * notice: if ANGLE graphics backend use OpenGL (settings in chrome://flags), the dragframe will not work
  * @param _camera
  * @param _scene
  * @param _renderer

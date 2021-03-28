@@ -12,24 +12,27 @@ let vertices;
 let mesh;
 
 /* ---------- GUI setup ---------- */
+const control = {
+  send: function () {
+    reconstructed.forEach((it) => {
+      it.parent.remove(it);
+    })
+    reconstructed = [];
+    
+    astMgr.setCurrentID(1);
+    archijson.sendArchiJSON('bts:sendGeometry', window.objects);
+  },
+  dragChanging: false
+}
+
 function initGUI() {
-  const control = {
-    send: function () {
-      reconstructed.forEach((it) => {
-        it.parent.remove(it);
-      })
-      reconstructed = [];
-      
-      astMgr.setCurrentID(1);
-      archijson.sendArchiJSON('bts:sendGeometry', window.objects);
-    }
-  }
   gui.gui.add(control, 'send');
+  gui.gui.add(control, 'dragChanging');
 }
 
 function parseGeometry(geometryElements) {
   for (let e of geometryElements) {
-  
+    
     let b = scene.getObjectByProperty('uuid', e.uuid);
     
     if (!b) {
@@ -105,16 +108,29 @@ window.searchSceneByUUID = function (uuid) {
 
 
 function draw() {
-  if (segments && segments.dragging) {
+  if (control.dragChanging && segments && segments.dragging) {
+    segments.geometry.setFromPoints((balls.map((handle) => handle.position)))
+    prism.updateModel(prism, {segments: segments.modelParam(segments), height: 5, extruded: 1});
+    
+    vertices.geometry.setFromPoints(geoFty.pointsInsideSegments(segments, 5000))
+  }
+}
+
+
+function draggingChanged(o, event) {
+  if (!event && balls.includes(o)) {
     
     segments.geometry.setFromPoints((balls.map((handle) => handle.position)))
     prism.updateModel(prism, {segments: segments.modelParam(segments), height: 5, extruded: 1});
     
     vertices.geometry.setFromPoints(geoFty.pointsInsideSegments(segments, 5000))
   }
-  
 }
 
+function updateObject(uuid, model) {
+  const o = scene.getObjectByProperty('uuid', uuid);
+  o.updateModel(o, model);
+}
 
 /* ---------- main entry ---------- */
 function main() {
@@ -125,7 +141,8 @@ function main() {
   
   astMgr = viewport.enableAssetManager();
   viewport.enableDragFrames();
-  viewport.enableTransformer();
+  let tr = viewport.enableTransformer();
+  tr.draggingChanged = draggingChanged;
   
   viewport.draw = draw;
   initGUI();
@@ -138,5 +155,6 @@ function main() {
 }
 
 export {
-  main
+  main,
+  updateObject
 }

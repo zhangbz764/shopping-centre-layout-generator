@@ -7,7 +7,7 @@ const examples = [
   '2d-editor', '3d-editor', 'camera-viewer',
   'marching-cubes', 'material-example', 'shape-2d',
   'undo-redo-canvas', 'image-3d', 'java-backend-example',
-  'archijson-geometry','quick3d'
+  'archijson-geometry','quick3d', 'csg', 'interactive-spanning-tree'
 ]
 const routes = [];
 examples.forEach((item) => {
@@ -28,7 +28,8 @@ examples.forEach((item) => {
 })
 
 routes.push(
-  {path: '/', name: 'home', component: Home, meta: {title: 'ArchiWeb'}}
+  {path: '/', name: 'index', component: Viewer, meta: {title: 'App'}},
+  {path: '/archiweb', name: 'home', component: Home, meta: {title: 'ArchiWeb'}}
 )
 
 Vue.use(VueRouter)

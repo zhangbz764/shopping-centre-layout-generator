@@ -19,8 +19,16 @@
         class="pa-2"
       >
         <v-card-title class="headline justify-center">
-          
-          ArchiWeb User Manual
+          {{ title }}
+        </v-card-title>
+        <v-card-text
+          v-if="info.length > 0"
+          class="justify-center text-center">
+          <span v-html="info"></span>
+  
+        </v-card-text>
+        <v-card-title class="justify-center">
+          Hotkeys
         </v-card-title>
         <v-card-text class="pa-3">
           <v-col
@@ -59,15 +67,17 @@
 <script>
 
 export default {
-  name: "ViewSelectCard",
+  name: "OptionCard",
   data: () => ({
     value: 1,
     dialog: false,
-    
+    title: "ArchiWeb User Manual",
+    info: "",
     manual: ["W:Translate", "E:Rotate", "R:Scale", "+/-:Size"
       , "Q:World/Local", "S:Snap", "C:Camera", "1-9:Camera View"]
   }),
   mounted() {
+    window.OptionCard = this;
   },
   
 }
