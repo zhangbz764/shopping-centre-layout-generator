@@ -1,6 +1,6 @@
 package formInteractive.graphAdjusting;
 
-import geometry.ZGeoFactory;
+import geometry.ZFactory;
 import geometry.ZLine;
 import geometry.ZPoint;
 import main.MallConstant;
@@ -85,7 +85,7 @@ public class Atrium {
             controlPoints.add(pt2);
         } else if (center.getLinkedEdgeNum() == 2) {
             // on edge
-            for (int i = 0; i < center.geiNeighborNum(); i++) {
+            for (int i = 0; i < center.getNeighborNum(); i++) {
                 ControlPoint pt = new ControlPoint(center, center.getVecUnitToNeighbor(i), center.getLinkedEdge(i).getLength() * 0.35);
                 controlPoints.add(pt);
             }
@@ -100,7 +100,7 @@ public class Atrium {
             }
         } else if (center.getLinkedEdgeNum() > 2) {
             // on edge
-            for (int i = 0; i < center.geiNeighborNum(); i++) {
+            for (int i = 0; i < center.getNeighborNum(); i++) {
                 ControlPoint pt = new ControlPoint(center, center.getVecUnitToNeighbor(i), center.getLinkedEdge(i).getLength() * 0.3);
                 controlPoints.add(pt);
             }
@@ -148,7 +148,7 @@ public class Atrium {
             polyPoints[i] = boundaryPoints.get(order[i]).toWB_Point();
         }
         polyPoints[polyPoints.length - 1] = polyPoints[0];
-        this.polygon = ZGeoFactory.wbgf.createSimplePolygon(polyPoints);
+        this.polygon = ZFactory.wbgf.createSimplePolygon(polyPoints);
     }
 
     /**

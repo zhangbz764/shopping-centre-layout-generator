@@ -101,7 +101,6 @@ public class TrafficGraph {
     /**
      * clear all fixed nodes
      *
-     * @param
      * @return void
      */
     public void clearFixed() {
@@ -115,7 +114,6 @@ public class TrafficGraph {
     /**
      * transform all edges to a list of LineStrings
      *
-     * @param
      * @return java.util.List<org.locationtech.jts.geom.LineString>
      */
     public List<LineString> toLineStrings() {
@@ -134,7 +132,6 @@ public class TrafficGraph {
     /**
      * reset all nodes' status
      *
-     * @param
      * @return void
      */
     public void resetActive() {
@@ -303,7 +300,6 @@ public class TrafficGraph {
     /**
      * set a atrium for tree node
      *
-     * @param
      * @return void
      */
     public void setAtrium() {
@@ -464,7 +460,6 @@ public class TrafficGraph {
     /**
      * initialize adjacency matrix of all nodes
      *
-     * @param
      * @return void
      */
     private void matrixInit() {
@@ -483,7 +478,6 @@ public class TrafficGraph {
     /**
      * compute minimum spanning tree
      *
-     * @param
      * @return void
      */
     private void getTree() {
@@ -537,7 +531,6 @@ public class TrafficGraph {
     /**
      * add edges from entries to their nearest node
      *
-     * @param
      * @return void
      */
     private void getFixedLink() {
@@ -567,7 +560,6 @@ public class TrafficGraph {
     /**
      * set node relations and join point on each bisector
      *
-     * @param
      * @return void
      */
     private void setRelations() {
@@ -581,18 +573,18 @@ public class TrafficGraph {
 
         // set relations
         for (ZEdge e : treeEdges) {
-            e.getStart().setNeighbor(e.getEnd());
-            e.getEnd().setNeighbor(e.getStart());
+            e.getStart().addNeighbor(e.getEnd());
+            e.getEnd().addNeighbor(e.getStart());
 
-            e.getStart().setLinkedEdges(e);
-            e.getEnd().setLinkedEdges(e);
+            e.getStart().addLinkedEdge(e);
+            e.getEnd().addLinkedEdge(e);
         }
         for (ZEdge e : fixedEdges) {
-            e.getStart().setNeighbor(e.getEnd());
-            e.getEnd().setNeighbor(e.getStart());
+            e.getStart().addNeighbor(e.getEnd());
+            e.getEnd().addNeighbor(e.getStart());
 
-            e.getStart().setLinkedEdges(e);
-            e.getEnd().setLinkedEdges(e);
+            e.getStart().addLinkedEdge(e);
+            e.getEnd().addLinkedEdge(e);
         }
     }
 

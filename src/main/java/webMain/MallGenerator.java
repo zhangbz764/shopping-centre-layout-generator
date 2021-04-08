@@ -3,7 +3,6 @@ package webMain;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import converter.JTS_Converter;
 import converter.WB_Converter;
 import formInteractive.graphAdjusting.TrafficGraph;
 import formInteractive.graphAdjusting.TrafficNode;
@@ -14,23 +13,25 @@ import main.ArchiJSON;
 import main.ImportData;
 import math.ZGeoMath;
 import org.locationtech.jts.geom.*;
-import org.locationtech.jts.operation.buffer.BufferOp;
-import org.locationtech.jts.operation.buffer.BufferParameters;
-import org.locationtech.jts.simplify.DouglasPeuckerSimplifier;
+import org.locationtech.jts.operation.polygonize.Polygonizer;
 import processing.core.PApplet;
 import render.JtsRender;
+import subdivision.ZSD_SkeVorStrip;
 import transform.ZTransform;
 import wblut.geom.WB_Coord;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.geom.WB_Segment;
-import wblut.processing.WB_Render3D;
+import wblut.processing.WB_Render;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
- * description
+ * main generator
+ * catch data from front-end
+ * convert data to front-end
  *
  * @author ZHANG Bai-zhou zhangbz
  * @project archijson
@@ -41,12 +42,14 @@ public class MallGenerator {
     private boolean draw = false; // display switch
 
     private final ImportData input = new ImportData(); // (temp) input data from backend
+
+    // geometries from front-end
     public List<WB_Point> innerNode_receive;
     public List<WB_Polygon> polyAtrium_receive;
+    public List<LineString> bufferCurve_receive;
 
+    // generator
     private TrafficGraph graph;
-    private List<LineString> bufferLineStrings;
-    private Geometry buffer;
     private List<List<WB_Coord>> bufferControlPoints;
 
     /* ------------- constructor ------------- */
@@ -91,43 +94,26 @@ public class MallGenerator {
      * @return void
      */
     public void generateBuffer(double dist) {
+        // receive geometries and generate buffer
         List<Geometry> geos = new ArrayList<>(getLineStrings());
-//        System.out.println(polyAtrium_receive);
         if (polyAtrium_receive != null && polyAtrium_receive.size() > 0) {
             for (WB_Polygon p : polyAtrium_receive) {
                 geos.add(ZTransform.WB_PolygonToJtsPolygon(p));
             }
         }
         Geometry[] geometries = geos.toArray(new Geometry[0]);
-        GeometryCollection collection = ZGeoFactory.jtsgf.createGeometryCollection(geometries);
-        Geometry buffer = collection.buffer(dist);
-//        BufferOp bop = new BufferOp(collection);
-//        bop.setEndCapStyle(BufferParameters.CAP_SQUARE);
-//        Geometry buffer = bop.getResultGeometry(dist);
+        GeometryCollection collection = ZFactory.jtsgf.createGeometryCollection(geometries);
+        Geometry originBuffer = collection.buffer(dist);
 
-
-//        if (buffer instanceof Polygon) {
-//            LineString bufferLS = ZTransform.PolygonToLineString((Polygon) buffer).get(0);
-//            Polygon boundary = ZTransform.WB_PolygonToJtsPolygon(input.getInputBoundary());
-//            Geometry intersection = bufferLS.intersection(boundary);
-//            if (intersection instanceof MultiLineString) {
-//                for (int i = 0; i < intersection.getNumGeometries(); i++) {
-//                    bufferLineStrings.add((LineString) intersection.getGeometryN(i));
-//                }
-//            } else {
-//                System.out.println("not MultiLineString");
-//            }
-//        }
-
+        // make intersection and record control points
         this.bufferControlPoints = new ArrayList<>();
-        if (buffer instanceof Polygon) {
-            LineString bufferLS = ZTransform.PolygonToLineString((Polygon) buffer).get(0);
+        if (originBuffer instanceof Polygon) {
+            LineString bufferLS = ZTransform.PolygonToLineString((Polygon) originBuffer).get(0);
             Polygon boundary = ZTransform.WB_PolygonToJtsPolygon(input.getInputBoundary());
             Geometry intersection = bufferLS.intersection(boundary);
-            this.buffer = intersection;
             if (intersection instanceof MultiLineString) {
                 for (int i = 0; i < intersection.getNumGeometries(); i++) {
-                    List<ZPoint> splitPoints = ZGeoMath.splitLineString((LineString) intersection.getGeometryN(i), 6);
+                    List<ZPoint> splitPoints = ZGeoMath.splitPolyLineEdge((LineString) intersection.getGeometryN(i), 6);
                     List<WB_Coord> splitPointsEach = new ArrayList<>();
                     for (ZPoint p : splitPoints) {
                         splitPointsEach.add(p.toWB_Point());
@@ -139,6 +125,60 @@ public class MallGenerator {
             }
         }
     }
+
+    private Polygon publicBlockPoly;
+    private List<Polygon> shopBlockPolys;
+    private List<List<WB_Polygon>> shopCells;
+    private ZSD_SkeVorStrip sub1;
+    private ZSD_SkeVorStrip sub2;
+    private ZSD_SkeVorStrip sub3;
+
+    /**
+     * split the whole boundary and generate first-level subdivision
+     *
+     * @return void
+     */
+    public void generateSplit() {
+        // spilt blocks
+        Polygonizer pr = new Polygonizer();
+        Geometry nodedLineStrings = ZTransform.WB_PolyLineToJtsLineString(input.getInputBoundary());
+        for (LineString ls : bufferCurve_receive) {
+            LineString newLs = ZFactory.createExtendedLineString(ls, 0.1);
+            nodedLineStrings = nodedLineStrings.union(newLs);
+        }
+        pr.add(nodedLineStrings);
+        Collection<Polygon> allPolys = pr.getPolygons();
+        Point verify = ZTransform.WB_CoordToPoint(innerNode_receive.get(0));
+
+        for (Polygon p : allPolys) {
+            if (p.contains(verify)) {
+                this.publicBlockPoly = (Polygon) p;
+                break;
+            }
+        }
+        allPolys.remove(publicBlockPoly);
+        this.shopBlockPolys = (List<Polygon>) allPolys;
+        System.out.println("shop blocks: " + shopBlockPolys.size());
+
+        // perform first-level shop partition
+        this.shopCells = new ArrayList<>();
+        for (int i = 0; i < shopBlockPolys.size(); i++) {
+            ZSD_SkeVorStrip divTool = new ZSD_SkeVorStrip(shopBlockPolys.get(i));
+            divTool.setSpan(8);
+            divTool.performDivide();
+            if (i == 0) {
+                sub1 = divTool;
+            } else if (i == 1) {
+                sub2 = divTool;
+            } else {
+                sub3 = divTool;
+            }
+            shopCells.add(divTool.getAllSubPolygons());
+            System.out.println(divTool.getAllSubPolygons().size());
+        }
+    }
+
+    /* ------------- JSON converting ------------- */
 
     /**
      * convert backend geometries to ArchiJSON
@@ -159,8 +199,6 @@ public class MallGenerator {
         List<JsonElement> elements = new ArrayList<>();
 
         // converting to json
-//        Vertices vertices = WB_Converter.toVertices(fixedNodes);
-//        elements.add(gson.toJsonTree(vertices));
         for (WB_Segment seg : graphSegments) {
             Segments segments = WB_Converter.toSegments(seg);
             JsonObject prop1 = new JsonObject();
@@ -174,14 +212,6 @@ public class MallGenerator {
         poly.setProperties(prop2);
         elements.add(gson.toJsonTree(poly));
 
-//        for (LineString ls : bufferLineStrings) {
-//            Segments bufferPoly = JTS_Converter.toSegments(ls);
-//            JsonObject prop3 = new JsonObject();
-//            prop3.addProperty("name", "buffer");
-//            bufferPoly.setProperties(prop3);
-//            elements.add(gson.toJsonTree(bufferPoly));
-//        }
-
         for (List<WB_Coord> splitPointsEach : bufferControlPoints) {
             Vertices bufferControlPointsEach = WB_Converter.toVertices(splitPointsEach, 3);
             JsonObject prop3 = new JsonObject();
@@ -192,10 +222,16 @@ public class MallGenerator {
 
         // setup json
         json.setGeometryElements(elements);
-        System.out.println("send to front");
         return json;
     }
 
+    /**
+     * convert backend geometries to ArchiJSON
+     *
+     * @param clientID
+     * @param gson
+     * @return main.ArchiJSON
+     */
     public ArchiJSON toArchiJSON2(String clientID, Gson gson) {
         // initializing
         ArchiJSON json = new ArchiJSON();
@@ -203,18 +239,18 @@ public class MallGenerator {
         List<JsonElement> elements = new ArrayList<>();
 
         // converting to json
-        WB_Polygon boundary = input.getInputBoundary();
-        WB_Point[] newPoint = new WB_Point[boundary.getNumberOfShellPoints()];
-        for (int i = 0; i < boundary.getNumberOfShellPoints(); i++) {
-            newPoint[i] = boundary.getPoint(i).translate(100, 100, 0);
+        for (List<WB_Polygon> cellList : shopCells) {
+            for (WB_Polygon p : cellList) {
+                Segments cell = WB_Converter.toSegments(p);
+                JsonObject prop = new JsonObject();
+                prop.addProperty("name", "shopCell");
+                cell.setProperties(prop);
+                elements.add(gson.toJsonTree(cell));
+            }
         }
-        WB_Polygon newBoundary = new WB_Polygon(newPoint);
-        Segments poly = WB_Converter.toSegments(newBoundary);
-        elements.add(gson.toJsonTree(poly));
 
         // setup json
         json.setGeometryElements(elements);
-        System.out.println("send to front");
         return json;
     }
 
@@ -226,6 +262,10 @@ public class MallGenerator {
 
     public void setPolyAtrium_receive(List<WB_Polygon> polyAtrium_receive) {
         this.polyAtrium_receive = polyAtrium_receive;
+    }
+
+    public void setBufferCurve_receive(List<LineString> bufferCurve_receive) {
+        this.bufferCurve_receive = bufferCurve_receive;
     }
 
     /**
@@ -277,7 +317,7 @@ public class MallGenerator {
 
     public void draw(PApplet app) {
         if (draw) {
-            WB_Render3D render = new WB_Render3D(app);
+            WB_Render render = new WB_Render(app);
             JtsRender jtsRender = new JtsRender(app);
 
             app.stroke(0);
@@ -288,7 +328,28 @@ public class MallGenerator {
                 e.display(app);
             }
 
-            jtsRender.drawGeometry(buffer);
+            if (bufferCurve_receive != null) {
+                for (LineString ls : bufferCurve_receive) {
+                    jtsRender.drawGeometry(ls);
+                }
+            }
+
+//            if (subdivisions != null) {
+//                for (ZSD_SkeVorStrip sd : subdivisions) {
+//                    sd.display(app, render);
+//                }
+//            }
+
+            if (sub1 != null) {
+                sub1.display(app, render);
+            }
+            if (sub2 != null) {
+                sub2.display(app, render);
+            }
+            if (sub3 != null) {
+                sub3.display(app, render);
+            }
+
             if (bufferControlPoints != null) {
                 for (List<WB_Coord> list : bufferControlPoints) {
                     for (WB_Coord c : list) {

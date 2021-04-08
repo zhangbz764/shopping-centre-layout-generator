@@ -39,13 +39,15 @@ const ArchiJSON = function (_scene, _geoFty) {
     let bufferCurve = [];
     let bufferCurveControl = [];
 
+    let partitionResult = [];
+
     /* ---------- core: create geometries from json ---------- */
 
     /**
      * refresh the scene
      *
      */
-    function clearScene() {
+    function clearScene1() {
         // 轮廓
         if (boundarySegments.length > 0) {
             boundarySegments.forEach((line) => {
@@ -67,7 +69,17 @@ const ArchiJSON = function (_scene, _geoFty) {
         boundarySegments = [];
         treeSegments = [];
         bufferCurve = [];
-        bufferCurveControl = [];
+        bufferCurveControl = []; // 不是物件，只是vec
+    }
+
+    function clearScene2(){
+        // 剖分结果
+        if (partitionResult.length > 0) {
+            partitionResult.forEach((poly) => {
+                poly.parent.remove(poly);
+            })
+        }
+        partitionResult = [];
     }
 
     /**
@@ -77,12 +89,11 @@ const ArchiJSON = function (_scene, _geoFty) {
     function segmentsFilter(geometryElements) {
         for (let e of geometryElements) {
             if (e.type === 'Segments') {
+                const segs = _geoFty.Segments();
                 if (e.properties.name === 'tree') {
-                    const segs = _geoFty.Segments();
                     segs.geometry.setAttribute('position', new THREE.Float32BufferAttribute(e.coordinates, e.size));
                     treeSegments.push(segs);
                 } else if (e.properties.name === 'boundary') {
-                    const segs = _geoFty.Segments();
                     segs.geometry.setAttribute('position', new THREE.Float32BufferAttribute(e.coordinates, e.size));
                     boundarySegments.push(segs);
                 }
@@ -110,11 +121,15 @@ const ArchiJSON = function (_scene, _geoFty) {
         }
     }
 
-    /* ---------- APIS & main entry ---------- */
 
     socket.on('stb:receiveGeometry', async function (message) {
         // get geometry
         scope.parseGeometry(message);
+    });
+
+    socket.on('btf:receivePartition', async function (message) {
+        // get geometry
+        scope.parseGeometry2(message);
     });
 
     this.sendArchiJSON = function (eventName, objects, properties = {}) {
@@ -127,8 +142,21 @@ const ArchiJSON = function (_scene, _geoFty) {
     }
 
     this.parseGeometry = function (geometryElements) {
-        clearScene();
+        clearScene1();
         segmentsFilter(geometryElements);
+    }
+
+    this.parseGeometry2 = function (geometryElements) {
+        clearScene2();
+        for (let e of geometryElements) {
+            if (e.type === 'Segments') {
+                const segs = _geoFty.Segments();
+                if(e.properties.name === 'shopCell'){
+                    segs.geometry.setAttribute('position', new THREE.Float32BufferAttribute(e.coordinates, e.size));
+                    partitionResult.push(segs);
+                }
+            }
+        }
     }
 
     this.bufferCurve = function () {

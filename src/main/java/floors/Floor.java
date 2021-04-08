@@ -10,6 +10,7 @@ import math.ZMath;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import render.JtsRender;
+import subdivision.ZSD_SkeVorStrip;
 import wblut.geom.*;
 import wblut.processing.WB_Render;
 
@@ -38,6 +39,9 @@ public class Floor {
     private List<WB_Polygon> shopBlock; // 初始店铺分区
     private WB_Polygon publicBlock; // 公共分区
     private List<ZSkeleton> skeletons; // 分区直骨架
+
+    private List<ZSD_SkeVorStrip> skeVorStrips;
+
     private List<WB_Polygon> allCells; // 初步剖分结果
 
     // select and union
@@ -126,6 +130,13 @@ public class Floor {
             ZSkeleton skeleton = new ZSkeleton(polygon);
             skeletons.add(skeleton);
         }
+//        this.skeVorStrips = new ArrayList<>();
+//        for (WB_Polygon polygon : shopBlock) {
+//            ZSD_SkeVorStrip divTool = new ZSD_SkeVorStrip(polygon);
+//            divTool.setSpan(16);
+//            divTool.performDivide();
+//            skeVorStrips.add(divTool);
+//        }
     }
 
     /**
@@ -135,34 +146,19 @@ public class Floor {
      * @return void
      */
     private void initShop() {
-//        if (this.publicBlock != null) {
-//            if (floorNum == 1) {
-//                // find non-boundary public block edge
-//                List<ZLine> nonBoundary = new ArrayList<>();
-//                for (int i = 0; i < publicBlock.getNumberSegments(); i++) {
-//                    ZPoint start = new ZPoint(publicBlock.getSegment(i).getOrigin());
-//                    ZPoint end = new ZPoint(publicBlock.getSegment(i).getEndpoint());
-//                    if (!(ZGeoMath.checkPointOnPolygonEdge(start, boundary) && ZGeoMath.checkPointOnPolygonEdge(end, boundary))) {
-//                        nonBoundary.add(new ZLine(publicBlock.getSegment(i)));
-//                    }
-//                }
-//            } else {
-//                List<ZPoint> splitResult = ZGeoMath.splitWB_PolyLineEdgeByStep(publicBlock, MallConstant.MID_SHOP_WIDTH * MallConstant.SCALE);
-//                for (ZPoint p : splitResult) {
-//                    WB_Point closest = WB_GeometryOp.getClosestPoint2D(p.toWB_Point(), boundary);
-//                }
-//            }
+//        this.allCells = new ArrayList<>();
+//        for (ZSD_SkeVorStrip svs : skeVorStrips) {
+//            allCells.addAll(svs.getAllSubPolygons());
 //        }
-
         // shop generator
         List<WB_Voronoi2D> voronois = new ArrayList<>();
         for (int i = 0; i < skeletons.size(); i++) {
             // maybe null
             List<ZLine> centerSegments = skeletons.get(i).getRidges();
             centerSegments.addAll(skeletons.get(i).getExtendedRidges());
-            WB_PolyLine polyLine = ZGeoFactory.createWB_PolyLine(centerSegments);
+            WB_PolyLine polyLine = ZFactory.createWB_PolyLine(centerSegments);
             if (polyLine != null) {
-                List<ZPoint> splitResult = ZGeoMath.splitWB_PolyLineEdgeByStep(polyLine, 17);
+                List<ZPoint> splitResult = ZGeoMath.splitPolyLineByStep(polyLine, 17);
                 if (splitResult.size() > 1) {
                     splitResult.remove(splitResult.size() - 1);
                     splitResult.remove(0);
@@ -233,7 +229,7 @@ public class Floor {
             List<WB_Polygon> union = new ArrayList<>();
             union.add(selected.get(0));
             for (int i = 1; i < selected.size(); i++) {
-                union = ZGeoFactory.wbgf.unionPolygons2D(selected.get(i), union);
+                union = ZFactory.wbgf.unionPolygons2D(selected.get(i), union);
             }
             allCells.addAll(union);
         }
@@ -350,7 +346,12 @@ public class Floor {
 
     public void display(WB_Render render, JtsRender jtsRender, PApplet app) {
         displayBlock(jtsRender, app);
-//        displaySkeleton(app);
+        displaySkeleton(app);
+//        app.pushStyle();
+//        for (ZSD_SkeVorStrip svs : skeVorStrips) {
+//            svs.display(app, render);
+//        }
+//        app.popStyle();
         displayGraph(render, app);
         displayShop(render, app);
         displaySelected(render, app);

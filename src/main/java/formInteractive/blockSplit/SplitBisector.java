@@ -45,7 +45,7 @@ public class SplitBisector implements Split {
         this.boundaryLineString = ZTransform.WB_PolyLineToJtsLineString(boundary);
         setNodeJoints(graph);
         // connect joints
-        this.connectedLinesToSplit = connectJoints(boundary, graph);
+        this.connectedLinesToSplit = connectJoints(graph);
         // get split result
         performSplit(boundaryLineString, connectedLinesToSplit, graph.getTreeNodes().get(0));
         shopBlockNum = shopBlockPolys.size();
@@ -59,7 +59,7 @@ public class SplitBisector implements Split {
         // refresh input data
         setNodeJoints(graph);
         // refresh joints connection
-        this.connectedLinesToSplit = connectJoints(boundary, graph);
+        this.connectedLinesToSplit = connectJoints(graph);
         // refresh split result
         performSplit(boundaryLineString, connectedLinesToSplit, graph.getTreeNodes().get(0));
         // print if number change
@@ -113,8 +113,12 @@ public class SplitBisector implements Split {
     /*-------- perform split --------*/
 
     /**
-     * @return java.util.Collection<org.locationtech.jts.geom.Polygon>
-     * @description split to polygons, input a boundary LineString ang multiple inner LineStrings
+     * split to polygons, input a boundary LineString ang multiple inner LineStrings
+     *
+     * @param outer  boundary
+     * @param inner  inner polyline
+     * @param verify a point to judge which is public space
+     * @return void
      */
     public void performSplit(LineString outer, List<ZLine> inner, ZPoint verify) {
         Polygonizer pr = new Polygonizer();
@@ -136,8 +140,10 @@ public class SplitBisector implements Split {
     }
 
     /**
+     * initialize node's joints
+     *
+     * @param graph traffic graph
      * @return void
-     * @description initialize node's joints
      */
     private void setNodeJoints(TrafficGraph graph) {
         // set treeNodes joint point
@@ -151,8 +157,11 @@ public class SplitBisector implements Split {
     }
 
     /**
-     * @return generalTools.ZPoint[]
-     * @description fine joint which need to be connected (0 -> positive, 1 -> negative)
+     * find joint which need to be connected (0 -> positive, 1 -> negative)
+     *
+     * @param curr    current node to process
+     * @param lineDir direction of the edge from current node
+     * @return geometry.ZPoint[]
      */
     private ZPoint[] selectJoint(TrafficNode curr, ZPoint lineDir) {
         List<ZPoint> joints = curr.getJoints();
@@ -189,10 +198,12 @@ public class SplitBisector implements Split {
     }
 
     /**
+     * get all connect lines
+     *
+     * @param graph traffic graph
      * @return java.util.List<geometry.ZLine>
-     * @description get all connect lines
      */
-    private List<ZLine> connectJoints(WB_Polygon boundary, TrafficGraph graph) {
+    private List<ZLine> connectJoints(TrafficGraph graph) {
         List<ZLine> connections = new ArrayList<>();
         // connect joints from tree edges
         for (ZEdge edge : graph.getTreeEdges()) {

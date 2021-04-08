@@ -9,6 +9,9 @@ import geometry.Vertices;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import main.ArchiJSON;
+import org.locationtech.jts.geom.LineString;
+import transform.ZTransform;
+import wblut.geom.WB_PolyLine;
 import wblut.geom.WB_Polygon;
 
 import java.net.URISyntaxException;
@@ -42,7 +45,6 @@ public class MallServer {
                 this.setupServer();
                 System.out.println("Socket connected to " + url);
             }
-
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -51,10 +53,10 @@ public class MallServer {
     /* ------------- member function ------------- */
 
     /**
-    * receiving, converting, processing and returning data
-    *
-    * @return void
-    */
+     * receiving, converting, processing and returning data
+     *
+     * @return void
+     */
     public void setupServer() {
         Gson gson = new Gson();
 
@@ -63,12 +65,26 @@ public class MallServer {
 
         socket.connect();
 
-        socket.on("ftb:receiveBuffer", args ->{
-            System.out.println("receiving");
+        socket.on("ftb:receiveBuffer", args -> {
             // receiving
             ArchiJSON archijson = gson.fromJson(args[0].toString(), ArchiJSON.class);
             archijson.parseGeometryElements(gson);
 
+            // converting
+            List<LineString> bufferCurve = new ArrayList<>();
+            System.out.println("json elements: " + archijson.getGeometries().size());
+            for (int i = 0; i < archijson.getGeometries().size(); i++) {
+                BaseGeometry g = archijson.getGeometries().get(i);
+                if (g instanceof Segments) {
+                    WB_PolyLine pl = WB_Converter.toWB_Polyline((Segments) g);
+                    bufferCurve.add(ZTransform.WB_PolyLineToJtsLineString(pl));
+                }
+            }
+
+            // processing
+            System.out.println("receive curve: " + bufferCurve.size());
+            generator.setBufferCurve_receive(bufferCurve);
+            generator.generateSplit();
 
             // return
             ArchiJSON json = generator.toArchiJSON2(archijson.getId(), gson);
@@ -76,7 +92,6 @@ public class MallServer {
         });
 
         socket.on("bts:receiveGeometry", args -> {
-            System.out.println("receiving");
             // receiving
             ArchiJSON archijson = gson.fromJson(args[0].toString(), ArchiJSON.class);
             archijson.parseGeometryElements(gson);
@@ -85,7 +100,7 @@ public class MallServer {
             int atriumNum = archijson.getProperties().getAtriumNum(); // 中庭图元个数
             double bufferDist = archijson.getProperties().getBufferDist(); // 偏移距离
 
-            System.out.println(atriumNum);
+            System.out.println("atrium num: " + atriumNum);
             generator.setInnerNode_receive(
                     WB_Converter.toWB_Point((Vertices) archijson.getGeometries().get(0))
             );
@@ -108,6 +123,5 @@ public class MallServer {
             ArchiJSON json = generator.toArchiJSON(archijson.getId(), gson);
             socket.emit("stb:sendGeometry", gson.toJson(json));
         });
-
     }
 }

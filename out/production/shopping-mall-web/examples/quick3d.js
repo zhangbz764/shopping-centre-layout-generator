@@ -121,6 +121,10 @@ function initGUI() {
 
         clearCurrent: function () {
             currentTreeNode = undefined;
+        },
+
+        sendTest: function (){
+            sendBuffer();
         }
     }
 
@@ -171,14 +175,16 @@ function initGUI() {
     gui.gui.add(updateButtons, 'update').name('send');
 
     gui.gui.add(updateButtons, 'clearCurrent');
+
+    gui.gui.add(updateButtons, 'sendTest');
 }
 
 /* ---------- core: initialize geometries ---------- */
 
 // drag-able elements
-let innerNodesDrag = [];
+let innerControlsDrag = [];
 let atriumControlsDrag = [];
-let bufferControlDrag = [];
+let bufferControlsDrag = [];
 
 // geometries to send
 let innerNodesSend = undefined;
@@ -193,7 +199,7 @@ function initGeo() {
     // geometries: cylinders
     let pos = [[-66, -36], [0, -35], [43, -40], [44, 9], [39, 81]];
     for (let p of pos) {
-        innerNodesDrag.push(gf.Cylinder(p, [2, 1],
+        innerControlsDrag.push(gf.Cylinder(p, [2, 1],
             new THREE.MeshLambertMaterial({color: 0xff0000})));
     }
 
@@ -222,7 +228,7 @@ function addNode(event) {
         )
         rayCaster.setFromCamera(mouse, camera);
         let pt = rayCaster.ray.intersectPlane(xoy, new THREE.Vector3());
-        innerNodesDrag.push(gf.Cylinder([pt.x, pt.y, pt.z], [2, 2],
+        innerControlsDrag.push(gf.Cylinder([pt.x, pt.y, pt.z], [2, 2],
             new THREE.MeshLambertMaterial({color: 0xff0000})));
         updateGraph();
         sendGraph();
@@ -364,11 +370,18 @@ function enableAtriumEdit() {
  *
  */
 function enableCurveEdit() {
-    bufferCurve = archijson.bufferCurve();
-    let bufferCurveControl = archijson.bufferCurveControl();
+    if (bufferCurve.length === 0) { // initial
+        bufferCurve = archijson.bufferCurve();
+        let bufferCurveControl = archijson.bufferCurveControl();
 
-    for (let i = 0; i < bufferCurve.length; i++) {
-        bufferControlDrag.push(setupDragCuboid(bufferCurve[i], bufferCurveControl[i]));
+        for (let i = 0; i < bufferCurve.length; i++) {
+            bufferControlsDrag.push(setupDragCuboid(bufferCurve[i], bufferCurveControl[i]));
+        }
+    } else {
+        for (let bc of bufferCurve) {
+            let pos = bc.controlCoordinates;
+            bufferControlsDrag.push(setupDragCuboid(bc, pos));
+        }
     }
 
     // inner function: setup cuboids to drag from bufferCurveControl in archijson
@@ -401,8 +414,10 @@ function disableEdit() {
         parentAtrium.controlCoordinates = lastVecList;
         // remove
         cuboidList.forEach((c) => scene.remove(c));
+        cuboidList.length = 0;
     }
-    for (let cuboidList of bufferControlDrag) {
+    atriumControlsDrag.length = 0;
+    for (let cuboidList of bufferControlsDrag) {
         // set final control coordinates
         let parentCurve = cuboidList[0].parentCurve;
         let lastVecList = [];
@@ -410,7 +425,9 @@ function disableEdit() {
         parentCurve.controlCoordinates = lastVecList;
         // remove
         cuboidList.forEach((c) => scene.remove(c));
+        cuboidList.length = 0;
     }
+    bufferControlsDrag.length = 0;
     am.setCurrentID(0);
 }
 
@@ -421,10 +438,9 @@ function disableEdit() {
  * @param o object to interact
  */
 function objectChanged(o) {
-    if (innerNodesDrag.includes(o)) {
+    if (innerControlsDrag.includes(o)) {
         currentTreeNode = o;
         atriumTypeProperties.type = o.atriumType;
-        am.highlightCurrent();
     }
 }
 
@@ -436,14 +452,10 @@ function objectChanged(o) {
 function draggingChanged(o, event) {
     if (editSwitches.EDIT_CURVE) {
         if (!event) {
-            for (let controls of bufferControlDrag) {
+            for (let controls of bufferControlsDrag) {
                 if (controls.includes(o)) {
                     let currCurve = o.parentCurve;
-                    let vecList = [];
-                    let controlCuboids = currCurve.controlCuboidList;
-                    controlCuboids.forEach((cc) => vecList.push(cc.position));
-                    let newPoints = new THREE.CatmullRomCurve3(vecList, false, 'centripetal', editProperties.bufferCurveTension).getPoints(24);
-                    currCurve.geometry.setFromPoints(newPoints);
+                    buildCurve(controls, currCurve);
                     // sendBuffer();
                     break;
                 }
@@ -455,15 +467,10 @@ function draggingChanged(o, event) {
                 if (controls.includes(o)) {
                     let currAtrium = o.parentAtrium;
                     if (currAtrium.atriumType === 'poly') {
-                        let controlCuboids = currAtrium.controlCuboidList;
-                        currAtrium.geometry.setFromPoints(controlCuboids.map((c) => c.position));
+                        buildPoly(controls, currAtrium);
                         sendGraph();
                     } else if (currAtrium.atriumType === 'curve') {
-                        let vecList = [];
-                        let controlCuboids = currAtrium.controlCuboidList;
-                        controlCuboids.forEach((cc) => vecList.push(cc.position));
-                        let newPoints = new THREE.CatmullRomCurve3(vecList, true).getPoints(24);
-                        currAtrium.geometry.setFromPoints(newPoints);
+                        buildCurve(controls, currAtrium);
                         sendGraph();
                     }
                     break;
@@ -471,21 +478,29 @@ function draggingChanged(o, event) {
             }
         }
     } else {
-        if (!event && innerNodesDrag.includes(o)) {
+        if (!event && innerControlsDrag.includes(o)) {
             updateAtriumPos(o);
             updateGraph();
             sendGraph();
+
+            // clear other customize
+            editSwitches.EDIT_ATRIUM = false;
+            editSwitches.EDIT_CURVE = false;
+            for (let bc of bufferCurve) {
+                scene.remove(bc);
+            }
+            bufferCurve.length = 0;
         }
     }
 }
 
 /**
- *
- * @param o Transformer: select object (override)
+ * Transformer: delete object (override)
+ * @param o object to interact
  */
 function deleteChanged(o) {
     if (editSwitches.EDIT_CURVE) {
-        for (let controls of bufferControlDrag) {
+        for (let controls of bufferControlsDrag) {
             let index = controls.indexOf(o);
             if (index > -1) {
                 let currCurve = o.parentCurve;
@@ -511,15 +526,25 @@ function deleteChanged(o) {
             }
         }
     } else {
-        let index = innerNodesDrag.indexOf(o);
+        let index = innerControlsDrag.indexOf(o);
         if (index > -1) {
-            innerNodesDrag.splice(index, 1);
+            innerControlsDrag.splice(index, 1);
             updateAtriumPos(o);
             updateGraph();
             sendGraph();
+
+            // clear other customize
+            editSwitches.EDIT_ATRIUM = false;
+            editSwitches.EDIT_CURVE = false;
+            for (let bc of bufferCurve) {
+                scene.remove(bc);
+            }
+            bufferCurve.length = 0;
         }
     }
 }
+
+/* ---------- core: build geometries from controls ---------- */
 
 /**
  * build a new curve by a new list of dragging objects
@@ -568,7 +593,6 @@ function sendGraph() {
     atriums.forEach((a) => objects.push(a));
 
     archijson.sendArchiJSON('bts:sendGeometry', objects, propertiesSend);
-    console.log('yes')
 }
 
 function sendBuffer() {
@@ -576,6 +600,7 @@ function sendBuffer() {
     // buffer curves
     bufferCurve.forEach((c) => objects.push(c));
     archijson.sendArchiJSON('ftb:sendBuffer', objects, propertiesSend);
+
 }
 
 /**
@@ -584,7 +609,7 @@ function sendBuffer() {
  */
 function updateGraph() {
     let pos = []
-    for (let c of innerNodesDrag) {
+    for (let c of innerControlsDrag) {
         let p = c.position
         pos.push(p.x, p.y, p.z)
     }
