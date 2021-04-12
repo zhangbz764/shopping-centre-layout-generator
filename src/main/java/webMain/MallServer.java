@@ -120,8 +120,12 @@ public class MallServer {
             generator.generateBuffer(bufferDist);
 
             // return
-            ArchiJSON json = generator.toArchiJSON(archijson.getId(), gson);
+            ArchiJSON json = generator.toArchiJSON1(archijson.getId(), gson);
             socket.emit("stb:sendGeometry", gson.toJson(json));
+        });
+
+        socket.on("ftb:generateEvacuation_", args -> {
+            generator.generateEvacuation();
         });
     }
 }

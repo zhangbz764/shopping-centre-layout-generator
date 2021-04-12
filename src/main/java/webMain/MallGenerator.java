@@ -9,24 +9,28 @@ import formInteractive.graphAdjusting.TrafficNode;
 import formInteractive.graphAdjusting.TrafficNodeFixed;
 import formInteractive.graphAdjusting.TrafficNodeTree;
 import geometry.*;
+import gurobi.*;
+import igeo.IVecR;
 import main.ArchiJSON;
 import main.ImportData;
 import math.ZGeoMath;
+import math.ZGraphMath;
+import org.locationtech.jts.algorithm.MinimumDiameter;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
 import processing.core.PApplet;
 import render.JtsRender;
+import subdivision.ZSD_SkeOBBStrip;
 import subdivision.ZSD_SkeVorStrip;
+import subdivision.ZSubdivision;
 import transform.ZTransform;
-import wblut.geom.WB_Coord;
-import wblut.geom.WB_Point;
-import wblut.geom.WB_Polygon;
-import wblut.geom.WB_Segment;
+import wblut.geom.*;
+import wblut.hemesh.HEC_FromPolygons;
+import wblut.hemesh.HE_Mesh;
+import wblut.hemesh.HE_Vertex;
 import wblut.processing.WB_Render;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * main generator
@@ -95,7 +99,7 @@ public class MallGenerator {
      */
     public void generateBuffer(double dist) {
         // receive geometries and generate buffer
-        List<Geometry> geos = new ArrayList<>(getLineStrings());
+        List<Geometry> geos = new ArrayList<>(graph.toLineStrings());
         if (polyAtrium_receive != null && polyAtrium_receive.size() > 0) {
             for (WB_Polygon p : polyAtrium_receive) {
                 geos.add(ZTransform.WB_PolygonToJtsPolygon(p));
@@ -129,9 +133,9 @@ public class MallGenerator {
     private Polygon publicBlockPoly;
     private List<Polygon> shopBlockPolys;
     private List<List<WB_Polygon>> shopCells;
-    private ZSD_SkeVorStrip sub1;
-    private ZSD_SkeVorStrip sub2;
-    private ZSD_SkeVorStrip sub3;
+    private ZSubdivision sub1;
+    private ZSubdivision sub2;
+    private ZSubdivision sub3;
 
     /**
      * split the whole boundary and generate first-level subdivision
@@ -163,34 +167,191 @@ public class MallGenerator {
         // perform first-level shop partition
         this.shopCells = new ArrayList<>();
         for (int i = 0; i < shopBlockPolys.size(); i++) {
-            ZSD_SkeVorStrip divTool = new ZSD_SkeVorStrip(shopBlockPolys.get(i));
-            divTool.setSpan(8);
-            divTool.performDivide();
-            if (i == 0) {
-                sub1 = divTool;
-            } else if (i == 1) {
-                sub2 = divTool;
+            double areaRatio = shopBlockPolys.get(i).getArea() / MinimumDiameter.getMinimumRectangle(shopBlockPolys.get(i)).getArea();
+            if (areaRatio < 0.8) {
+                ZSD_SkeVorStrip divTool = new ZSD_SkeVorStrip(shopBlockPolys.get(i));
+                divTool.setSpan(8.4);
+                divTool.performDivide();
+                if (i == 0) {
+                    sub1 = divTool;
+                } else if (i == 1) {
+                    sub2 = divTool;
+                } else {
+                    sub3 = divTool;
+                }
+                shopCells.add(divTool.getAllSubPolygons());
             } else {
-                sub3 = divTool;
+                ZSD_SkeOBBStrip divTool = new ZSD_SkeOBBStrip(shopBlockPolys.get(i));
+                divTool.setSpan(8.4);
+                divTool.performDivide();
+                if (i == 0) {
+                    sub1 = divTool;
+                } else if (i == 1) {
+                    sub2 = divTool;
+                } else {
+                    sub3 = divTool;
+                }
+                shopCells.add(divTool.getAllSubPolygons());
             }
-            shopCells.add(divTool.getAllSubPolygons());
-            System.out.println(divTool.getAllSubPolygons().size());
         }
+    }
+
+    private List<ZPoint> evacuationPoint;
+    private ZGraph tempGraph;
+    private boolean drawGraph = false;
+
+    /**
+     * description
+     *
+     * @param
+     * @return void
+     */
+    public void generateEvacuation() {
+        // 构造HE_Mesh来找到boundary vertices
+        List<WB_Polygon> cells = new ArrayList<>();
+        for (List<WB_Polygon> polygonList : shopCells) {
+            cells.addAll(polygonList);
+        }
+        WB_Polygon publicBlock = ZTransform.jtsPolygonToWB_Polygon(publicBlockPoly);
+        cells.add(publicBlock);
+        HEC_FromPolygons hec = new HEC_FromPolygons(cells);
+        HE_Mesh floorMesh = hec.create();
+
+        List<HE_Vertex> allVertices = floorMesh.getAllBoundaryVertices();
+        List<ZPoint> allPossiblePoints = new ArrayList<>();
+        for (HE_Vertex v : allVertices) {
+            if (!WB_GeometryOp.contains2D(v, publicBlock)) {
+                // 排除与公共动线区域相接的点
+                allPossiblePoints.add(new ZPoint(v));
+            }
+        }
+
+        // 构造临时的graph
+        tempGraph = graph.duplicate();
+        List<ZNode> nodesToCal = new ArrayList<>(); // possible points在tempGraph上的替身
+        for (ZPoint pp : allPossiblePoints) {
+            ZPoint closest = ZGeoMath.closestPointToLineList(pp, graph.getAllEdges());
+            ZNode closestAsNode = new ZNode(closest.xd(), closest.yd(), closest.zd());
+            nodesToCal.add(closestAsNode);
+            tempGraph.addNodeByDist(closestAsNode);
+        }
+        System.out.println("tempGraph nodes after first rebuild:  " + tempGraph.getNodesNum());
+        List<ZPoint> splitPoints = ZGraphMath.splitGraphEachEdgeByStep(tempGraph, 2);
+        splitPoints.removeAll(tempGraph.getNodes());
+        System.out.println("splitPoints.size()  " + splitPoints.size());
+        for (ZPoint sp : splitPoints) {
+            tempGraph.addNodeByDist(sp);
+        }
+        System.out.println("tempGraph nodes after second rebuild:  " + tempGraph.getNodesNum());
+
+        // 计算每个possible points能够服务到多少target node
+        Map<ZNode, List<Integer>> targetNodeMap = new HashMap<>();
+        for (ZNode n : tempGraph.getNodes()) {
+            targetNodeMap.put(n, new ArrayList<>());
+        }
+        double evacuationDist = 56;
+        for (int i = 0; i < nodesToCal.size(); i++) {
+            double dist = evacuationDist - allPossiblePoints.get(i).distance(nodesToCal.get(i));
+            if (dist > 0) {
+                List<ZNode> targetReached = ZGraphMath.nodesOnGraphByDist(nodesToCal.get(i), null, dist);
+                for (ZNode n : targetReached) {
+                    if (targetNodeMap.containsKey(n)) {
+                        targetNodeMap.get(n).add(i);
+                    }
+                }
+            }
+        }
+        for (ZNode n : targetNodeMap.keySet()) {
+            System.out.println(n.toString() + "   " + targetNodeMap.get(n));
+        }
+
+        // gurobi optimizer
+        System.out.println("********* gurobi optimizing *********" + "\n");
+        try {
+            // Create empty environment, set options, and start
+            GRBEnv env = new GRBEnv(true);
+            env.set("logFile", "mip1.log");
+            env.start();
+            // Create empty model
+            GRBModel model = new GRBModel(env);
+            // Create variables
+            GRBVar[] vars = new GRBVar[allPossiblePoints.size()];
+            for (int i = 0; i < vars.length; i++) {
+                vars[i] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, "var" + i);
+            }
+            // Set objective
+            GRBLinExpr expr = new GRBLinExpr();
+            for (int i = 0; i < vars.length; i++) {
+                expr.addTerm(1.0, vars[i]);
+            }
+            model.setObjective(expr, GRB.MINIMIZE);
+            // Add constraint
+            for (ZNode n : targetNodeMap.keySet()) {
+                expr = new GRBLinExpr();
+                if (targetNodeMap.get(n).size() > 0) {
+                    for (int i : targetNodeMap.get(n)) {
+                        expr.addTerm(1.0, vars[i]);
+                    }
+                }
+                model.addConstr(expr, GRB.GREATER_EQUAL, 1, "cons" + n.toString());
+            }
+            // Optimize model
+            model.optimize();
+            // output
+            System.out.println("\n" + "******* result output *******");
+            System.out.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal));
+            evacuationPoint = new ArrayList<>();
+            for (int i = 0; i < vars.length; i++) {
+                if (vars[i].get(GRB.DoubleAttr.X) > 0.5) {
+                    evacuationPoint.add(allPossiblePoints.get(i));
+                }
+            }
+            // Dispose of model and environment
+            model.dispose();
+            env.dispose();
+
+            System.out.println("evacuationPoint.size()" + evacuationPoint.size());
+//            for (ZPoint p : evacuationPoint) {
+//                System.out.println(p.toString());
+//            }
+        } catch (GRBException e) {
+            System.out.println(
+                    "Error code: "
+                            + e.getErrorCode()
+                            + ". "
+                            + e.getMessage()
+            );
+        }
+        drawGraph = true;
+    }
+
+    // TODO: 2021/4/9 数据指标显示 
+    // stats
+    private double totalArea; // 当前层总面积
+    private double shopArea; // 店铺面积
+    private int shopNum; // 店铺数量
+    private double shopRatioTotal; // 综合得铺率
+    private double shopRatioFloor; // 分层得铺率
+    private double smallShopRatio; // 小铺率（数量占比）
+
+    public void generateStats() {
+        this.totalArea = input.getBoundaryArea();
     }
 
     /* ------------- JSON converting ------------- */
 
     /**
      * convert backend geometries to ArchiJSON
+     * boundary, graph segments, buffer control points
      *
      * @param clientID
      * @param gson
      * @return main.ArchiJSON
      */
-    public ArchiJSON toArchiJSON(String clientID, Gson gson) {
+    public ArchiJSON toArchiJSON1(String clientID, Gson gson) {
         // preparing data
         List<WB_Point> fixedNodes = getFixedNode();
-        List<WB_Segment> graphSegments = getSegments();
+        List<WB_Segment> graphSegments = graph.toWB_Segments();
         WB_Polygon boundary = input.getInputBoundary();
 
         // initializing
@@ -227,6 +388,7 @@ public class MallGenerator {
 
     /**
      * convert backend geometries to ArchiJSON
+     * first-level subdivision cells
      *
      * @param clientID
      * @param gson
@@ -281,38 +443,6 @@ public class MallGenerator {
         return pts;
     }
 
-    /**
-     * convert traffic edge to WB_Segment
-     *
-     * @return java.util.List<wblut.geom.WB_Segment>
-     */
-    public List<WB_Segment> getSegments() {
-        List<WB_Segment> segments = new ArrayList<>();
-        for (ZEdge e : graph.getTreeEdges()) {
-            segments.add(e.toWB_Segment());
-        }
-        for (ZEdge e : graph.getFixedEdges()) {
-            segments.add(e.toWB_Segment());
-        }
-        return segments;
-    }
-
-    /**
-     * convert traffic edge to LineString
-     *
-     * @return java.util.List<org.locationtech.jts.geom.LineString>
-     */
-    public List<LineString> getLineStrings() {
-        List<LineString> lineStrings = new ArrayList<>();
-        for (ZEdge e : graph.getTreeEdges()) {
-            lineStrings.add(e.toJtsLineString());
-        }
-        for (ZEdge e : graph.getFixedEdges()) {
-            lineStrings.add(e.toJtsLineString());
-        }
-        return lineStrings;
-    }
-
     /* ------------- draw ------------- */
 
     public void draw(PApplet app) {
@@ -356,6 +486,20 @@ public class MallGenerator {
                         render.drawPoint(c, 5);
                     }
                 }
+            }
+
+            if (drawGraph) {
+                app.pushMatrix();
+                app.pushStyle();
+                tempGraph.display(app);
+                app.fill(0, 0, 255);
+                if (evacuationPoint != null) {
+                    for (ZPoint p : evacuationPoint) {
+                        p.displayAsPoint(app, 8);
+                    }
+                }
+                app.popStyle();
+                app.popMatrix();
             }
         }
     }

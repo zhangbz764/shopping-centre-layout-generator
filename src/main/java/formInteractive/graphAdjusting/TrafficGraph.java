@@ -1,13 +1,13 @@
 package formInteractive.graphAdjusting;
 
-import geometry.ZEdge;
-import geometry.ZPoint;
+import geometry.*;
 import main.MallConstant;
 import math.ZMath;
 import org.locationtech.jts.geom.LineString;
 import processing.core.PApplet;
 import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Polygon;
+import wblut.geom.WB_Segment;
 import wblut.processing.WB_Render;
 
 import java.util.ArrayList;
@@ -90,12 +90,24 @@ public class TrafficGraph {
         return fixedNodes;
     }
 
+    public List<TrafficNode> getAllNodes() {
+        List<TrafficNode> allNodes = fixedNodes;
+        allNodes.addAll(treeNodes);
+        return allNodes;
+    }
+
     public List<ZEdge> getTreeEdges() {
         return treeEdges;
     }
 
     public List<ZEdge> getFixedEdges() {
         return fixedEdges;
+    }
+
+    public List<ZEdge> getAllEdges() {
+        List<ZEdge> allEdges = treeEdges;
+        allEdges.addAll(fixedEdges);
+        return allEdges;
     }
 
     /**
@@ -109,6 +121,26 @@ public class TrafficGraph {
         }
         this.fixedNodes.clear();
         this.fixedEdges.clear();
+    }
+
+    public ZGraph duplicate() {
+        return ZFactory.createZGraphFromSegments(getAllEdges());
+    }
+
+    /**
+     * transform all edges to a list of WB_Segment
+     *
+     * @return java.util.List<org.locationtech.jts.geom.LineString>
+     */
+    public List<WB_Segment> toWB_Segments() {
+        List<WB_Segment> segments = new ArrayList<>();
+        for (ZEdge te : treeEdges) {
+            segments.add(te.toWB_Segment());
+        }
+        for (ZEdge fe : fixedEdges) {
+            segments.add(fe.toWB_Segment());
+        }
+        return segments;
     }
 
     /**
@@ -407,8 +439,8 @@ public class TrafficGraph {
     /**
      * draw all nodes and edges
      *
-     * @param render
-     * @param app
+     * @param render WB_Render
+     * @param app    PApplet
      * @return void
      */
     public void display(WB_Render render, PApplet app) {
@@ -444,7 +476,7 @@ public class TrafficGraph {
      *
      * @param pointerX x
      * @param pointerY y
-     * @param app
+     * @param app      PApplet
      * @return void
      */
     public void displayNeighbor(int pointerX, int pointerY, PApplet app) {
