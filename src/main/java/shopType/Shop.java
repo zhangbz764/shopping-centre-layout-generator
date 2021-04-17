@@ -12,10 +12,10 @@ import wblut.processing.WB_Render;
  * @date 2020/11/9
  * @time 22:44
  */
-public abstract class Shop {
-    private WB_Point location;
+public class Shop {
     private WB_Polygon shape;
     private double area;
+    private String shopType;
 
     /* ------------- constructor ------------- */
 
@@ -23,32 +23,32 @@ public abstract class Shop {
 
     }
 
-    public Shop(WB_Point location, WB_Polygon shape) {
-        setLocation(location);
+    public Shop(WB_Polygon shape, String shopType) {
         setShape(shape);
+        setShopType(shopType);
     }
 
     /* ------------- set & get ------------- */
-
-    public void setLocation(WB_Point location) {
-        this.location = location;
-    }
 
     public void setShape(WB_Polygon shape) {
         this.shape = shape;
         this.area = Math.abs(shape.getSignedArea());
     }
 
+    public void setShopType(String shopType) {
+        this.shopType = shopType;
+    }
+
     public double getArea() {
         return area;
     }
 
-    public WB_Point getLocation() {
-        return location;
-    }
-
     public WB_Polygon getShape() {
         return shape;
+    }
+
+    public String getShopType() {
+        return shopType;
     }
 
     /* ------------- draw ------------- */
@@ -60,9 +60,9 @@ public abstract class Shop {
     @Override
     public String toString() {
         return "Shop{" +
-                "location=" + location +
-                ", shape=" + shape +
-                ", area=" + area +
-                '}';
+                "shop type = " + shopType +
+                ", shape = " + shape +
+                ", area = " + area +
+                "}";
     }
 }

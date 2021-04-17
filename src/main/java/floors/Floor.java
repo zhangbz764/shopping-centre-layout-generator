@@ -130,13 +130,6 @@ public class Floor {
             ZSkeleton skeleton = new ZSkeleton(polygon);
             skeletons.add(skeleton);
         }
-//        this.skeVorStrips = new ArrayList<>();
-//        for (WB_Polygon polygon : shopBlock) {
-//            ZSD_SkeVorStrip divTool = new ZSD_SkeVorStrip(polygon);
-//            divTool.setSpan(16);
-//            divTool.performDivide();
-//            skeVorStrips.add(divTool);
-//        }
     }
 
     /**
@@ -146,40 +139,47 @@ public class Floor {
      * @return void
      */
     private void initShop() {
-//        this.allCells = new ArrayList<>();
-//        for (ZSD_SkeVorStrip svs : skeVorStrips) {
-//            allCells.addAll(svs.getAllSubPolygons());
-//        }
-        // shop generator
-        List<WB_Voronoi2D> voronois = new ArrayList<>();
-        for (int i = 0; i < skeletons.size(); i++) {
-            // maybe null
-            List<ZLine> centerSegments = skeletons.get(i).getRidges();
-            centerSegments.addAll(skeletons.get(i).getExtendedRidges());
-            WB_PolyLine polyLine = ZFactory.createWB_PolyLine(centerSegments);
-            if (polyLine != null) {
-                List<ZPoint> splitResult = ZGeoMath.splitPolyLineByStep(polyLine, 17);
-                if (splitResult.size() > 1) {
-                    splitResult.remove(splitResult.size() - 1);
-                    splitResult.remove(0);
-                } else if (splitResult.size() == 1) {
-                    splitResult.remove(0);
-                }
-                // generate voronoi
-                List<WB_Point> points = new ArrayList<>();
-                for (ZPoint p : splitResult) {
-                    points.add(p.toWB_Point());
-                }
-                WB_Voronoi2D voronoi = WB_VoronoiCreator.getClippedVoronoi2D(points, shopBlock.get(i));
-                voronois.add(voronoi);
-            }
+        this.skeVorStrips = new ArrayList<>();
+        for (WB_Polygon polygon : shopBlock) {
+            ZSD_SkeVorStrip divTool = new ZSD_SkeVorStrip(polygon);
+            divTool.setSpan(16);
+            divTool.performDivide();
+            skeVorStrips.add(divTool);
         }
         this.allCells = new ArrayList<>();
-        for (WB_Voronoi2D wb_voronoi2D : voronois) {
-            for (WB_VoronoiCell2D cell : wb_voronoi2D.getCells()) {
-                allCells.add(cell.getPolygon());
-            }
+        for (ZSD_SkeVorStrip svs : skeVorStrips) {
+            allCells.addAll(svs.getAllSubPolygons());
         }
+        // shop generator
+//        List<WB_Voronoi2D> voronois = new ArrayList<>();
+//        for (int i = 0; i < skeletons.size(); i++) {
+//            // maybe null
+//            List<ZLine> centerSegments = skeletons.get(i).getRidges();
+//            centerSegments.addAll(skeletons.get(i).getExtendedRidges());
+//            WB_PolyLine polyLine = ZFactory.createWB_PolyLine(centerSegments);
+//            if (polyLine != null) {
+//                List<ZPoint> splitResult = ZGeoMath.splitPolyLineByStep(polyLine, 17);
+//                if (splitResult.size() > 1) {
+//                    splitResult.remove(splitResult.size() - 1);
+//                    splitResult.remove(0);
+//                } else if (splitResult.size() == 1) {
+//                    splitResult.remove(0);
+//                }
+//                // generate voronoi
+//                List<WB_Point> points = new ArrayList<>();
+//                for (ZPoint p : splitResult) {
+//                    points.add(p.toWB_Point());
+//                }
+//                WB_Voronoi2D voronoi = WB_VoronoiCreator.getClippedVoronoi2D(points, shopBlock.get(i));
+//                voronois.add(voronoi);
+//            }
+//        }
+//        this.allCells = new ArrayList<>();
+//        for (WB_Voronoi2D wb_voronoi2D : voronois) {
+//            for (WB_VoronoiCell2D cell : wb_voronoi2D.getCells()) {
+//                allCells.add(cell.getPolygon());
+//            }
+//        }
     }
 
     /* ------------- select & update ------------- */
