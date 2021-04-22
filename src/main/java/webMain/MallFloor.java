@@ -200,12 +200,12 @@ public class MallFloor {
                     ZSD_SkeVorStrip divTool = new ZSD_SkeVorStrip(shopBlock);
                     divTool.setSpan(span);
                     divTool.performDivide();
-                    allCells.addAll(divTool.getAllSubPolygons());
+                    allCells.addAll(divTool.getAllValidSubPolygon());
                 } else {
                     ZSD_SkeOBBStrip divTool = new ZSD_SkeOBBStrip(shopBlock);
                     divTool.setSpan(span);
                     divTool.performDivide();
-                    allCells.addAll(divTool.getAllSubPolygons());
+                    allCells.addAll(divTool.getAllValidSubPolygon());
                 }
             }
         } else {
@@ -213,7 +213,7 @@ public class MallFloor {
                 ZSD_SkeVorStrip divTool = new ZSD_SkeVorStrip(shopBlock);
                 divTool.setSpan(span);
                 divTool.performDivide();
-                allCells.addAll(divTool.getAllSubPolygons());
+                allCells.addAll(divTool.getAllValidSubPolygon());
             }
         }
     }
@@ -340,11 +340,15 @@ public class MallFloor {
 
     public void disposeSplit() {
         this.publicBlock = null;
-        this.shopBlocks = new ArrayList<>();
+        this.shopBlocks = null;
     }
 
     public void disposeSubdivision() {
-        this.allCells = new ArrayList<>();
+        this.allCells = null;
+    }
+
+    public void disposeEvacuation() {
+        this.evacuationPoint = null;
     }
 
     /* ------------- setter & getter ------------- */
@@ -359,6 +363,10 @@ public class MallFloor {
 
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    public int getStatus() {
+        return status;
     }
 
     public TrafficGraph getGraph() {
