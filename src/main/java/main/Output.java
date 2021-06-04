@@ -1,6 +1,6 @@
 package main;
 
-import floors.Floor;
+import oldVersion.Floor;
 import igeo.IG;
 
 /**

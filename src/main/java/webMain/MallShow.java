@@ -2,6 +2,8 @@ package webMain;
 
 import Guo_Cam.CameraController;
 import processing.core.PApplet;
+import render.JtsRender;
+import wblut.processing.WB_Render;
 
 /**
  * description
@@ -15,11 +17,16 @@ public class MallShow extends PApplet {
     private MallServer server;
     private CameraController cam;
 
-    public void settings () {
+    private WB_Render render;
+    private JtsRender jtsRender;
+
+    public void settings() {
         size(600, 800, P3D);
     }
 
     public void setup() {
+        render = new WB_Render(this);
+        jtsRender = new JtsRender(this);
         cam = new CameraController(this, 1000);
         server = new MallServer();
     }
@@ -27,6 +34,6 @@ public class MallShow extends PApplet {
     public void draw() {
         background(221);
         cam.drawSystem(1000);
-        server.generator.draw(this);
+        server.generator.display(this, render, jtsRender);
     }
 }

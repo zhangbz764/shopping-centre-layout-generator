@@ -9,6 +9,7 @@ import geometry.Vertices;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import main.ArchiJSON;
+import main.MallGenerator;
 import org.locationtech.jts.geom.LineString;
 import transform.ZTransform;
 import wblut.geom.WB_PolyLine;
@@ -134,7 +135,7 @@ public class MallServer {
             status2Setting(floorNum, archijson);
 
             // processing
-            generator.generateSubdivision(floorNum, span);
+            generator.generateSubdivision(floorNum);
 
             // return
             ArchiJSON json = generator.toArchiJSONSubdivision(floorNum, archijson.getId(), gson);
@@ -153,7 +154,7 @@ public class MallServer {
             status2Setting(floorNum, archijson);
 
             // processing
-            generator.generateSubdivision(floorNum, span);
+            generator.generateSubdivision(floorNum);
 
             // return
             ArchiJSON json = generator.toArchiJSONSubdivision(floorNum, archijson.getId(), gson);
@@ -252,7 +253,7 @@ public class MallServer {
             BaseGeometry g = archijson.getGeometries().get(i);
             if (g instanceof Segments) {
                 WB_PolyLine pl = WB_Converter.toWB_Polyline((Segments) g);
-                bufferCurve.add(ZTransform.WB_PolyLineToJtsLineString(pl));
+                bufferCurve.add(ZTransform.WB_PolyLineToLineString(pl));
             }
         }
         generator.setBufferCurve_receive(floorNum, bufferCurve);
