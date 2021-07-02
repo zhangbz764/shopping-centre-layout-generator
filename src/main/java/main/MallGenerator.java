@@ -1,10 +1,9 @@
 package main;
 
+import advancedGeometry.ZCatmullRom;
+import advancedGeometry.ZSkeleton;
 import advancedGeometry.rectCover.ZRectCover;
-import basicGeometry.ZEdge;
-import basicGeometry.ZFactory;
-import basicGeometry.ZLine;
-import basicGeometry.ZPoint;
+import basicGeometry.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -38,11 +37,12 @@ import java.util.List;
  * @time 17:55
  */
 public class MallGenerator {
-    // display switch
-    private boolean draw = false;
-
     // geometries received from frontend
+    private WB_Polygon site_receive;                // 场地（共用）
     private WB_Polygon boundary_receive;            // 轮廓（共用）
+    private ZCatmullRom mainTrafficCurve;                 // 主路径轴线（共用）
+    private Polygon mainTrafficBuffer;              // 主路径区域（共用）
+
     private List<WB_Point> innerNode_receive;       // 内部控制点（共用）
     private List<WB_Point> entryNode_receive;       // 轮廓控制点（共用）
     private List<WB_Polygon> polyAtrium_receive;    // 中庭多边形（共用）
@@ -62,11 +62,11 @@ public class MallGenerator {
 
     }
 
-    public void init() {
+    public void init(int gridNum) {
         // setup structure grids
-        ZRectCover zrc = new ZRectCover(boundary_receive, MallConst.RECT_COVER_NUM);
+        ZRectCover zrc = new ZRectCover(boundary_receive, gridNum);
         List<Polygon> rects = zrc.getBestRects();
-        this.grids = new StructureGrid[MallConst.RECT_COVER_NUM];
+        this.grids = new StructureGrid[gridNum];
         for (int i = 0; i < rects.size(); i++) {
             grids[i] = new StructureGrid(rects.get(i), MallConst.SHOP_SPAN_THRESHOLD);
         }
@@ -81,7 +81,7 @@ public class MallGenerator {
         }
 
         // setup floors
-        this.floors = new MallFloor[4];
+        this.floors = new MallFloor[MallConst.FLOOR_TOTAL];
 
         this.bufferCurve_receive = new ArrayList<>();
         bufferCurve_receive.add(new ArrayList<LineString>());
@@ -93,10 +93,39 @@ public class MallGenerator {
 
             cellPolys_receive.add(new ArrayList<WB_Polygon>());
         }
-        draw = true;
     }
 
     /* ------------- generating ------------- */
+
+    public void initTraffic(double bufferDist) {
+        // find ridges of skeleton
+        ZSkeleton boundarySkel = new ZSkeleton(boundary_receive);
+        List<ZLine> centralSegs = boundarySkel.getRidges();
+        centralSegs.addAll(boundarySkel.getExtendedRidges());
+        LineString centralLs = ZFactory.createLineString(centralSegs);
+
+        // divide and add entries
+        List<ZPoint> dividePts = ZGeoMath.splitPolyLineEdge(centralLs, 10);
+        dividePts.remove(0);
+        dividePts.remove(dividePts.size() - 1);
+        WB_Point[] pts = new WB_Point[dividePts.size() + 2];
+        for (int i = 0; i < dividePts.size(); i++) {
+            pts[i + 1] = dividePts.get(i).toWB_Point();
+        }
+        WB_PolyLine boundLS = ZTransform.WB_PolygonToWB_PolyLine(boundary_receive);
+        WB_Point entryP1 = WB_GeometryOp.getClosestPoint2D(dividePts.get(0).toWB_Point(), boundLS);
+        WB_Point entryP2 = WB_GeometryOp.getClosestPoint2D(dividePts.get(dividePts.size() - 1).toWB_Point(), boundLS);
+        pts[0] = entryP1;
+        pts[pts.length - 1] = entryP2;
+
+        generateTraffic(pts, bufferDist);
+    }
+
+    public void generateTraffic(WB_Point[] generatePts, double bufferDist) {
+        // build traffic curve, and make buffer polygon
+        this.mainTrafficCurve = new ZCatmullRom(generatePts, 10, false);
+        this.mainTrafficBuffer = (Polygon) mainTrafficCurve.getAsLineString().buffer(bufferDist);
+    }
 
     /**
      * update traffic graph and buffer of current floor
@@ -493,9 +522,35 @@ public class MallGenerator {
 
     /* ------------- setter & getter ------------- */
 
-    public void setBoundary_receive(WB_Polygon boundary_receive) {
-        this.boundary_receive = ZTransform.validateWB_Polygon(boundary_receive);
+    public void setSite_receive(WB_Polygon site_receive) {
+        this.site_receive = site_receive;
     }
+
+    public void setBoundary_receive(WB_Polygon boundary_receive) {
+        this.boundary_receive = boundary_receive;
+    }
+
+    public ZCatmullRom getMainTrafficCurve() {
+        return mainTrafficCurve;
+    }
+
+    public List<WB_Point> getTrafficInnerNodes() {
+        List<WB_Point> nodes = new ArrayList<>();
+        List<ZPoint> controls = mainTrafficCurve.getCurveControlPts();
+        for (int i = 1; i < controls.size() - 1; i++) {
+            nodes.add(controls.get(i).toWB_Point());
+        }
+        return nodes;
+    }
+
+    public List<WB_Point> getTrafficEntryNodes() {
+        List<WB_Point> nodes = new ArrayList<>();
+        List<ZPoint> controls = mainTrafficCurve.getCurveControlPts();
+        nodes.add(controls.get(0).toWB_Point());
+        nodes.add(controls.get(controls.size() - 1).toWB_Point());
+        return nodes;
+    }
+
 
     public void setInnerNode_receive(List<WB_Point> innerNode_receive) {
         this.innerNode_receive = innerNode_receive;
@@ -582,11 +637,39 @@ public class MallGenerator {
 
     /* ------------- draw ------------- */
 
-    public void display(PApplet app, WB_Render render, JtsRender jtsRender) {
-        if (draw) {
-
+    public void displayLocal(PApplet app, WB_Render render, JtsRender jtsRender, int status) {
+        app.pushStyle();
+        switch (status) {
+            case -1:
+            case 0:
+                break;
+            case 1:
+                displaySiteBoundaryLocal(app, render);
+                displayTrafficLocal(app, jtsRender);
+                break;
         }
+        app.popStyle();
     }
+
+    public void displaySiteBoundaryLocal(PApplet app, WB_Render render) {
+        // draw boundary and site
+        app.noFill();
+        app.stroke(255);
+        app.strokeWeight(6);
+        render.drawPolygonEdges(boundary_receive);
+        app.stroke(255, 0, 0);
+        app.strokeWeight(3);
+        render.drawPolygonEdges(site_receive);
+    }
+
+    public void displayTrafficLocal(PApplet app, JtsRender jtsRender) {
+        // draw traffic route and buffer area
+        app.stroke(255);
+        app.strokeWeight(1);
+        jtsRender.drawGeometry(mainTrafficCurve.getAsLineString());
+        jtsRender.drawGeometry(mainTrafficBuffer);
+    }
+
 
     public void displayGridLocal(PApplet app, WB_Render render, JtsRender jtsRender) {
         app.pushStyle();

@@ -2,7 +2,7 @@ package mallElementNew;
 
 import basicGeometry.ZNode;
 import basicGeometry.ZPoint;
-import oldVersion.mallElements.Atrium;
+import oldVersion.mallElements.AtriumOld;
 import processing.core.PApplet;
 import wblut.geom.WB_Point;
 import wblut.processing.WB_Render;
@@ -175,7 +175,7 @@ public abstract class TrafficNode extends ZNode {
 
     public abstract void clearAtrium();
 
-    public abstract Atrium getAtrium();
+    public abstract AtriumOld getAtrium();
 
     public abstract boolean hasAtrium();
 

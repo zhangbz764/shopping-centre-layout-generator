@@ -1,7 +1,7 @@
 package mallElementNew;
 
 import basicGeometry.ZPoint;
-import oldVersion.mallElements.Atrium;
+import oldVersion.mallElements.AtriumOld;
 import math.ZGeoMath;
 import processing.core.PApplet;
 import transform.ZTransform;
@@ -80,7 +80,7 @@ public class TrafficNodeFixed extends TrafficNode {
     }
 
     @Override
-    public Atrium getAtrium() {
+    public AtriumOld getAtrium() {
         throw new NullPointerException("Fixed node can't have atrium");
     }
 

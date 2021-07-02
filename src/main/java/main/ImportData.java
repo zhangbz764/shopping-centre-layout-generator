@@ -4,6 +4,7 @@ import basicGeometry.ZFactory;
 import igeo.ICurve;
 import igeo.IG;
 import igeo.IPoint;
+import math.ZGeoMath;
 import processing.core.PApplet;
 import transform.ZTransform;
 import wblut.geom.WB_Point;
@@ -24,15 +25,13 @@ import java.util.List;
  */
 public class ImportData {
     // geometries
+    private WB_Polygon inputSite;
     private WB_Polygon inputBoundary;
-    private WB_Polygon inputOffset;
     private List<WB_Point> inputEntries;
     private List<WB_Point> inputInnerNodes;
 
-    private List<WB_PolyLine> publicTemp;
-
     // statistics
-    private double boundaryArea;
+    private double siteArea;
 
     /* ------------- constructor ------------- */
 
@@ -65,28 +64,24 @@ public class ImportData {
         for (IPoint p : inners) {
             inputInnerNodes.add(ZTransform.IPointToWB_Point(p));
         }
+        // load site polygon
+        ICurve[] site = IG.layer("site").curves();
+        if (site.length > 0) {
+            this.inputSite = (WB_Polygon) ZTransform.ICurveToWB(site[0]);
+        }
         // load boundary polygon
         ICurve[] boundary = IG.layer("boundary").curves();
-        this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0]);
-        // load public polyline (temporary)
-        ICurve[] polyline = IG.layer("public").curves();
-        this.publicTemp = new ArrayList<>();
-        for (ICurve c : polyline) {
-            publicTemp.add((WB_PolyLine) ZTransform.ICurveToWB(c));
+        if (boundary.length > 0) {
+            this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0]);
         }
 
-
         // print
-        assert inputBoundary != null;
-        this.inputOffset = ZTransform.validateWB_Polygon(ZFactory.wbgf.createBufferedPolygons2D(inputBoundary, -MallConst.EVACUATION_WIDTH).get(0));
-        this.boundaryArea = Math.abs(inputBoundary.getSignedArea());
-        String inputInfo = "\n" + "*** IMPORT STATS ***"
-                + "\n" + "boundary points " + "---> " + inputBoundary.getNumberOfPoints()
-                + "\n" + "entries " + "---> " + inputEntries.size()
-                + "\n" + "inner nodes " + "---> " + inputInnerNodes.size()
-                + "\n" + "input boundary area " + "---> " + boundaryArea + " ㎡"
-                + "\n";
-        System.out.println(inputInfo + "**  LOADING SUCCESS **" + "\n" + "----------------------" + "\n");
+//        String inputInfo = "\n" + "*** IMPORT STATS ***"
+//                + "\n" + "boundary points " + "---> " + inputBoundary.getNumberOfPoints()
+//                + "\n" + "entries " + "---> " + inputEntries.size()
+//                + "\n" + "inner nodes " + "---> " + inputInnerNodes.size()
+//                + "\n";
+//        System.out.println(inputInfo + "**  LOADING SUCCESS **" + "\n" + "----------------------" + "\n");
     }
 
     /**
@@ -96,6 +91,7 @@ public class ImportData {
      * @param scale scale
      * @return void
      */
+    @Deprecated
     public void loadData(String path, double scale) {
         System.out.println("** LOADING FILE **");
         IG.init();
@@ -118,23 +114,20 @@ public class ImportData {
         this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0], scale);
 
         // print
-        assert inputBoundary != null;
-        this.boundaryArea = Math.abs(inputBoundary.getSignedArea());
         String inputInfo = "\n" + "*** IMPORT STATS ***"
                 + "\n" + "boundary points " + "---> " + inputBoundary.getNumberOfPoints()
                 + "\n" + "entries " + "---> " + inputEntries.size()
                 + "\n" + "inner nodes " + "---> " + inputInnerNodes.size()
-                + "\n" + "input boundary area " + "---> " + boundaryArea + " ㎡"
                 + "\n";
         System.out.println(inputInfo + "**  LOADING SUCCESS **" + "\n" + "----------------------" + "\n");
     }
 
-    public WB_Polygon getInputBoundary() {
-        return this.inputBoundary;
+    public WB_Polygon getInputSite() {
+        return inputSite;
     }
 
-    public WB_Polygon getInputOffset() {
-        return inputOffset;
+    public WB_Polygon getInputBoundary() {
+        return this.inputBoundary;
     }
 
     public List<WB_Point> getInputEntries() {
@@ -143,14 +136,6 @@ public class ImportData {
 
     public List<WB_Point> getInputInnerNodes() {
         return this.inputInnerNodes;
-    }
-
-    public List<WB_PolyLine> getPublicTemp() {
-        return publicTemp;
-    }
-
-    public double getBoundaryArea() {
-        return this.boundaryArea;
     }
 
     /*-------- print & draw --------*/
