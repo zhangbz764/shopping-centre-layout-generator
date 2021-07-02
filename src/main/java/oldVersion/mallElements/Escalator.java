@@ -30,11 +30,11 @@ public class Escalator {
 
     /* ------------- constructor ------------- */
 
-    public Escalator(Atrium atrium) {
+    public Escalator(AtriumOld atrium) {
         initShape(atrium);
     }
 
-    public Escalator(Atrium atrium, double scale) {
+    public Escalator(AtriumOld atrium, double scale) {
         setScale(scale);
         initShape(atrium);
     }
@@ -47,7 +47,7 @@ public class Escalator {
      * @param atrium input atrium to generate
      * @return void
      */
-    private void initShape(Atrium atrium) {
+    private void initShape(AtriumOld atrium) {
         // find a valid atrium edge to generate a escalator
         List<ZLine> possibleAtriumSide = atrium.getMainSegmentsOfAtrium();
         for (ZLine possible : possibleAtriumSide) {

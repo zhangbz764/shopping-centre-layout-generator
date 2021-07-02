@@ -1,7 +1,7 @@
 package mallElementNew;
 
 import basicGeometry.ZPoint;
-import oldVersion.mallElements.Atrium;
+import oldVersion.mallElements.AtriumOld;
 import math.ZGeoMath;
 import processing.core.PApplet;
 import wblut.geom.WB_GeometryOp;
@@ -23,7 +23,7 @@ import java.util.List;
 public class TrafficNodeTree extends TrafficNode {
     private WB_Polygon boundary;
     private List<ZPoint> joints;  // join points on bisectors
-    private Atrium atrium;
+    private AtriumOld atrium;
     private boolean atriumActive;
 
     /* ------------- constructor ------------- */
@@ -112,7 +112,7 @@ public class TrafficNodeTree extends TrafficNode {
     @Override
     public void setAtrium() {
         if (this.getNeighbors() != null && this.getNeighbors().size() != 0) {
-            this.atrium = new Atrium(this);
+            this.atrium = new AtriumOld(this);
         } else {
             System.out.println("can't generate an atrium here");
         }
@@ -135,7 +135,7 @@ public class TrafficNodeTree extends TrafficNode {
 
     // ************ about atrium ************
     @Override
-    public Atrium getAtrium() {
+    public AtriumOld getAtrium() {
         return atrium;
     }
 

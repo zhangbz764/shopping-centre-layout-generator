@@ -76,16 +76,14 @@ public class MallServer {
 
             // initializing
             WB_Polygon p = WB_Converter.toWB_Polygon((Segments) archijson.getGeometries().get(0));
-            generator.setBoundary_receive(
-                    p
-            );
+            generator.setBoundary_receive(ZTransform.validateWB_Polygon(p));
             generator.setInnerNode_receive(null);
             generator.setEntryNode_receive(null);
             generator.setPolyAtrium_receive(null);
             generator.setBufferCurve_receive(null);
             generator.setCellPolys_receive(null);
 
-            generator.init();
+//            generator.init();
         });
 
         /*

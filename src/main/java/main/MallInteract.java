@@ -1,16 +1,16 @@
 package main;
 
 import basicGeometry.ZFactory;
+import basicGeometry.ZLine;
+import basicGeometry.ZPoint;
 import mallElementNew.AtriumCurve;
 import mallElementNew.Shop;
+import math.ZGeoMath;
 import org.locationtech.jts.geom.*;
 import processing.core.PApplet;
 import render.JtsRender;
 import transform.ZTransform;
-import wblut.geom.WB_GeometryOp;
-import wblut.geom.WB_GeometryOp2D;
-import wblut.geom.WB_Point;
-import wblut.geom.WB_Polygon;
+import wblut.geom.*;
 import wblut.processing.WB_Render;
 
 import java.util.ArrayList;
@@ -26,10 +26,17 @@ import java.util.List;
  * @time 11:20
  */
 public class MallInteract {
-    private WB_Polygon boundary;            // 轮廓（共用）
-    //    private WB_Polygon boundaryBuffer;      // 红线/上层轮廓（共用）
-    private List<WB_Point> innerNode_interact;       // 内部控制点（共用）
-    private List<WB_Point> entryNode_interact;       // 轮廓控制点（共用）
+    private int status;
+
+    private WB_Polygon site;                // 场地轮廓
+    private WB_Polygon redLine;             // 场地红线
+    private WB_Polygon boundary;            // 建筑轮廓
+    private int boundaryBase = 0;
+    private List<WB_Point> boundaryNode_interact; // 建筑轮廓控制点
+
+    private List<WB_Point> innerNode_interact;       // 动线中部控制点
+    private List<WB_Point> entryNode_interact;       // 动线端头控制点
+
     private List<List<WB_Point>> atriumNode_interact;    // 中庭多边形（共用）
     private List<AtriumCurve> atriumCurves;
 
@@ -43,27 +50,127 @@ public class MallInteract {
 
     /* ------------- constructor ------------- */
 
-    public MallInteract(WB_Polygon boundary, List<WB_Point> innerNode, List<WB_Point> entryNode) {
-        this.boundary = boundary;
-//        this.boundaryBuffer = boundaryBuffer;
-        this.innerNode_interact = innerNode;
-        this.entryNode_interact = entryNode;
-        this.atriumNode_interact = new ArrayList<>();
-        this.atriumCurves = new ArrayList<>();
+    public MallInteract() {
+
     }
 
-    /* ------------- graph node interact ------------- */
+    /* ------------- site boundary interact ------------- */
+
+    /**
+     * initialize
+     * given site and boundary straightly or given a quad site and generate boundary automatically
+     *
+     * @param _site     input site
+     * @param _boundary input boundary
+     * @return void
+     */
+    public void initSiteBoundary(WB_Polygon _site, WB_Polygon _boundary, double redLineDist, double siteBufferDist) {
+        this.site = ZTransform.validateWB_Polygon(ZGeoMath.polygonFaceUp(_site));
+        if (_boundary != null) {
+            this.boundary = ZTransform.validateWB_Polygon(ZGeoMath.polygonFaceUp(_boundary));
+            this.boundaryNode_interact = new ArrayList<>();
+            for (int i = 0; i < boundary.getNumberOfPoints(); i++) {
+                boundaryNode_interact.add(boundary.getPoint(i));
+            }
+        } else {
+            WB_Polygon redLineSite = ZFactory.wbgf.createBufferedPolygons2D(
+                    _site, -1 * redLineDist
+            ).get(0);
+            this.redLine = ZGeoMath.polygonFaceUp(ZTransform.validateWB_Polygon(redLineSite));
+
+            this.boundary = generateBoundary(redLine, boundaryBase, siteBufferDist);
+            this.boundaryNode_interact = new ArrayList<>();
+            for (int i = 0; i < boundary.getNumberOfPoints(); i++) {
+                boundaryNode_interact.add(boundary.getPoint(i));
+            }
+        }
+    }
+
+    /**
+     * switch 4 possible L-shape boundary
+     *
+     * @return void
+     */
+    public void switchBoundary(double siteBufferDist) {
+        this.boundaryBase = (boundaryBase + 1) % 4;
+        this.boundary = generateBoundary(redLine, boundaryBase, siteBufferDist);
+        this.boundaryNode_interact = new ArrayList<>();
+        for (int i = 0; i < boundary.getNumberOfPoints(); i++) {
+            boundaryNode_interact.add(boundary.getPoint(i));
+        }
+    }
+
+    /**
+     * drag update to change the boundary shape manually
+     *
+     * @param x
+     * @param y
+     * @return void
+     */
+    public void dragUpdateBoundary(double x, double y) {
+        for (int i = 0; i < boundaryNode_interact.size() - 1; i++) {
+            WB_Point p = boundaryNode_interact.get(i);
+            if (distance(p.xd(), p.yd(), x, y) <= MallConst.BOUNDARY_INTERACT_R) {
+                p.set(x, y);
+                if (i == 0) {
+                    WB_Point last = boundaryNode_interact.get(boundaryNode_interact.size() - 1);
+                    last.set(x, y);
+                }
+                break;
+            }
+        }
+    }
+
+    /**
+     * generate a L-shape building boundary from a quad site
+     *
+     * @param validRedLine quad site red line
+     * @param base         base index of point of validRedLine
+     * @return wblut.geom.WB_Polygon
+     */
+    private WB_Polygon generateBoundary(WB_Polygon validRedLine, int base, double siteBufferDist) {
+        assert validRedLine.getNumberOfPoints() == 5;
+        WB_Coord[] boundaryPts = new WB_Coord[7];
+        boundaryPts[0] = validRedLine.getPoint(base);
+        boundaryPts[1] = validRedLine.getPoint((base + 1) % 4);
+        boundaryPts[5] = validRedLine.getPoint((base + 3) % 4);
+        boundaryPts[6] = boundaryPts[0];
+        ZPoint vec01 = new ZPoint(
+                boundaryPts[1].xd() - boundaryPts[0].xd(),
+                boundaryPts[1].yd() - boundaryPts[0].yd()
+        ).normalize();
+        ZPoint vec05 = new ZPoint(
+                boundaryPts[5].xd() - boundaryPts[0].xd(),
+                boundaryPts[5].yd() - boundaryPts[0].yd()
+        ).normalize();
+        ZPoint bisector = vec01.add(vec05);
+        double sin = Math.abs(vec01.cross2D(bisector));
+        ZPoint move = bisector.scaleTo(siteBufferDist / sin);
+
+        ZLine seg01_move = new ZLine(boundaryPts[0], boundaryPts[1]).translate2D(move);
+        ZLine seg30_move = new ZLine(boundaryPts[5], boundaryPts[6]).translate2D(move);
+        boundaryPts[3] = seg01_move.getPt0().toWB_Point();
+        boundaryPts[2] = ZGeoMath.simpleLineElementsIntersect2D(
+                seg01_move, "segment", new ZLine(validRedLine.getSegment((base + 1) % 4)), "segment"
+        ).toWB_Point();
+        boundaryPts[4] = ZGeoMath.simpleLineElementsIntersect2D(
+                seg30_move, "segment", new ZLine(validRedLine.getSegment((base + 2) % 4)), "segment"
+        ).toWB_Point();
+        return new WB_Polygon(boundaryPts);
+    }
+
+    /* ------------- traffic interact ------------- */
 
     public void dragUpdateNode(double x, double y) {
         for (WB_Point p : innerNode_interact) {
             if (distance(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
                 WB_Point point = new WB_Point(x, y);
                 if (WB_GeometryOp.contains2D(point, boundary) && WB_GeometryOp.getDistance2D(point, boundary) > MallConst.TRAFFIC_NODE_R) {
-                    for (AtriumCurve a : atriumCurves) {
-                        if (a.isCenter(p)) {
-                            a.changePosition(x, y);
-                        }
-                    }
+//                    for (AtriumCurve a : atriumCurves) {
+//                        if (a.isCenter(p)) {
+//                            a.changePosition(x, y);
+//                        }
+//                    }
                     p.set(x, y);
                 }
                 return;
@@ -112,6 +219,7 @@ public class MallInteract {
         }
     }
 
+
     public void addOrRemoveAtrium(double x, double y) {
         // 是否选到node
         WB_Point selected = null;
@@ -137,32 +245,6 @@ public class MallInteract {
                 this.atriumCurves.add(new AtriumCurve(selected, 6));
             }
         }
-    }
-
-    public void drawBoundaryAndNode(PApplet app, WB_Render render) {
-        app.pushStyle();
-
-        // draw boundary
-        app.noFill();
-        app.stroke(255);
-        app.strokeWeight(6);
-        render.drawPolygonEdges(boundary);
-//        app.stroke(180);
-//        app.strokeWeight(3);
-//        render.drawPolygonEdges(boundaryBuffer);
-
-        // draw nodes
-        app.noStroke();
-        app.fill(255, 97, 136);
-        for (WB_Point p : innerNode_interact) {
-            app.ellipse(p.xf(), p.yf(), (float) MallConst.TRAFFIC_NODE_R, (float) MallConst.TRAFFIC_NODE_R);
-        }
-        app.fill(128);
-        for (WB_Point p : entryNode_interact) {
-            app.ellipse(p.xf(), p.yf(), (float) MallConst.TRAFFIC_NODE_R, (float) MallConst.TRAFFIC_NODE_R);
-        }
-
-        app.popStyle();
     }
 
     /* ------------- atrium shape interact ------------- */
@@ -344,6 +426,31 @@ public class MallInteract {
         this.cellPolys_selected = new ArrayList<>();
     }
 
+
+    public WB_Polygon getSite() {
+        return site;
+    }
+
+    public WB_Polygon getBoundary() {
+        return boundary;
+    }
+
+    public void setInnerNode_interact(List<WB_Point> innerNode_interact) {
+        this.innerNode_interact = innerNode_interact;
+    }
+
+    public void setEntryNode_interact(List<WB_Point> entryNode_interact) {
+        this.entryNode_interact = entryNode_interact;
+    }
+
+    public List<WB_Point> getTrafficControls() {
+        List<WB_Point> controls = new ArrayList<>();
+        controls.add(entryNode_interact.get(0));
+        controls.addAll(innerNode_interact);
+        controls.add(entryNode_interact.get(entryNode_interact.size() - 1));
+        return controls;
+    }
+
     public List<WB_Point> getInnerNode_interact() {
         return innerNode_interact;
     }
@@ -384,5 +491,52 @@ public class MallInteract {
     }
 
     /* ------------- draw ------------- */
+
+    public void displayLocal(PApplet app, WB_Render render, JtsRender jtsRender, int status) {
+        app.pushStyle();
+
+        switch (status) {
+            case -1:
+                break;
+            case 0:
+                displaySiteBoundary(app, render);
+                break;
+            case 1:
+                displayTraffic(app, render);
+                break;
+        }
+        app.popStyle();
+    }
+
+    public void displaySiteBoundary(PApplet app, WB_Render render) {
+        // draw boundary control nodes
+        app.noStroke();
+        app.fill(255, 97, 136);
+        for (WB_Point p : boundaryNode_interact) {
+            app.ellipse(p.xf(), p.yf(), (float) MallConst.BOUNDARY_INTERACT_R, (float) MallConst.BOUNDARY_INTERACT_R);
+        }
+
+        // draw boundary and site
+        app.noFill();
+        app.stroke(255);
+        app.strokeWeight(6);
+        render.drawPolygonEdges(boundary);
+        app.stroke(255, 0, 0);
+        app.strokeWeight(3);
+        render.drawPolygonEdges(site);
+    }
+
+    public void displayTraffic(PApplet app, WB_Render render) {
+        // draw traffic control nodes
+        app.noStroke();
+        app.fill(255, 97, 136);
+        for (WB_Point p : innerNode_interact) {
+            app.ellipse(p.xf(), p.yf(), (float) MallConst.TRAFFIC_NODE_R, (float) MallConst.TRAFFIC_NODE_R);
+        }
+        app.fill(128);
+        for (WB_Point p : entryNode_interact) {
+            app.ellipse(p.xf(), p.yf(), (float) MallConst.TRAFFIC_NODE_R, (float) MallConst.TRAFFIC_NODE_R);
+        }
+    }
 
 }

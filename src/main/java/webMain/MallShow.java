@@ -34,6 +34,6 @@ public class MallShow extends PApplet {
     public void draw() {
         background(221);
         cam.drawSystem(1000);
-        server.generator.display(this, render, jtsRender);
+//        server.generator.display(this, render, jtsRender);
     }
 }

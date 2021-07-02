@@ -23,7 +23,7 @@ import java.util.List;
  * @time 10:00
  */
 
-public class Atrium {
+public class AtriumOld {
     // center node
     private TrafficNode center;
 
@@ -49,7 +49,7 @@ public class Atrium {
 
     /* ------------- constructor ------------- */
 
-    public Atrium(TrafficNode center) {
+    public AtriumOld(TrafficNode center) {
         this.center = center;
         initAtrium();
     }
@@ -238,7 +238,7 @@ public class Atrium {
     }
 
     public static void setCorridorWidth(double corridorWidth) {
-        Atrium.corridorWidth = corridorWidth;
+        AtriumOld.corridorWidth = corridorWidth;
     }
 
     public TrafficNode getCenter() {
