@@ -13,7 +13,7 @@ import processing.core.PApplet;
 public class MallWebMain {
     public static void main(String[] args) {
         if (args.length > 0) {
-            new MallServer(args);
+//            new MallServer(args);
         } else {
             PApplet.main("webMain.MallShow");
         }

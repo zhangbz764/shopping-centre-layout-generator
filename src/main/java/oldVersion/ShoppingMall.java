@@ -1,6 +1,6 @@
 package oldVersion;
 
-import Guo_Cam.CameraController;
+import guo_cam.CameraController;
 import main.ImportData;
 import processing.core.PApplet;
 import processing.core.PFont;
@@ -208,7 +208,7 @@ public class ShoppingMall extends PApplet {
     /* ------------- mouse & key interaction ------------- */
 
     public void mouseDragged() {
-        if (publicSpaceAdjust && mouseButton == RIGHT) {
+        if (publicSpaceAdjust && mouseButton == LEFT) {
             // drag a node of traffic graph
             publicSpaceGenerator.dragUpdate(mouseX, -1 * mouseY + height);
             for (Floor floor : floors) {
@@ -223,7 +223,7 @@ public class ShoppingMall extends PApplet {
     }
 
     public void mouseReleased() {
-        if (publicSpaceAdjust && mouseButton == RIGHT) {
+        if (publicSpaceAdjust && mouseButton == LEFT) {
             publicSpaceGenerator.releaseUpdate();
         }
     }
@@ -231,7 +231,7 @@ public class ShoppingMall extends PApplet {
     public void mouseClicked() {
         if (!publicSpaceAdjust && floorAdjust) {
             for (Floor f : floors) {
-                if (f.activate && mouseButton == RIGHT) {
+                if (f.activate && mouseButton == LEFT) {
                     f.selectShop(mouseX, -1 * mouseY + height);
                 }
             }
@@ -239,7 +239,7 @@ public class ShoppingMall extends PApplet {
         if (publicSpaceAdjust && !floorAdjust && mouseButton == LEFT) {
             publicSpaceGenerator.atriumEdit(mouseX, -1 * mouseY + height);
         }
-        if (publicSpaceAdjust && !floorAdjust && mouseButton == RIGHT) {
+        if (publicSpaceAdjust && !floorAdjust && mouseButton == LEFT) {
             publicSpaceGenerator.atriumEditEnd();
         }
     }
