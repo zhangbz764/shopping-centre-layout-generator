@@ -1,6 +1,6 @@
 package webMain;
 
-import Guo_Cam.CameraController;
+import guo_cam.CameraController;
 import processing.core.PApplet;
 import render.JtsRender;
 import wblut.processing.WB_Render;

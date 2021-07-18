@@ -42,6 +42,7 @@ public class MallFloor {
     private List<Polygon> shopBlocks; // 初始店铺分区
 
     // subdivision
+    private Point verify;
     private List<ZPoint> turning; // 记录需要拐角的剖分线所属的轴网交点
     private List<LineString> allSubLines; // 初次剖分线
     private List<Shop> allCells; // 初次剖分结果
@@ -161,13 +162,14 @@ public class MallFloor {
         Collection<Polygon> allPolys = pr.getPolygons();
 
         // verify one tree node to find public poly, others are shop blocks
-        Point verify = graph.getTreeNodes().get(0).toJtsPoint();
+//        this.verify = graph.getTreeNodes().get(0).toJtsPoint();
         for (Polygon p : allPolys) {
             if (p.contains(verify)) {
                 this.publicBlock = p;
                 break;
             }
         }
+
         if (publicBlock != null) {
             allPolys.remove(publicBlock);
             this.shopBlocks = new ArrayList<>();
@@ -399,15 +401,18 @@ public class MallFloor {
                         if (extend != null) {
                             if (extend.getLength() < 4 * MallConst.SHOP_SPAN_THRESHOLD[1]) {
                                 // 剔除过长剖分线
-                                WB_Point closest = WB_GeometryOp.getClosestPoint2D(nextNode.toWB_Point(), ZTransform.PolygonToWB_PolyLine(publicBlock).get(0));
-                                Coordinate[] coords = new Coordinate[3];
-                                coords[0] = new Coordinate(closest.xd(), closest.yd());
-                                coords[1] = new Coordinate(extend.getPt0().xd(), extend.getPt0().yd());
-                                coords[2] = new Coordinate(extend.getPt1().xd(), extend.getPt1().yd());
+//                                ZPoint closestP = ZGeoMath.closestPointToLineList(nextNode, ZFactory.breakWB_PolyLine(ZTransform.PolygonToWB_PolyLine(publicBlock).get(0)));
+                                WB_Point closestP = WB_GeometryOp.getClosestPoint2D(nextNode.toWB_Point(), ZTransform.PolygonToWB_PolyLine(publicBlock).get(0));
+                                if (closestP != null && !Double.isNaN(closestP.xd())) {
+                                    Coordinate[] coords = new Coordinate[3];
+                                    coords[0] = new Coordinate(closestP.xd(), closestP.yd());
+                                    coords[1] = new Coordinate(extend.getPt0().xd(), extend.getPt0().yd());
+                                    coords[2] = new Coordinate(extend.getPt1().xd(), extend.getPt1().yd());
 
-                                LineString subLine = ZFactory.jtsgf.createLineString(coords);
-                                subLines.add(subLine);
-                                allSubLines.add(subLine);
+                                    LineString subLine = ZFactory.jtsgf.createLineString(coords);
+                                    subLines.add(subLine);
+                                    allSubLines.add(subLine);
+                                }
                             }
                         }
                     }
@@ -435,13 +440,14 @@ public class MallFloor {
             }
             for (int j = 0; j < subLines.size(); j++) {
                 LineString sl = ZFactory.createExtendedLineString(subLines.get(j), 0.1);
+                System.out.println(sl.toString());
                 nodedLineStrings = nodedLineStrings.union(sl);
             }
             pr.add(nodedLineStrings);
             Collection<Polygon> allPolys = pr.getPolygons();
 
             boolean doIf = true;
-            Point verify = graph.getTreeNodes().get(0).toJtsPoint();
+//            Point verify = graph.getTreeNodes().get(0).toJtsPoint();
             for (Polygon poly : allPolys) {
                 if (poly.getArea() > 1.0) {
                     // 防止 polygonizer 时出现极小误差
@@ -764,6 +770,14 @@ public class MallFloor {
 
     public List<WB_Point> getEvacuationPoint() {
         return evacuationPoint;
+    }
+
+    public void setVerify(Point verify) {
+        this.verify = verify;
+    }
+
+    public Point getVerify() {
+        return verify;
     }
 
     /* ------------- draw ------------- */

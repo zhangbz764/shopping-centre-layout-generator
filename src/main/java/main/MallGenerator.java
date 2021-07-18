@@ -13,10 +13,7 @@ import geometry.Vertices;
 import mallElementNew.StructureGrid;
 import mallElementNew.Shop;
 import math.ZGeoMath;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.*;
 import processing.core.PApplet;
 import render.JtsRender;
 import transform.ZTransform;
@@ -37,18 +34,25 @@ import java.util.List;
  * @time 17:55
  */
 public class MallGenerator {
-    // geometries received from frontend
+    // site & boundary
     private WB_Polygon site_receive;                // 场地（共用）
     private WB_Polygon boundary_receive;            // 轮廓（共用）
-    private ZCatmullRom mainTrafficCurve;                 // 主路径轴线（共用）
-    private Polygon mainTrafficBuffer;              // 主路径区域（共用）
 
+    // main traffic
+    private ZCatmullRom mainTrafficCurve;           // 主路径轴线（共用）
+    private Polygon mainTrafficBuffer;              // 主路径区域（共用）
     private List<WB_Point> innerNode_receive;       // 内部控制点（共用）
     private List<WB_Point> entryNode_receive;       // 轮廓控制点（共用）
-    private List<WB_Polygon> polyAtrium_receive;    // 中庭多边形（共用）
+
+    // raw atriums & public space
+    private List<WB_Polygon> rawAtrium_receive;     // 中庭多边形（共用）
+    private Polygon publicSpace;                 // 收敛后的中央交通空间轮廓
+
     // structure grid
-    private StructureGrid[] grids;      // 结构轴网（共用）
-    private List<ZLine> gridToShow;
+    private StructureGrid[] grids;                  // 结构轴网（共用）
+    private boolean validGrids = true;
+
+    // shop cells
 
     private List<List<LineString>> bufferCurve_receive;   // 动线边界曲线（不同层）
     private List<List<WB_Polygon>> cellPolys_receive;     // 商铺剖分多边形（不同层）
@@ -59,44 +63,48 @@ public class MallGenerator {
     /* ------------- constructor ------------- */
 
     public MallGenerator() {
-
-    }
-
-    public void init(int gridNum) {
-        // setup structure grids
-        ZRectCover zrc = new ZRectCover(boundary_receive, gridNum);
-        List<Polygon> rects = zrc.getBestRects();
-        this.grids = new StructureGrid[gridNum];
-        for (int i = 0; i < rects.size(); i++) {
-            grids[i] = new StructureGrid(rects.get(i), MallConst.SHOP_SPAN_THRESHOLD);
-        }
-
-        this.gridToShow = new ArrayList<>();
-        for (int i = 0; i < grids.length; i++) {
-            StructureGrid g = grids[i];
-            for (ZLine l : g.getAllLines()) {
-                ZLine show = l.extendTwoSidesSlightly(MallConst.SHOP_SPAN_THRESHOLD[0]);
-                gridToShow.add(show);
-            }
-        }
-
         // setup floors
         this.floors = new MallFloor[MallConst.FLOOR_TOTAL];
-
-        this.bufferCurve_receive = new ArrayList<>();
-        bufferCurve_receive.add(new ArrayList<LineString>());
-        bufferCurve_receive.add(new ArrayList<LineString>());
-        this.cellPolys_receive = new ArrayList<>();
-        for (int i = 0; i < floors.length; i++) {
-            floors[i] = new MallFloor(i + 1, boundary_receive);
-            floors[i].setStatus(0);
-
-            cellPolys_receive.add(new ArrayList<WB_Polygon>());
-        }
+//        for (int i = 0; i < floors.length; i++) {
+//            floors[i] = new MallFloor(i + 1, boundary_receive);
+//            floors[i].setStatus(0);
+//
+////            cellPolys_receive.add(new ArrayList<WB_Polygon>());
+//        }
     }
+
+//    public void init(int gridNum) {
+//        // setup structure grids
+//        ZRectCover zrc = new ZRectCover(boundary_receive, gridNum);
+//        List<Polygon> rects = zrc.getBestRects();
+//        this.grids = new StructureGrid[gridNum];
+//        for (int i = 0; i < rects.size(); i++) {
+//            grids[i] = new StructureGrid(rects.get(i), MallConst.SHOP_SPAN_THRESHOLD);
+//        }
+//
+//        // setup floors
+//        this.floors = new MallFloor[MallConst.FLOOR_TOTAL];
+//
+//        this.bufferCurve_receive = new ArrayList<>();
+//        bufferCurve_receive.add(new ArrayList<LineString>());
+//        bufferCurve_receive.add(new ArrayList<LineString>());
+//        this.cellPolys_receive = new ArrayList<>();
+//        for (int i = 0; i < floors.length; i++) {
+//            floors[i] = new MallFloor(i + 1, boundary_receive);
+//            floors[i].setStatus(0);
+//
+//            cellPolys_receive.add(new ArrayList<WB_Polygon>());
+//        }
+//    }
 
     /* ------------- generating ------------- */
 
+    /**
+     * initialize main traffic
+     *
+     * @param bufferDist distance to buffer
+     * @return void
+     */
     public void initTraffic(double bufferDist) {
         // find ridges of skeleton
         ZSkeleton boundarySkel = new ZSkeleton(boundary_receive);
@@ -105,7 +113,7 @@ public class MallGenerator {
         LineString centralLs = ZFactory.createLineString(centralSegs);
 
         // divide and add entries
-        List<ZPoint> dividePts = ZGeoMath.splitPolyLineEdge(centralLs, 10);
+        List<ZPoint> dividePts = ZGeoMath.splitPolyLineEdge(centralLs, 6);
         dividePts.remove(0);
         dividePts.remove(dividePts.size() - 1);
         WB_Point[] pts = new WB_Point[dividePts.size() + 2];
@@ -118,14 +126,348 @@ public class MallGenerator {
         pts[0] = entryP1;
         pts[pts.length - 1] = entryP2;
 
-        generateTraffic(pts, bufferDist);
+        // build traffic curve, and make buffer polygon
+        this.mainTrafficCurve = new ZCatmullRom(pts, 10, false);
+        this.mainTrafficBuffer = (Polygon) mainTrafficCurve.getAsLineString().buffer(bufferDist);
     }
 
-    public void generateTraffic(WB_Point[] generatePts, double bufferDist) {
+    /**
+     * update main traffic
+     *
+     * @param bufferDist distance to buffer
+     * @return void
+     */
+    public void updateTraffic(double bufferDist) {
+        WB_Point[] generatePts = new WB_Point[innerNode_receive.size() + entryNode_receive.size()];
+        generatePts[0] = entryNode_receive.get(0);
+        for (int i = 0; i < innerNode_receive.size(); i++) {
+            generatePts[i + 1] = innerNode_receive.get(i);
+        }
+        generatePts[generatePts.length - 1] = entryNode_receive.get(entryNode_receive.size() - 1);
         // build traffic curve, and make buffer polygon
         this.mainTrafficCurve = new ZCatmullRom(generatePts, 10, false);
         this.mainTrafficBuffer = (Polygon) mainTrafficCurve.getAsLineString().buffer(bufferDist);
     }
+
+    /**
+     * update public traffic space
+     *
+     * @return void
+     */
+    public void updatePublicSpace() {
+        if (rawAtrium_receive == null || rawAtrium_receive.size() == 0) {
+            WB_Point[] generatePtsTemp = innerNode_receive.toArray(new WB_Point[0]);
+            ZCatmullRom curveTemp = new ZCatmullRom(generatePtsTemp, 10, false);
+            Polygon bufferTemp = (Polygon) curveTemp.getAsLineString().buffer(MallConst.TRAFFIC_BUFFER_DIST);
+            this.publicSpace = bufferTemp;
+        } else {
+            WB_Polygon bufferOut = ZFactory.wbgf.createBufferedPolygons2D(rawAtrium_receive, 50).get(0);
+            WB_Polygon bufferIn = ZFactory.wbgf.createBufferedPolygons2D(bufferOut, -50).get(0);
+            this.publicSpace = ZTransform.WB_PolygonToPolygon(bufferIn);
+        }
+    }
+
+    /**
+     * setup structure grids
+     *
+     * @param gridNum number of structure grids
+     * @param dist    column distance
+     * @return void
+     */
+    public void initGrid(int gridNum, double dist) {
+        ZRectCover zrc = new ZRectCover(boundary_receive, gridNum);
+        List<Polygon> rects = zrc.getBestRects();
+        this.grids = new StructureGrid[gridNum];
+        for (int i = 0; i < rects.size(); i++) {
+            grids[i] = new StructureGrid(rects.get(i), dist);
+        }
+    }
+
+    /**
+     * update structure grid given a new rectangle
+     *
+     * @param gridIndex index of changed grid
+     * @param rect      new rectangle
+     * @return void
+     */
+    public void updateGridByRect(int gridIndex, Polygon rect) {
+        if (gridIndex > -1 && rect != null) {
+            grids[gridIndex].updateRect(rect);
+            Geometry union = grids[0].getRect();
+            for (int i = 1; i < grids.length; i++) {
+                union = union.union(grids[i].getRect());
+            }
+            union = union.buffer(1);
+            this.validGrids = union.contains(ZTransform.WB_PolygonToPolygon(boundary_receive));
+        }
+    }
+
+    public void updateGridByDist(int gridIndex, double dist) {
+
+    }
+
+    /**
+     * description
+     *
+     * @param floorNum
+     * @return void
+     */
+    public void initShopCells(int floorNum) {
+        if (floorNum == 1) {
+            List<LineString> publicSpaceLS = new ArrayList<>(ZTransform.PolygonToLineString(publicSpace));
+            floors[floorNum - 1] = new MallFloor(floorNum, boundary_receive);
+            floors[floorNum - 1].setStatus(0);
+            this.floors[floorNum - 1].updateSubdivision(publicSpaceLS, grids);
+        } else {
+            List<LineString> publicSpaceLS = new ArrayList<>(ZTransform.PolygonToLineString(publicSpace));
+            floors[floorNum - 1] = new MallFloor(floorNum, boundary_receive);
+            floors[floorNum - 1].setStatus(0);
+            Point verify = publicSpace.getInteriorPoint();
+            floors[floorNum - 1].setVerify(verify);
+            this.floors[floorNum - 1].updateSubdivision(publicSpaceLS, grids);
+        }
+    }
+
+    /* ------------- setter & getter ------------- */
+
+    public void setSite_receive(WB_Polygon site_receive) {
+        this.site_receive = site_receive;
+    }
+
+    public WB_Polygon getSite_receive() {
+        return site_receive;
+    }
+
+    public void setBoundary_receive(WB_Polygon boundary_receive) {
+        this.boundary_receive = boundary_receive;
+    }
+
+    public WB_Polygon getBoundary_receive() {
+        return boundary_receive;
+    }
+
+    public ZCatmullRom getMainTrafficCurve() {
+        return mainTrafficCurve;
+    }
+
+    public Polygon getMainTrafficBuffer() {
+        return mainTrafficBuffer;
+    }
+
+    public List<WB_Point> getTrafficInnerNodes() {
+        List<WB_Point> nodes = new ArrayList<>();
+        List<ZPoint> controls = mainTrafficCurve.getCurveControlPts();
+        for (int i = 1; i < controls.size() - 1; i++) {
+            nodes.add(controls.get(i).toWB_Point());
+        }
+        return nodes;
+    }
+
+    public List<WB_Point> getTrafficEntryNodes() {
+        List<WB_Point> nodes = new ArrayList<>();
+        List<ZPoint> controls = mainTrafficCurve.getCurveControlPts();
+        nodes.add(controls.get(0).toWB_Point());
+        nodes.add(controls.get(controls.size() - 1).toWB_Point());
+        return nodes;
+    }
+
+    public void setInnerNode_receive(List<WB_Point> innerNode_receive) {
+        this.innerNode_receive = innerNode_receive;
+    }
+
+    public void setEntryNode_receive(List<WB_Point> entryNode_receive) {
+        this.entryNode_receive = entryNode_receive;
+    }
+
+    public void setRawAtrium_receive(List<WB_Polygon> rawAtrium_receive) {
+        this.rawAtrium_receive = rawAtrium_receive;
+    }
+
+    public Polygon[] getGridRects() {
+        Polygon[] rects = new Polygon[grids.length];
+        for (int i = 0; i < grids.length; i++) {
+            rects[i] = grids[i].getRect();
+        }
+        return rects;
+    }
+
+    /* ------------- draw ------------- */
+
+    public void displayLocal(PApplet app, WB_Render render, JtsRender jtsRender, int status, int floorNum) {
+        app.pushStyle();
+        switch (status) {
+            case -1:
+            case 0:
+                break;
+            case 1:
+                displaySiteBoundaryLocal(app, render);
+                displayTrafficLocal(app, jtsRender);
+                break;
+            case 2:
+                displaySiteBoundaryLocal(app, render);
+                displayTrafficLocal(app, jtsRender);
+                break;
+            case 3:
+                displaySiteBoundaryLocal(app, render);
+                displayPublicSpaceLocal(app, jtsRender);
+                break;
+            case 4:
+                displaySiteBoundaryLocal(app, render);
+                displayPublicSpaceLocal(app, jtsRender);
+                displayGridLocal(app);
+                break;
+            case 5:
+                displaySiteBoundaryLocal(app, render);
+                displayPublicSpaceLocal(app, jtsRender);
+                displayGridLocal(app);
+                displayShopCellsLocal(floorNum, app, jtsRender);
+                break;
+        }
+        app.popStyle();
+    }
+
+    public void displaySiteBoundaryLocal(PApplet app, WB_Render render) {
+        // draw boundary and site
+        app.noFill();
+        app.stroke(255);
+        app.strokeWeight(6);
+        render.drawPolygonEdges(boundary_receive);
+        app.stroke(255, 0, 0);
+        app.strokeWeight(3);
+        render.drawPolygonEdges(site_receive);
+    }
+
+    public void displayTrafficLocal(PApplet app, JtsRender jtsRender) {
+        // draw traffic route and buffer area
+        app.stroke(255);
+        app.strokeWeight(1);
+        jtsRender.drawGeometry(mainTrafficCurve.getAsLineString());
+        app.stroke(52, 170, 187);
+        app.strokeWeight(3);
+        jtsRender.drawGeometry(mainTrafficBuffer);
+    }
+
+    public void displayPublicSpaceLocal(PApplet app, JtsRender jtsRender) {
+        // draw public space generated by raw atriums
+        app.stroke(52, 170, 187);
+        app.strokeWeight(3);
+        jtsRender.drawGeometry(publicSpace);
+    }
+
+    public void displayGridLocal(PApplet app) {
+        app.strokeWeight(0.5f);
+        if (validGrids) {
+            app.stroke(128);
+        } else {
+            app.stroke(255, 0, 0);
+        }
+
+        for (StructureGrid grid : grids) {
+            for (ZLine l : grid.getAllLines()) {
+                l.display(app);
+            }
+        }
+    }
+
+    public void displayShopCellsLocal(int floorNum, PApplet app, JtsRender jtsRender) {
+        if (floors[floorNum - 1].getAllCells() != null) {
+            app.strokeWeight(3);
+            app.stroke(255);
+            List<Shop> cells = floors[floorNum - 1].getAllCells();
+            for (Shop s : cells) {
+                jtsRender.drawGeometry(s.getShape());
+            }
+            app.noStroke();
+            for (Shop s : floors[floorNum - 1].getAllCells()) {
+                s.display(app, jtsRender);
+            }
+
+            app.fill(255);
+            app.textSize(2);
+
+            for (Shop s : floors[floorNum - 1].getAllCells()) {
+                app.pushMatrix();
+                app.scale(1, -1);
+                app.translate(0, (float) (-2 * s.getCenter().getY()));
+                s.displayText(app);
+                app.popMatrix();
+            }
+        }
+    }
+
+    /* ------------- deprecated ------------- */
+
+    public void setBufferCurve_receive(int floorNum, List<LineString> bufferCurve_receive) {
+        if (floorNum == 1) {
+            this.bufferCurve_receive.set(0, bufferCurve_receive);
+        } else {
+            this.bufferCurve_receive.set(1, bufferCurve_receive);
+        }
+    }
+
+    public void setBufferCurve_receive(List<List<LineString>> bufferCurve_receive) {
+        this.bufferCurve_receive = bufferCurve_receive;
+    }
+
+    public void setCellPolys_receive(int floorNum, List<WB_Polygon> cellPolys_receive) {
+        this.cellPolys_receive.set(floorNum - 1, cellPolys_receive);
+    }
+
+    public void setShopCells_receive(int floorNum, List<Shop> shopCell_receive) {
+        this.floors[floorNum - 1].setAllCells(shopCell_receive);
+    }
+
+    public void setCellPolys_receive(List<List<WB_Polygon>> cellPolys_receive) {
+        this.cellPolys_receive = cellPolys_receive;
+    }
+
+    public MallFloor[] getFloors() {
+        return floors;
+    }
+
+    public List<WB_Segment> getGraphSegments(int floorNum) {
+        return floors[floorNum - 1].getGraph().toWB_Segments();
+    }
+
+    public List<List<WB_Coord>> getBufferControlPoints(int floorNum) {
+        return floors[floorNum - 1].getBufferControlPoints();
+    }
+
+    public List<Shop> getShopCells(int floorNum) {
+        return floors[floorNum - 1].getAllCells();
+    }
+
+    public String getFloorStats(int floorNum) {
+        MallFloor floor = floors[floorNum - 1];
+
+        WB_Polygon bufferOut = ZFactory.wbgf.createBufferedPolygons2D(boundary_receive, MallConst.EVACUATION_WIDTH).get(0);
+        double bufferArea = Math.abs(bufferOut.getSignedArea());
+
+//        double totalArea = Math.abs(boundary_receive.getSignedArea());
+//        double shopArea = 0;
+//        for (Polygon p : floor.getShopBlocks()) {
+//            shopArea += p.getArea();
+//        }
+        double shopArea = newBound.getArea();
+        for (Polygon ep : evacPoly) {
+            shopArea -= ep.getArea();
+        }
+
+        int shopNum = getShopCells(floorNum).size();
+        double trafficLength = 0;
+        for (ZEdge e : floor.getGraph().getAllEdges()) {
+            trafficLength += e.getLength();
+        }
+        double shopRatio = shopArea / bufferArea;
+
+        return "本层建筑面积 : " + String.format("%.2f", bufferArea) + " ㎡"
+                + "\n" + "可租赁面积 : " + String.format("%.2f", shopArea) + " ㎡"
+                + "\n" + "商铺总数量 : " + shopNum
+                + "\n" + "分层得铺率 : " + String.format("%.2f", shopRatio * 100) + " %"
+                + "\n" + "小铺率 : "
+                + "\n" + "动线长度 : " + String.format("%.2f", trafficLength) + " m";
+    }
+    /* ------------- deprecated ------------- */
 
     /**
      * update traffic graph and buffer of current floor
@@ -141,7 +483,7 @@ public class MallGenerator {
         } else {
             this.floors[floorNum - 1].updateGraph(innerNode_receive, new ArrayList<WB_Point>());
         }
-        this.floors[floorNum - 1].updateBuffer(polyAtrium_receive, dist, curvePtsNum);
+        this.floors[floorNum - 1].updateBuffer(rawAtrium_receive, dist, curvePtsNum);
 
         this.floors[floorNum - 1].disposeSplit();
         this.floors[floorNum - 1].disposeSubdivision();
@@ -324,6 +666,74 @@ public class MallGenerator {
             }
         }
         System.out.println("diff: " + difference.getGeometryType());
+    }
+
+    public void displayGraphLocal(int floorNum, PApplet app, WB_Render render) {
+        app.pushStyle();
+        app.stroke(255);
+        app.strokeWeight(1);
+        for (WB_Segment seg : getGraphSegments(floorNum)) {
+            render.drawSegment(seg);
+        }
+        app.popStyle();
+    }
+
+    public void displayPartitionLocal(int floorNum, PApplet app, JtsRender jtsRender) {
+        app.pushStyle();
+        app.strokeWeight(3);
+        app.stroke(255);
+        if (floors[floorNum - 1].getAllCells() != null) {
+            List<Shop> cells = floors[floorNum - 1].getAllCells();
+            for (Shop s : cells) {
+                jtsRender.drawGeometry(s.getShape());
+            }
+        }
+//        if (floors[floorNum - 1].getAllSubLines() != null) {
+//            for (LineString l : floors[floorNum - 1].getAllSubLines()) {
+//                jtsRender.drawGeometry(l);
+//            }
+//        }
+
+        if (floors[floorNum - 1].getAllCells() != null) {
+            app.noStroke();
+            for (Shop s : floors[floorNum - 1].getAllCells()) {
+                s.display(app, jtsRender);
+            }
+
+            app.fill(255);
+            app.textSize(2);
+
+            for (Shop s : floors[floorNum - 1].getAllCells()) {
+                app.pushMatrix();
+                app.scale(1, -1);
+                app.translate(0, (float) (-2 * s.getCenter().getY()));
+                s.displayText(app);
+                app.popMatrix();
+            }
+        }
+        app.popStyle();
+    }
+
+    public void displayEvacuationLocal(PApplet app, JtsRender jtsRender) {
+        app.pushStyle();
+
+        if (evacPoly != null) {
+            app.stroke(255);
+            app.fill(80);
+            for (Polygon p : evacPoly) {
+                jtsRender.drawGeometry(p);
+            }
+        }
+
+//        if (newBound != null) {
+//            app.stroke(255);
+//            app.pushMatrix();
+//            app.translate(500, 0);
+//            jtsRender.drawGeometry(newBound);
+//            app.popMatrix();
+//        }
+
+        app.popStyle();
     }
 
     /* ------------- JSON converting ------------- */
@@ -518,235 +928,5 @@ public class MallGenerator {
         // setup json
         json.setGeometryElements(elements);
         return json;
-    }
-
-    /* ------------- setter & getter ------------- */
-
-    public void setSite_receive(WB_Polygon site_receive) {
-        this.site_receive = site_receive;
-    }
-
-    public void setBoundary_receive(WB_Polygon boundary_receive) {
-        this.boundary_receive = boundary_receive;
-    }
-
-    public ZCatmullRom getMainTrafficCurve() {
-        return mainTrafficCurve;
-    }
-
-    public List<WB_Point> getTrafficInnerNodes() {
-        List<WB_Point> nodes = new ArrayList<>();
-        List<ZPoint> controls = mainTrafficCurve.getCurveControlPts();
-        for (int i = 1; i < controls.size() - 1; i++) {
-            nodes.add(controls.get(i).toWB_Point());
-        }
-        return nodes;
-    }
-
-    public List<WB_Point> getTrafficEntryNodes() {
-        List<WB_Point> nodes = new ArrayList<>();
-        List<ZPoint> controls = mainTrafficCurve.getCurveControlPts();
-        nodes.add(controls.get(0).toWB_Point());
-        nodes.add(controls.get(controls.size() - 1).toWB_Point());
-        return nodes;
-    }
-
-
-    public void setInnerNode_receive(List<WB_Point> innerNode_receive) {
-        this.innerNode_receive = innerNode_receive;
-    }
-
-    public void setEntryNode_receive(List<WB_Point> entryNode_receive) {
-        this.entryNode_receive = entryNode_receive;
-    }
-
-    public void setPolyAtrium_receive(List<WB_Polygon> polyAtrium_receive) {
-        this.polyAtrium_receive = polyAtrium_receive;
-    }
-
-    public void setBufferCurve_receive(int floorNum, List<LineString> bufferCurve_receive) {
-        if (floorNum == 1) {
-            this.bufferCurve_receive.set(0, bufferCurve_receive);
-        } else {
-            this.bufferCurve_receive.set(1, bufferCurve_receive);
-        }
-    }
-
-    public void setBufferCurve_receive(List<List<LineString>> bufferCurve_receive) {
-        this.bufferCurve_receive = bufferCurve_receive;
-    }
-
-    public void setCellPolys_receive(int floorNum, List<WB_Polygon> cellPolys_receive) {
-        this.cellPolys_receive.set(floorNum - 1, cellPolys_receive);
-    }
-
-    public void setShopCells_receive(int floorNum, List<Shop> shopCell_receive) {
-        this.floors[floorNum - 1].setAllCells(shopCell_receive);
-    }
-
-    public void setCellPolys_receive(List<List<WB_Polygon>> cellPolys_receive) {
-        this.cellPolys_receive = cellPolys_receive;
-    }
-
-    public MallFloor[] getFloors() {
-        return floors;
-    }
-
-    public List<WB_Segment> getGraphSegments(int floorNum) {
-        return floors[floorNum - 1].getGraph().toWB_Segments();
-    }
-
-    public List<List<WB_Coord>> getBufferControlPoints(int floorNum) {
-        return floors[floorNum - 1].getBufferControlPoints();
-    }
-
-    public List<Shop> getShopCells(int floorNum) {
-        return floors[floorNum - 1].getAllCells();
-    }
-
-    public String getFloorStats(int floorNum) {
-        MallFloor floor = floors[floorNum - 1];
-
-        WB_Polygon bufferOut = ZFactory.wbgf.createBufferedPolygons2D(boundary_receive, MallConst.EVACUATION_WIDTH).get(0);
-        double bufferArea = Math.abs(bufferOut.getSignedArea());
-
-//        double totalArea = Math.abs(boundary_receive.getSignedArea());
-//        double shopArea = 0;
-//        for (Polygon p : floor.getShopBlocks()) {
-//            shopArea += p.getArea();
-//        }
-        double shopArea = newBound.getArea();
-        for (Polygon ep : evacPoly) {
-            shopArea -= ep.getArea();
-        }
-
-        int shopNum = getShopCells(floorNum).size();
-        double trafficLength = 0;
-        for (ZEdge e : floor.getGraph().getAllEdges()) {
-            trafficLength += e.getLength();
-        }
-        double shopRatio = shopArea / bufferArea;
-
-        return "本层建筑面积 : " + String.format("%.2f", bufferArea) + " ㎡"
-                + "\n" + "可租赁面积 : " + String.format("%.2f", shopArea) + " ㎡"
-                + "\n" + "商铺总数量 : " + shopNum
-                + "\n" + "分层得铺率 : " + String.format("%.2f", shopRatio * 100) + " %"
-                + "\n" + "小铺率 : "
-                + "\n" + "动线长度 : " + String.format("%.2f", trafficLength) + " m";
-    }
-
-    /* ------------- draw ------------- */
-
-    public void displayLocal(PApplet app, WB_Render render, JtsRender jtsRender, int status) {
-        app.pushStyle();
-        switch (status) {
-            case -1:
-            case 0:
-                break;
-            case 1:
-                displaySiteBoundaryLocal(app, render);
-                displayTrafficLocal(app, jtsRender);
-                break;
-        }
-        app.popStyle();
-    }
-
-    public void displaySiteBoundaryLocal(PApplet app, WB_Render render) {
-        // draw boundary and site
-        app.noFill();
-        app.stroke(255);
-        app.strokeWeight(6);
-        render.drawPolygonEdges(boundary_receive);
-        app.stroke(255, 0, 0);
-        app.strokeWeight(3);
-        render.drawPolygonEdges(site_receive);
-    }
-
-    public void displayTrafficLocal(PApplet app, JtsRender jtsRender) {
-        // draw traffic route and buffer area
-        app.stroke(255);
-        app.strokeWeight(1);
-        jtsRender.drawGeometry(mainTrafficCurve.getAsLineString());
-        jtsRender.drawGeometry(mainTrafficBuffer);
-    }
-
-
-    public void displayGridLocal(PApplet app, WB_Render render, JtsRender jtsRender) {
-        app.pushStyle();
-        app.strokeWeight(0.5f);
-        app.stroke(128);
-        app.noFill();
-        for (ZLine line : gridToShow) {
-            line.display(app);
-        }
-        app.popStyle();
-    }
-
-    public void displayGraphLocal(int floorNum, PApplet app, WB_Render render) {
-        app.pushStyle();
-        app.stroke(255);
-        app.strokeWeight(1);
-        for (WB_Segment seg : getGraphSegments(floorNum)) {
-            render.drawSegment(seg);
-        }
-        app.popStyle();
-    }
-
-    public void displayPartitionLocal(int floorNum, PApplet app, JtsRender jtsRender) {
-        app.pushStyle();
-        app.strokeWeight(3);
-        app.stroke(255);
-        if (floors[floorNum - 1].getAllCells() != null) {
-            List<Shop> cells = floors[floorNum - 1].getAllCells();
-            for (Shop s : cells) {
-                jtsRender.drawGeometry(s.getShape());
-            }
-        }
-//        if (floors[floorNum - 1].getAllSubLines() != null) {
-//            for (LineString l : floors[floorNum - 1].getAllSubLines()) {
-//                jtsRender.drawGeometry(l);
-//            }
-//        }
-
-        if (floors[floorNum - 1].getAllCells() != null) {
-            app.noStroke();
-            for (Shop s : floors[floorNum - 1].getAllCells()) {
-                s.display(app, jtsRender);
-            }
-
-            app.fill(255);
-            app.textSize(2);
-
-            for (Shop s : floors[floorNum - 1].getAllCells()) {
-                app.pushMatrix();
-                app.scale(1, -1);
-                app.translate(0, (float) (-2 * s.getCenter().getY()));
-                s.displayText(app);
-                app.popMatrix();
-            }
-        }
-        app.popStyle();
-    }
-
-    public void displayEvacuationLocal(PApplet app, JtsRender jtsRender) {
-        app.pushStyle();
-
-        if (evacPoly != null) {
-            app.stroke(255);
-            app.fill(80);
-            for (Polygon p : evacPoly) {
-                jtsRender.drawGeometry(p);
-            }
-        }
-
-//        if (newBound != null) {
-//            app.stroke(255);
-//            app.pushMatrix();
-//            app.translate(500, 0);
-//            jtsRender.drawGeometry(newBound);
-//            app.popMatrix();
-//        }
-
-        app.popStyle();
     }
 }

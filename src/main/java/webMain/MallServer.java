@@ -79,7 +79,7 @@ public class MallServer {
             generator.setBoundary_receive(ZTransform.validateWB_Polygon(p));
             generator.setInnerNode_receive(null);
             generator.setEntryNode_receive(null);
-            generator.setPolyAtrium_receive(null);
+            generator.setRawAtrium_receive(null);
             generator.setBufferCurve_receive(null);
             generator.setCellPolys_receive(null);
 
@@ -235,7 +235,7 @@ public class MallServer {
                 polyAtrium_receive.add(WB_Converter.toWB_Polygon((Plane) g));
             }
         }
-        generator.setPolyAtrium_receive(polyAtrium_receive);
+        generator.setRawAtrium_receive(polyAtrium_receive);
     }
 
     /**

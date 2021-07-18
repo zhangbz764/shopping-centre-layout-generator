@@ -13,7 +13,7 @@
     <bytecodeTargetLevel target="8">
       <module name="archijson" target="8" />
       <module name="shopping_mall" target="8" />
-      <module name="Ztools" target="7" />
+      <module name="Ztools" target="8" />
     </bytecodeTargetLevel>
   </component>
 </project>
