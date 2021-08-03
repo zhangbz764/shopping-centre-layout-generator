@@ -18,7 +18,7 @@ public class MallConst {
     public static final float SITE_BUFFER_MAX = 70;       // 场地退界最大值
     public static final double BOUNDARY_NODE_R = 5;       // 轮廓控制点判定范围
 
-    public static final float TRAFFIC_BUFFER_DIST = 8;   // 主路两侧偏移距离
+    public static final float TRAFFIC_BUFFER_DIST = 8;    // 主路径预设偏移距离
     public static final double TRAFFIC_NODE_R = 5;        // 主路径控制点判定范围
 
     public static final float ATRIUM_AREA_MAX = 600;      // 最大中庭面积

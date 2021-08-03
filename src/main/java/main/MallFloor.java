@@ -5,7 +5,6 @@ import mallElementNew.TrafficGraph;
 import mallElementNew.TrafficNode;
 import mallElementNew.TrafficNodeFixed;
 import mallElementNew.TrafficNodeTree;
-import gurobi.*;
 import mallElementNew.StructureGrid;
 import mallElementNew.Shop;
 import math.ZGeoMath;
@@ -469,117 +468,117 @@ public class MallFloor {
      * @param cellPolys_receive shop cells after adjust from frontend
      * @return void
      */
-    public void updateEvacuation(List<WB_Polygon> cellPolys_receive) {
-        // 构造HE_Mesh来找到boundary vertices
-        List<WB_Polygon> cells = new ArrayList<>(cellPolys_receive);
-        WB_Polygon pb = ZTransform.PolygonToWB_Polygon(publicBlock);
-        cells.add(pb);
-        HEC_FromPolygons hec = new HEC_FromPolygons(cells);
-        HE_Mesh floorMesh = hec.create();
-
-        List<HE_Vertex> allVertices = floorMesh.getAllBoundaryVertices();
-        List<ZPoint> allPossiblePoints = new ArrayList<>();
-        for (HE_Vertex v : allVertices) {
-            if (!WB_GeometryOp.contains2D(v, pb)) {
-                // 排除与公共动线区域相接的点
-                allPossiblePoints.add(new ZPoint(v));
-            }
-        }
-
-        // 构造临时的graph
-        ZGraph tempGraph = graph.duplicate();
-        List<ZNode> nodesToCal = new ArrayList<>(); // possible points在tempGraph上的替身
-        for (ZPoint pp : allPossiblePoints) {
-            ZPoint closest = ZGeoMath.closestPointToLineList(pp, graph.getAllEdges());
-            ZNode closestAsNode = new ZNode(closest.xd(), closest.yd(), closest.zd());
-            nodesToCal.add(closestAsNode);
-            tempGraph.addNodeByDist(closestAsNode);
-        }
-//        System.out.println("tempGraph nodes after first rebuild:  " + tempGraph.getNodesNum());
-        List<ZPoint> splitPoints = ZGraphMath.splitGraphEachEdgeByStep(tempGraph, 2);
-        splitPoints.removeAll(tempGraph.getNodes());
-//        System.out.println("splitPoints.size()  " + splitPoints.size());
-        for (ZPoint sp : splitPoints) {
-            tempGraph.addNodeByDist(sp);
-        }
-//        System.out.println("tempGraph nodes after second rebuild:  " + tempGraph.getNodesNum());
-
-        // 计算每个possible points能够服务到多少target node
-        Map<ZNode, List<Integer>> targetNodeMap = new HashMap<>();
-        for (ZNode n : tempGraph.getNodes()) {
-            targetNodeMap.put(n, new ArrayList<>());
-        }
-        double evacuationDist = 56;
-        for (int i = 0; i < nodesToCal.size(); i++) {
-            double dist = evacuationDist - allPossiblePoints.get(i).distance(nodesToCal.get(i));
-            if (dist > 0) {
-                List<ZNode> targetReached = ZGraphMath.nodesOnGraphByDist(nodesToCal.get(i), null, dist);
-                for (ZNode n : targetReached) {
-                    if (targetNodeMap.containsKey(n)) {
-                        targetNodeMap.get(n).add(i);
-                    }
-                }
-            }
-        }
-//        for (ZNode n : targetNodeMap.keySet()) {
-//            System.out.println(n.toString() + "   " + targetNodeMap.get(n));
+//    public void updateEvacuation(List<WB_Polygon> cellPolys_receive) {
+//        // 构造HE_Mesh来找到boundary vertices
+//        List<WB_Polygon> cells = new ArrayList<>(cellPolys_receive);
+//        WB_Polygon pb = ZTransform.PolygonToWB_Polygon(publicBlock);
+//        cells.add(pb);
+//        HEC_FromPolygons hec = new HEC_FromPolygons(cells);
+//        HE_Mesh floorMesh = hec.create();
+//
+//        List<HE_Vertex> allVertices = floorMesh.getAllBoundaryVertices();
+//        List<ZPoint> allPossiblePoints = new ArrayList<>();
+//        for (HE_Vertex v : allVertices) {
+//            if (!WB_GeometryOp.contains2D(v, pb)) {
+//                // 排除与公共动线区域相接的点
+//                allPossiblePoints.add(new ZPoint(v));
+//            }
 //        }
-
-        // gurobi optimizer
-        System.out.println("********* gurobi optimizing *********" + "\n");
-        try {
-            // Create empty environment, set options, and start
-            GRBEnv env = new GRBEnv(true);
-            env.set("logFile", "mip1.log");
-            env.start();
-            // Create empty model
-            GRBModel model = new GRBModel(env);
-            // Create variables
-            GRBVar[] vars = new GRBVar[allPossiblePoints.size()];
-            for (int i = 0; i < vars.length; i++) {
-                vars[i] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, "var" + i);
-            }
-            // Set objective
-            GRBLinExpr expr = new GRBLinExpr();
-            for (GRBVar var : vars) {
-                expr.addTerm(1.0, var);
-            }
-            model.setObjective(expr, GRB.MINIMIZE);
-            // Add constraint
-            for (ZNode n : targetNodeMap.keySet()) {
-                expr = new GRBLinExpr();
-                if (targetNodeMap.get(n).size() > 0) {
-                    for (int i : targetNodeMap.get(n)) {
-                        expr.addTerm(1.0, vars[i]);
-                    }
-                }
-                model.addConstr(expr, GRB.GREATER_EQUAL, 1, "cons" + n.toString());
-            }
-            // Optimize model
-            model.optimize();
-            // output
-            System.out.println("\n" + "******* result output *******");
-            System.out.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal));
-            this.evacuationPoint = new ArrayList<>();
-            for (int i = 0; i < vars.length; i++) {
-                if (vars[i].get(GRB.DoubleAttr.X) > 0.5) {
-                    evacuationPoint.add(allPossiblePoints.get(i).toWB_Point());
-                }
-            }
-            // Dispose of model and environment
-            model.dispose();
-            env.dispose();
-
-//            System.out.println("evacuationPoint.size()" + evacuationPoint.size());
-        } catch (GRBException e) {
-            System.out.println(
-                    "Error code: "
-                            + e.getErrorCode()
-                            + ". "
-                            + e.getMessage()
-            );
-        }
-    }
+//
+//        // 构造临时的graph
+//        ZGraph tempGraph = graph.duplicate();
+//        List<ZNode> nodesToCal = new ArrayList<>(); // possible points在tempGraph上的替身
+//        for (ZPoint pp : allPossiblePoints) {
+//            ZPoint closest = ZGeoMath.closestPointToLineList(pp, graph.getAllEdges());
+//            ZNode closestAsNode = new ZNode(closest.xd(), closest.yd(), closest.zd());
+//            nodesToCal.add(closestAsNode);
+//            tempGraph.addNodeByDist(closestAsNode);
+//        }
+////        System.out.println("tempGraph nodes after first rebuild:  " + tempGraph.getNodesNum());
+//        List<ZPoint> splitPoints = ZGraphMath.splitGraphEachEdgeByStep(tempGraph, 2);
+//        splitPoints.removeAll(tempGraph.getNodes());
+////        System.out.println("splitPoints.size()  " + splitPoints.size());
+//        for (ZPoint sp : splitPoints) {
+//            tempGraph.addNodeByDist(sp);
+//        }
+////        System.out.println("tempGraph nodes after second rebuild:  " + tempGraph.getNodesNum());
+//
+//        // 计算每个possible points能够服务到多少target node
+//        Map<ZNode, List<Integer>> targetNodeMap = new HashMap<>();
+//        for (ZNode n : tempGraph.getNodes()) {
+//            targetNodeMap.put(n, new ArrayList<>());
+//        }
+//        double evacuationDist = 56;
+//        for (int i = 0; i < nodesToCal.size(); i++) {
+//            double dist = evacuationDist - allPossiblePoints.get(i).distance(nodesToCal.get(i));
+//            if (dist > 0) {
+//                List<ZNode> targetReached = ZGraphMath.nodesOnGraphByDist(nodesToCal.get(i), null, dist);
+//                for (ZNode n : targetReached) {
+//                    if (targetNodeMap.containsKey(n)) {
+//                        targetNodeMap.get(n).add(i);
+//                    }
+//                }
+//            }
+//        }
+////        for (ZNode n : targetNodeMap.keySet()) {
+////            System.out.println(n.toString() + "   " + targetNodeMap.get(n));
+////        }
+//
+//        // gurobi optimizer
+//        System.out.println("********* gurobi optimizing *********" + "\n");
+//        try {
+//            // Create empty environment, set options, and start
+//            GRBEnv env = new GRBEnv(true);
+//            env.set("logFile", "mip1.log");
+//            env.start();
+//            // Create empty model
+//            GRBModel model = new GRBModel(env);
+//            // Create variables
+//            GRBVar[] vars = new GRBVar[allPossiblePoints.size()];
+//            for (int i = 0; i < vars.length; i++) {
+//                vars[i] = model.addVar(0.0, 1.0, 0.0, GRB.BINARY, "var" + i);
+//            }
+//            // Set objective
+//            GRBLinExpr expr = new GRBLinExpr();
+//            for (GRBVar var : vars) {
+//                expr.addTerm(1.0, var);
+//            }
+//            model.setObjective(expr, GRB.MINIMIZE);
+//            // Add constraint
+//            for (ZNode n : targetNodeMap.keySet()) {
+//                expr = new GRBLinExpr();
+//                if (targetNodeMap.get(n).size() > 0) {
+//                    for (int i : targetNodeMap.get(n)) {
+//                        expr.addTerm(1.0, vars[i]);
+//                    }
+//                }
+//                model.addConstr(expr, GRB.GREATER_EQUAL, 1, "cons" + n.toString());
+//            }
+//            // Optimize model
+//            model.optimize();
+//            // output
+//            System.out.println("\n" + "******* result output *******");
+//            System.out.println("Obj: " + model.get(GRB.DoubleAttr.ObjVal));
+//            this.evacuationPoint = new ArrayList<>();
+//            for (int i = 0; i < vars.length; i++) {
+//                if (vars[i].get(GRB.DoubleAttr.X) > 0.5) {
+//                    evacuationPoint.add(allPossiblePoints.get(i).toWB_Point());
+//                }
+//            }
+//            // Dispose of model and environment
+//            model.dispose();
+//            env.dispose();
+//
+////            System.out.println("evacuationPoint.size()" + evacuationPoint.size());
+//        } catch (GRBException e) {
+//            System.out.println(
+//                    "Error code: "
+//                            + e.getErrorCode()
+//                            + ". "
+//                            + e.getMessage()
+//            );
+//        }
+//    }
 
     /**
      * select intersection points of the grid and buffer curves

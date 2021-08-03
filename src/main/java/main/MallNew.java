@@ -302,7 +302,6 @@ public class MallNew extends PApplet {
                                 mallGenerator.getBoundary_receive()
                         );
                     }
-
                     mallInteract.updateStatus0GUI(cp5, 0);
                     this.EDIT_STATUS = MallConst.E_SITE_BOUNDARY;
                     println("edit boundary");
@@ -379,6 +378,7 @@ public class MallNew extends PApplet {
                 break;
 
             // function controllers
+            // 0
             case (MallConst.BUTTON_SWITCH_BOUNDARY):
                 mallInteract.switchBoundary(MallConst.SITE_BUFFER_DIST);
                 break;
@@ -402,12 +402,16 @@ public class MallNew extends PApplet {
                         buffer_
                 );
                 break;
-
+            // 1
             case (MallConst.BUTTON_DELETE_INNERNODE):
                 break;
             case (MallConst.BUTTON_DELETE_ENTRYNODE):
                 break;
-
+            case (MallConst.SLIDER_TRAFFIC_WIDTH):
+                float width = theEvent.getController().getValue();
+                mallGenerator.initTraffic(width);
+                break;
+            // 2
             case (MallConst.BUTTON_CURVE_ATRIUM):
                 mallInteract.changeAtriumCurve();
                 break;

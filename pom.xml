@@ -6,23 +6,200 @@
 
     <groupId>aaa.zbz</groupId>
     <artifactId>shopping_mall</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/log4j.properties</exclude>
+                    </excludes>
+                    <archive>
+                        <!-- 包里面是否包含pom.xml文件和pom.properties文件 -->
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>main.MallMain</mainClass>
+                            <classpathPrefix>lib/</classpathPrefix>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <!--  exclude junit, we need runtime dependency only -->
+                            <includeScope>runtime</includeScope>
+                            <outputDirectory>${project.build.directory}/lib/</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- maven-shade-plugin -->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-shade-plugin</artifactId>-->
+<!--                <version>3.2.1</version>-->
+
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <phase>package</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>shade</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <shadedArtifactAttached>true</shadedArtifactAttached>-->
+<!--                            <transformers>-->
+<!--                                <transformer implementation=-->
+<!--                                                     "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
+<!--                                    <mainClass>main.MallMain</mainClass>-->
+<!--                                </transformer>-->
+<!--                            </transformers>-->
+
+<!--                            <artifactSet>-->
+<!--                                <includes>-->
+<!--                                    <include>org.github.Agent14zbz:Ztools</include>-->
+
+<!--                                    <include>org.processing:core</include>-->
+<!--                                    <include>org.jogamp.gluegen:gluegen-rt</include>-->
+<!--                                    <include>org.jogamp.gluegen:gluegen-rt-natives-windows-amd64</include>-->
+<!--                                    <include>org.jogamp.gluegen:gluegen-rt-natives-windows-i586</include>-->
+<!--                                    <include>org.jogamp.jogl:jogl-all</include>-->
+<!--                                    <include>org.jogamp.jogl:jogl-all-natives-windows-amd64</include>-->
+<!--                                    <include>org.jogamp.jogl:jogl-all-natives-windows-i586</include>-->
+<!--                                    <include>org.locationtech.jts:jts-core</include>-->
+<!--                                    <include>com.github.twak:campskeleton</include>-->
+<!--                                    <include>com.github.twak:jutils</include>-->
+<!--                                    <include>javax.vecmath:vecmath</include>-->
+<!--                                    <include>gov.nist.math:jama</include>-->
+<!--                                    &lt;!&ndash;<include>io.socket:socket.io-client</include>&ndash;&gt;-->
+<!--                                    &lt;!&ndash;<include>com.google.code.gson:gson</include>&ndash;&gt;-->
+
+<!--                                    <include>com.github.archialgo:camera</include>-->
+<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:eclipse-collections-9.0.0</include>-->
+<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:eclipse-collections-api-9.0.0</include>-->
+<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:hemesh</include>-->
+<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:hemesh-data-3_0_0</include>-->
+<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:hemesh-external-6_0_0</include>-->
+<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:hemesh-lab</include>-->
+<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:javaluator-3.0.2</include>-->
+<!--                                    <include>com.github.archialgo:iGeo-maven-lib</include>-->
+<!--                                    <include>com.github.archialgo:controlp5-maven-lib</include>-->
+<!--                                </includes>-->
+<!--                            </artifactSet>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
+
+            <!-- ProGuard混淆插件-->
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>proguard</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- 是否将生成的PG文件安装部署-->
+                    <attach>true</attach>
+                    <!-- 是否混淆-->
+                    <obfuscate>true</obfuscate>
+                    <!-- 指定生成文件分类 -->
+                    <attachArtifactClassifier>pg</attachArtifactClassifier>
+
+                    <options>
+                        <!-- JDK目标版本1.8-->
+                        <option>-target 1.8</option>
+
+                        <!-- 不做收缩（删除注释、未被引用代码）-->
+                        <option>-dontshrink</option>
+                        <!-- 不做优化（变更代码实现逻辑）-->
+                        <option>-dontoptimize</option>
+
+                        <!-- 不路过非公用类文件及成员-->
+                        <option>-dontskipnonpubliclibraryclasses</option>
+                        <option>-dontskipnonpubliclibraryclassmembers</option>
+
+                        <!--不用大小写混合类名机制-->
+                        <option>-dontusemixedcaseclassnames</option>
+
+                        <!-- 优化时允许访问并修改有修饰符的类和类的成员 -->
+                        <option>-allowaccessmodification</option>
+                        <!-- 确定统一的混淆类的成员名称来增加混淆-->
+                        <option>-useuniqueclassmembernames</option>
+
+                        <!-- 不混淆所有包名-->
+                        <!--<option>-keeppackagenames</option>-->
+
+                        <!-- 需要保持的属性：异常，注解等-->
+                        <option>-keep public class main.MallMain { public static void main(java.lang.String[]);}
+                        </option>
+                        <option>-keep public class main.MallNew</option>
+                        <option>-keep public class main.MallNew {public void controlEvent(controlP5.ControlEvent);}</option>
+                        <option>-keepattributes
+                            Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LocalVariable*Table,*Annotation*,Synthetic,EnclosingMethod
+                        </option>
+
+                        <!-- 不混淆所有的set/get方法-->
+                        <!--<option>-keepclassmembers public class * {void set*(***);*** get*();}</option>-->
+
+                    </options>
+
+                    <!--class 混淆后输出的jar包-->
+                    <injar>${project.build.finalName}.jar</injar>
+                    <outjar>${project.build.finalName}-pg.jar</outjar>
+
+                    <!-- 添加依赖，这里你可以按你的需要修改，这里测试只需要一个JRE的Runtime包就行了 -->
+                    <libs>
+                        <lib>${java.home}/lib/rt.jar</lib>
+                    </libs>
+
+                    <!-- 输出目录-->
+                    <outputDirectory>E:\AAA_Project\202009_Shuishi\code\target</outputDirectory>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
-    <modules>
-        <module>../../../AAA_Study/202010_HuaianUrbanDesign/commercial_street</module>
-    </modules>
 
     <dependencies>
         <dependency>
@@ -54,12 +231,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.zbz</groupId>
-            <artifactId>Ztools</artifactId>
-            <version>0.0.1</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>io.socket</groupId>
             <artifactId>socket.io-client</artifactId>
             <version>1.0.0</version>
@@ -71,11 +242,33 @@
             <version>2.8.6</version>
             <scope>compile</scope>
         </dependency>
+
         <dependency>
-            <groupId>inst.aaa</groupId>
-            <artifactId>archijson</artifactId>
-            <version>0.1.0</version>
+            <groupId>org.github.Agent14zbz</groupId>
+            <artifactId>Ztools</artifactId>
+            <version>0.1</version>
             <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.archialgo</groupId>
+            <artifactId>camera</artifactId>
+            <version>1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.archialgo</groupId>
+            <artifactId>HE_Mesh-maven-lib</artifactId>
+            <version>2019.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.archialgo</groupId>
+            <artifactId>iGeo-maven-lib</artifactId>
+            <version>0.9.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.archialgo</groupId>
+            <artifactId>controlp5-maven-lib</artifactId>
+            <version>2.2.6</version>
         </dependency>
     </dependencies>
 

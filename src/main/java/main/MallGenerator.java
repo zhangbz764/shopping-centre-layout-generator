@@ -7,9 +7,6 @@ import basicGeometry.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import converter.WB_Converter;
-import geometry.Segments;
-import geometry.Vertices;
 import mallElementNew.StructureGrid;
 import mallElementNew.Shop;
 import math.ZGeoMath;
@@ -515,7 +512,7 @@ public class MallGenerator {
      * @return void
      */
     public void generateEvacuation(int floorNum) {
-        this.floors[floorNum - 1].updateEvacuation(cellPolys_receive.get(floorNum - 1));
+//        this.floors[floorNum - 1].updateEvacuation(cellPolys_receive.get(floorNum - 1));
 
         this.floors[floorNum - 1].setStatus(3);
     }
@@ -736,197 +733,197 @@ public class MallGenerator {
         app.popStyle();
     }
 
-    /* ------------- JSON converting ------------- */
-
-    /**
-     * converting status 1 geometries to JsonElement
-     *
-     * @param floorNum current floor
-     * @param elements list of JsonElement
-     * @param gson     Gson
-     * @return void
-     */
-    private void convertingStatus1(int floorNum, List<JsonElement> elements, Gson gson) {
-        // preparing data
-        List<WB_Segment> graphSegments = getGraphSegments(floorNum);
-        List<List<WB_Coord>> controlPoints = getBufferControlPoints(floorNum);
-
-        // converting to json
-        for (WB_Segment seg : graphSegments) {
-            Segments segments = WB_Converter.toSegments(seg);
-            JsonObject prop1 = new JsonObject();
-            prop1.addProperty("name", "treeEdges");
-            segments.setProperties(prop1);
-            elements.add(gson.toJsonTree(segments));
-        }
-        for (List<WB_Coord> splitPointsEach : controlPoints) {
-            Vertices bufferControlPointsEach = WB_Converter.toVertices(splitPointsEach, 3);
-            JsonObject prop2 = new JsonObject();
-            prop2.addProperty("name", "bufferControl");
-            bufferControlPointsEach.setProperties(prop2);
-            elements.add(gson.toJsonTree(bufferControlPointsEach));
-        }
-    }
-
-    /**
-     * converting status 2 geometries to JsonElement
-     *
-     * @param floorNum current floor
-     * @param elements list of JsonElement
-     * @param gson     Gson
-     * @return void
-     */
-    private void convertingStatus2(int floorNum, List<JsonElement> elements, Gson gson) {
-        // preparing data
-        List<Shop> allShops = floors[floorNum - 1].getAllCells();
-        List<WB_Polygon> allCells = new ArrayList<>();
-        for (Shop s : allShops) {
-            allCells.add(s.getShapeWB());
-        }
-
-        // converting to json
-        for (WB_Polygon p : allCells) {
-            Segments cell = WB_Converter.toSegments(p);
-            JsonObject prop = new JsonObject();
-            prop.addProperty("name", "shopCell");
-
-            double area = Math.abs(p.getSignedArea());
-            if (area > 2000) {
-                prop.addProperty("shopType", "anchor");
-            } else if (area > 400 && area <= 2000) {
-                prop.addProperty("shopType", "subAnchor");
-            } else if (area > 80 && area <= 400) {
-                prop.addProperty("shopType", "ordinary");
-            } else {
-                prop.addProperty("shopType", "invalid");
-            }
-
-            cell.setProperties(prop);
-            elements.add(gson.toJsonTree(cell));
-        }
-    }
-
-    /**
-     * converting status 3 geometries to JsonElement
-     *
-     * @param floorNum current floor
-     * @param elements list of JsonElement
-     * @param gson     Gson
-     * @return void
-     */
-    private void convertingStatus3(int floorNum, List<JsonElement> elements, Gson gson) {
-        // preparing data
-        List<WB_Point> evacuationPoints = floors[floorNum - 1].getEvacuationPoint();
-
-        // converting to json
-        Vertices evacuation = WB_Converter.toVertices(evacuationPoints, 3);
-        JsonObject prop = new JsonObject();
-        prop.addProperty("name", "evacuation");
-        evacuation.setProperties(prop);
-        elements.add(gson.toJsonTree(evacuation));
-    }
-
-    /* ------------- JSON sending ------------- */
-
-    /**
-     * convert backend geometries to ArchiJSON
-     * graph segments, buffer control points
-     *
-     * @param floorNum current floor number
-     * @param clientID
-     * @param gson
-     * @return main.ArchiJSON
-     */
-    public ArchiJSON toArchiJSONGraphAndBuffer(int floorNum, String clientID, Gson gson) {
-        // initializing
-        ArchiJSON json = new ArchiJSON();
-        json.setId(clientID);
-        List<JsonElement> elements = new ArrayList<>();
-
-        convertingStatus1(floorNum, elements, gson);
-
-        // setup json
-        json.setGeometryElements(elements);
-        return json;
-    }
-
-    /**
-     * convert backend geometries to ArchiJSON
-     * first-level subdivision cells
-     *
-     * @param floorNum current floor number
-     * @param clientID
-     * @param gson
-     * @return main.ArchiJSON
-     */
-    public ArchiJSON toArchiJSONSubdivision(int floorNum, String clientID, Gson gson) {
-        // initializing
-        ArchiJSON json = new ArchiJSON();
-        json.setId(clientID);
-        List<JsonElement> elements = new ArrayList<>();
-
-        convertingStatus2(floorNum, elements, gson);
-
-        // setup json
-        json.setGeometryElements(elements);
-        return json;
-    }
-
-    /**
-     * convert backend geometries to ArchiJSON
-     * evacuation points & segments
-     *
-     * @param floorNum current floor number
-     * @param clientID
-     * @param gson
-     * @return main.ArchiJSON
-     */
-    public ArchiJSON toArchiJSONEvacuation(int floorNum, String clientID, Gson gson) {
-        // initializing
-        ArchiJSON json = new ArchiJSON();
-        json.setId(clientID);
-        List<JsonElement> elements = new ArrayList<>();
-
-        convertingStatus3(floorNum, elements, gson);
-
-        // setup json
-        json.setGeometryElements(elements);
-        return json;
-    }
-
-    /**
-     * switch floor num: convert all geometries in one floor
-     *
-     * @param floorNum current floor number
-     * @param clientID
-     * @param gson
-     * @return main.ArchiJSON
-     */
-    public ArchiJSON toArchiJSONFloor(int floorNum, String clientID, Gson gson) {
-        // initializing
-        ArchiJSON json = new ArchiJSON();
-        json.setId(clientID);
-        List<JsonElement> elements = new ArrayList<>();
-
-        // preparing data
-        int currentStatus = floors[floorNum - 1].getStatus();
-        int count = 1;
-        if (count <= currentStatus) {
-            convertingStatus1(floorNum, elements, gson);
-            count++; // ==2
-            if (count <= currentStatus) {
-                convertingStatus2(floorNum, elements, gson);
-                count++; // ==3
-                if (count <= currentStatus) {
-                    convertingStatus3(floorNum, elements, gson);
-                }
-            }
-        } else {
-            System.out.println("this floor hasn't been initialized due to some error");
-        }
-
-        // setup json
-        json.setGeometryElements(elements);
-        return json;
-    }
+//    /* ------------- JSON converting ------------- */
+//
+//    /**
+//     * converting status 1 geometries to JsonElement
+//     *
+//     * @param floorNum current floor
+//     * @param elements list of JsonElement
+//     * @param gson     Gson
+//     * @return void
+//     */
+//    private void convertingStatus1(int floorNum, List<JsonElement> elements, Gson gson) {
+//        // preparing data
+//        List<WB_Segment> graphSegments = getGraphSegments(floorNum);
+//        List<List<WB_Coord>> controlPoints = getBufferControlPoints(floorNum);
+//
+//        // converting to json
+//        for (WB_Segment seg : graphSegments) {
+//            Segments segments = WB_Converter.toSegments(seg);
+//            JsonObject prop1 = new JsonObject();
+//            prop1.addProperty("name", "treeEdges");
+//            segments.setProperties(prop1);
+//            elements.add(gson.toJsonTree(segments));
+//        }
+//        for (List<WB_Coord> splitPointsEach : controlPoints) {
+//            Vertices bufferControlPointsEach = WB_Converter.toVertices(splitPointsEach, 3);
+//            JsonObject prop2 = new JsonObject();
+//            prop2.addProperty("name", "bufferControl");
+//            bufferControlPointsEach.setProperties(prop2);
+//            elements.add(gson.toJsonTree(bufferControlPointsEach));
+//        }
+//    }
+//
+//    /**
+//     * converting status 2 geometries to JsonElement
+//     *
+//     * @param floorNum current floor
+//     * @param elements list of JsonElement
+//     * @param gson     Gson
+//     * @return void
+//     */
+//    private void convertingStatus2(int floorNum, List<JsonElement> elements, Gson gson) {
+//        // preparing data
+//        List<Shop> allShops = floors[floorNum - 1].getAllCells();
+//        List<WB_Polygon> allCells = new ArrayList<>();
+//        for (Shop s : allShops) {
+//            allCells.add(s.getShapeWB());
+//        }
+//
+//        // converting to json
+//        for (WB_Polygon p : allCells) {
+//            Segments cell = WB_Converter.toSegments(p);
+//            JsonObject prop = new JsonObject();
+//            prop.addProperty("name", "shopCell");
+//
+//            double area = Math.abs(p.getSignedArea());
+//            if (area > 2000) {
+//                prop.addProperty("shopType", "anchor");
+//            } else if (area > 400 && area <= 2000) {
+//                prop.addProperty("shopType", "subAnchor");
+//            } else if (area > 80 && area <= 400) {
+//                prop.addProperty("shopType", "ordinary");
+//            } else {
+//                prop.addProperty("shopType", "invalid");
+//            }
+//
+//            cell.setProperties(prop);
+//            elements.add(gson.toJsonTree(cell));
+//        }
+//    }
+//
+//    /**
+//     * converting status 3 geometries to JsonElement
+//     *
+//     * @param floorNum current floor
+//     * @param elements list of JsonElement
+//     * @param gson     Gson
+//     * @return void
+//     */
+//    private void convertingStatus3(int floorNum, List<JsonElement> elements, Gson gson) {
+//        // preparing data
+//        List<WB_Point> evacuationPoints = floors[floorNum - 1].getEvacuationPoint();
+//
+//        // converting to json
+//        Vertices evacuation = WB_Converter.toVertices(evacuationPoints, 3);
+//        JsonObject prop = new JsonObject();
+//        prop.addProperty("name", "evacuation");
+//        evacuation.setProperties(prop);
+//        elements.add(gson.toJsonTree(evacuation));
+//    }
+//
+//    /* ------------- JSON sending ------------- */
+//
+//    /**
+//     * convert backend geometries to ArchiJSON
+//     * graph segments, buffer control points
+//     *
+//     * @param floorNum current floor number
+//     * @param clientID
+//     * @param gson
+//     * @return main.ArchiJSON
+//     */
+//    public ArchiJSON toArchiJSONGraphAndBuffer(int floorNum, String clientID, Gson gson) {
+//        // initializing
+//        ArchiJSON json = new ArchiJSON();
+//        json.setId(clientID);
+//        List<JsonElement> elements = new ArrayList<>();
+//
+//        convertingStatus1(floorNum, elements, gson);
+//
+//        // setup json
+//        json.setGeometryElements(elements);
+//        return json;
+//    }
+//
+//    /**
+//     * convert backend geometries to ArchiJSON
+//     * first-level subdivision cells
+//     *
+//     * @param floorNum current floor number
+//     * @param clientID
+//     * @param gson
+//     * @return main.ArchiJSON
+//     */
+//    public ArchiJSON toArchiJSONSubdivision(int floorNum, String clientID, Gson gson) {
+//        // initializing
+//        ArchiJSON json = new ArchiJSON();
+//        json.setId(clientID);
+//        List<JsonElement> elements = new ArrayList<>();
+//
+//        convertingStatus2(floorNum, elements, gson);
+//
+//        // setup json
+//        json.setGeometryElements(elements);
+//        return json;
+//    }
+//
+//    /**
+//     * convert backend geometries to ArchiJSON
+//     * evacuation points & segments
+//     *
+//     * @param floorNum current floor number
+//     * @param clientID
+//     * @param gson
+//     * @return main.ArchiJSON
+//     */
+//    public ArchiJSON toArchiJSONEvacuation(int floorNum, String clientID, Gson gson) {
+//        // initializing
+//        ArchiJSON json = new ArchiJSON();
+//        json.setId(clientID);
+//        List<JsonElement> elements = new ArrayList<>();
+//
+//        convertingStatus3(floorNum, elements, gson);
+//
+//        // setup json
+//        json.setGeometryElements(elements);
+//        return json;
+//    }
+//
+//    /**
+//     * switch floor num: convert all geometries in one floor
+//     *
+//     * @param floorNum current floor number
+//     * @param clientID
+//     * @param gson
+//     * @return main.ArchiJSON
+//     */
+//    public ArchiJSON toArchiJSONFloor(int floorNum, String clientID, Gson gson) {
+//        // initializing
+//        ArchiJSON json = new ArchiJSON();
+//        json.setId(clientID);
+//        List<JsonElement> elements = new ArrayList<>();
+//
+//        // preparing data
+//        int currentStatus = floors[floorNum - 1].getStatus();
+//        int count = 1;
+//        if (count <= currentStatus) {
+//            convertingStatus1(floorNum, elements, gson);
+//            count++; // ==2
+//            if (count <= currentStatus) {
+//                convertingStatus2(floorNum, elements, gson);
+//                count++; // ==3
+//                if (count <= currentStatus) {
+//                    convertingStatus3(floorNum, elements, gson);
+//                }
+//            }
+//        } else {
+//            System.out.println("this floor hasn't been initialized due to some error");
+//        }
+//
+//        // setup json
+//        json.setGeometryElements(elements);
+//        return json;
+//    }
 }

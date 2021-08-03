@@ -337,6 +337,13 @@ public class MallInteract {
         }
     }
 
+    /**
+     * update site and boundary by given straightly
+     *
+     * @param _site     input site
+     * @param _boundary input boundary
+     * @return void
+     */
     public void updateSiteBoundary(WB_Polygon _site, WB_Polygon _boundary) {
         this.site = _site;
         this.boundary = _boundary;
