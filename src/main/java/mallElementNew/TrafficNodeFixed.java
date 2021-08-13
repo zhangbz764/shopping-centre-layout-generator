@@ -45,7 +45,7 @@ public class TrafficNodeFixed extends TrafficNode {
     @Override
     public void setByRestriction(double pointerX, double pointerY) {
         WB_Point point = new WB_Point(pointerX, pointerY);
-        this.set(WB_GeometryOp2D.getClosestPoint2D(point, ZTransform.WB_PolygonToWB_PolyLine(boundary)));
+        this.set(WB_GeometryOp2D.getClosestPoint2D(point, ZTransform.WB_PolygonToWB_PolyLine(boundary).get(0)));
     }
 
     /**
@@ -55,7 +55,7 @@ public class TrafficNodeFixed extends TrafficNode {
     @Override
     public void setJoints() {
         this.joints = new ArrayList<>();
-        ZPoint[] besides = ZGeoMath.pointsOnEdgeByDist(this, boundary, getRegionR());
+        ZPoint[] besides = ZGeoMath.pointOnEdgeByDist(this, boundary, getRegionR());
         joints.add(besides[1]);
         joints.add(besides[0]);
     }

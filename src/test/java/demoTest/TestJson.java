@@ -34,13 +34,13 @@ public class TestJson {
 
         Gson gson = new Gson();
         ZPoint[] ps = new ZPoint[]{p0, p1};
-        String s = gson.toJson(ps);
+//        String s = gson.toJson(ps);
 //        String s0 = gson.toJson(p0);
 //        String s1 = gson.toJson(p0);
-//        String s2 = gson.toJson(l);
+        String s2 = gson.toJson(l);
 //        String s3 = gson.toJson(ls);
 
-        saveDataToFile("./src/test/resources/test.json", s);
+        saveDataToFile("./src/test/resources/test.json", s2);
     }
 
     public void runLoad() {

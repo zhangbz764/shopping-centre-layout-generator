@@ -3,10 +3,8 @@ package main;
 import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
-import controlP5.ControlP5;
-import controlP5.DropdownList;
 import mallElementNew.AtriumFactory;
-import mallElementNew.AtriumNew;
+import mallElementNew.AtriumRaw;
 import mallElementNew.Shop;
 import math.ZGeoMath;
 import org.locationtech.jts.geom.*;
@@ -29,14 +27,12 @@ import java.util.List;
  * @time 11:20
  */
 public class MallInteract {
-    private String[] activeControllers = new String[]{};
-
     // 场地&建筑轮廓
-    private WB_Polygon site;                            // 场地轮廓
-    private WB_Polygon redLine;                         // 场地红线
-    private WB_Polygon boundary;                        // 建筑轮廓
+    private Polygon site;                            // 场地轮廓
+    private Polygon redLine;                         // 场地红线
+    private Polygon boundary;                        // 建筑轮廓
     private int boundaryBase = 0;                       // 生成建筑轮廓的场地基点序号
-    private List<WB_Point> boundaryNode_interact;       // 建筑轮廓控制点
+    private List<Coordinate> boundaryNode_interact;       // 建筑轮廓控制点
 
     // 主路径
     private List<WB_Point> innerNode_interact;          // 动线中部控制点
@@ -45,24 +41,33 @@ public class MallInteract {
     // 原始中庭
     private Polygon mainTraffic_interact;               // 主路径区域（用于判断）
     private int selectedAtriumType = -1;                // 选择的中庭类型代号
-    private List<AtriumNew> rawAtriums;                 // 原始中庭
-    private AtriumNew selectedAtrium;                   // 选择的原始中庭
+    private List<AtriumRaw> rawAtriums;                 // 原始中庭
+    private AtriumRaw selectedAtrium;                   // 选择的原始中庭
     private WB_Point[] atriumNode_interact;             // 选择的原始中庭的控制点
     private int atriumDragFlag = -1;                    // 拖拽中心 or 边界控制点
     private int atriumNodeID = -1;                      // 被拖拽的边界控制点序号
 
+    // 交通空间轮廓
+    private List<ZPoint> publicSpaceNode_interact;
+
     // 柱网
-    private Polygon[] rect_interact;
-    private Polygon selectedRect;
-    private int selectedRectID = -1;
-    private WB_Point[] rectNode_interact;
-    private WB_Line[] rectCentralLine;
+    private Polygon[] rect_interact;                    // 柱网矩形
+    private Polygon selectedRect;                       // 选择的柱网
+    private int selectedRectID = -1;                    // 选择的柱网序号
+    private WB_Point[] rectNode_interact;               // 柱网控制点
+    private WB_Line[] rectCentralLine;                  // 柱网矩形轴线（用于限制控制点）
+
+    // 商铺
+    private List<Polygon> shopCell_interact;            // 商铺划格（不同层）
+    private List<Polygon> shopCell_selected;            // 选择的商铺
+    private double shopArea = -1;
+
+    // 中庭&走廊
+    private List<WB_Point> corridorNode_interact;       // 走廊控制点
+    private WB_Point[] selectedCorridorNode;            // 选择的走廊控制点
 
     private List<LineString> bufferCurve_interact;   // 动线边界曲线（不同层）
     private List<WB_Point> bufferCurveControl_interact;
-
-    private List<Polygon> cellPolys_interact;     // 商铺剖分多边形（不同层）
-    private List<Polygon> cellPolys_selected;
 
     /* ------------- constructor ------------- */
 
@@ -70,240 +75,45 @@ public class MallInteract {
 
     }
 
-    /* ------------- controlP5 GUI ------------- */
+    /* ------------- utils ------------- */
 
-    /**
-     * remove current GUIs
-     *
-     * @param cp5 controlP5
-     * @return void
-     */
-    private void removeGUI(ControlP5 cp5) {
-        for (String s : activeControllers) {
-            cp5.remove(s);
+    private double distance(double x1, double y1, double x2, double y2) {
+        return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+    }
+
+    public String getBoundaryArea() {
+        return boundary != null ? String.format("%.2f", boundary.getArea()) + "㎡" : "";
+    }
+
+    public String getRentArea() {
+        if (shopCell_interact != null && shopCell_interact.size() > 0) {
+            shopArea = 0;
+            for (Polygon p : shopCell_interact) {
+                shopArea += p.getArea();
+            }
+            return String.format("%.2f", shopArea) + "㎡";
+        } else {
+            shopArea = -1;
+            return "";
         }
     }
 
-    /**
-     * update status 0 GUI
-     *
-     * @param cp5    controlP5
-     * @param startH start height of the controllers
-     * @return void
-     */
-    public void updateStatus0GUI(ControlP5 cp5, int startH) {
-        removeGUI(cp5);
-        cp5.addButton("SWITCH BOUNDARY")
-                .setPosition(MallConst.STATUS_W, startH)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_SWITCH_BOUNDARY)
-        ;
-        cp5.addSlider("SITE REDLINE DIST")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.SLIDER_REDLINE_DIST)
-                .setRange(0, MallConst.SITE_REDLINE_DIST * 2)
-                .setValue(MallConst.SITE_REDLINE_DIST)
-        ;
-        cp5.addSlider("SITE BUFFER DIST")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.SLIDER_SITE_BUFFER)
-                .setRange(MallConst.SITE_BUFFER_MIN, MallConst.SITE_BUFFER_MAX)
-                .setValue(MallConst.SITE_BUFFER_DIST)
-        ;
-        System.out.println(cp5.getController("SITE REDLINE DIST").getValue());
-        System.out.println(cp5.getController("SITE BUFFER DIST").getValue());
-        this.activeControllers = new String[]{
-                "SWITCH BOUNDARY",
-                "SITE REDLINE DIST",
-                "SITE BUFFER DIST"
-        };
+    public String getShopRatio() {
+        return shopArea > 0 ? String.format("%.2f", (shopArea / boundary.getArea()) * 100) + "%" : "";
     }
 
-    /**
-     * update status 1 GUI
-     *
-     * @param cp5    controlP5
-     * @param startH start height of the controllers
-     * @return void
-     */
-    public void updateStatus1GUI(ControlP5 cp5, int startH) {
-        removeGUI(cp5);
-        cp5.addButton("DELETE INNER NODE")
-                .setPosition(MallConst.STATUS_W, startH)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_DELETE_INNERNODE)
-        ;
-        cp5.addButton("DELETE ENTRY NODE")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_DELETE_ENTRYNODE)
-        ;
-        cp5.addSlider("MAIN TRAFFIC WIDTH")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.SLIDER_TRAFFIC_WIDTH)
-                .setRange(MallConst.TRAFFIC_BUFFER_DIST - 2, MallConst.TRAFFIC_BUFFER_DIST + 2)
-                .setValue(MallConst.TRAFFIC_BUFFER_DIST)
-        ;
-        this.activeControllers = new String[]{
-                "DELETE INNER NODE",
-                "DELETE ENTRY NODE",
-                "MAIN TRAFFIC WIDTH"
-        };
-    }
-
-    /**
-     * update status 2 GUI
-     *
-     * @param cp5    controlP5
-     * @param startH start height of the controllers
-     * @return void
-     */
-    public void updateStatus2GUI(ControlP5 cp5, int startH) {
-        removeGUI(cp5);
-        // curve button
-        cp5.addButton("CURVE ATRIUM")
-                .setPosition(MallConst.STATUS_W, startH)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_CURVE_ATRIUM)
-        ;
-        // delete button
-        cp5.addButton("DELETE ATRIUM")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_DELETE_ATRIUM)
-        ;
-        // angle slider
-        cp5.addSlider("ATRIUM ANGLE")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.SLIDER_ATRIUM_ANGLE)
-                .setRange(0, 360)
-                .setValue(0)
-        ;
-        // area slider
-        cp5.addSlider("ATRIUM AREA")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 3)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.SLIDER_ATRIUM_AREA)
-                .setRange(MallConst.ATRIUM_AREA_MIN, 2000)
-                .setValue(MallConst.ATRIUM_AREA_INIT)
-        ;
-        // atrium type DropdownList
-        DropdownList ddl = cp5.addDropdownList("ATRIUM FACTORY")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 4)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H * 9)
-                .setId(MallConst.LIST_ATRIUM_FACTORY);
-        ddl.setItemHeight(MallConst.CONTROLLER_H);
-        ddl.setBarHeight(MallConst.CONTROLLER_H);
-        ddl.setCaptionLabel("ATRIUM FACTORY");
-        ddl.getCaptionLabel().getStyle().marginTop = 3;
-        ddl.getCaptionLabel().getStyle().marginLeft = 3;
-        ddl.getValueLabel().getStyle().marginTop = 3;
-        ddl.addItem("TRIANGLE", MallConst.ITEM_A_TRIANGLE);
-        ddl.addItem("SQUARE", MallConst.ITEM_A_SQUARE);
-        ddl.addItem("TRAPEZOID", MallConst.ITEM_A_TRAPEZOID);
-        ddl.addItem("PENTAGON", MallConst.ITEM_A_PENTAGON);
-        ddl.addItem("HEXAGON1", MallConst.ITEM_A_HEXAGON1);
-        ddl.addItem("HEXAGON2", MallConst.ITEM_A_HEXAGON2);
-        ddl.addItem("L-SHAPE", MallConst.ITEM_A_L_SHAPE);
-        ddl.addItem("OCTAGON", MallConst.ITEM_A_OCTAGON);
-
-        this.activeControllers = new String[]{
-                "CURVE ATRIUM",
-                "DELETE ATRIUM",
-                "ATRIUM ANGLE",
-                "ATRIUM AREA",
-                "ATRIUM FACTORY"
-        };
-    }
-
-    /**
-     * update status 3 GUI
-     *
-     * @param cp5    controlP5
-     * @param startH start height of the controllers
-     * @return void
-     */
-    public void updateStatus3GUI(ControlP5 cp5, int startH) {
-        removeGUI(cp5);
-        // buffer distance slider
-        cp5.addSlider("BUFFER DIST")
-                .setPosition(MallConst.STATUS_W, startH)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.SLIDER_BUFFER_DIST)
-                .setRange(0, 3)
-                .setValue(0)
-        ;
-        this.activeControllers = new String[]{
-                "BUFFER DIST"
-        };
-    }
-
-    /**
-     * update status 4 GUI
-     *
-     * @param cp5    controlP5
-     * @param startH start height of the controllers
-     * @return void
-     */
-    public void updateStatus4GUI(ControlP5 cp5, int startH) {
-        removeGUI(cp5);
-        // column distance
-        cp5.addSlider("COLUMN DIST")
-                .setPosition(MallConst.STATUS_W, startH)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.SLIDER_COLUMN_DIST)
-                .setRange(7, 9)
-                .setValue(MallConst.STRUCTURE_DIST)
-        ;
-        // angle of the grid
-        cp5.addSlider("GRID_ANGLE")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.SLIDER_GRID_ANGLE)
-                .setRange(0, 360)
-                .setValue(0)
-        ;
-        // grid number list
-        cp5.addDropdownList("GRID NUM")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H * 5)
-                .setId(MallConst.LIST_GRID_NUM)
-                .setItemHeight(MallConst.CONTROLLER_H)
-                .setBarHeight(MallConst.CONTROLLER_H)
-                .setCaptionLabel("GRID NUM")
-                .addItem("1", 1)
-                .addItem("2", 2)
-                .addItem("3", 3)
-                .addItem("4", 4);
-        this.activeControllers = new String[]{
-                "COLUMN DIST",
-                "GRID_ANGLE",
-                "GRID NUM"
-        };
-    }
-
-    /**
-     * update status 5 GUI
-     *
-     * @param cp5    controlP5
-     * @param startH start height of the controllers
-     * @return void
-     */
-    public void updateStatus5GUI(ControlP5 cp5, int startH) {
-        removeGUI(cp5);
-        // union cells
-        cp5.addButton("UNION CELLS")
-                .setPosition(MallConst.STATUS_W, startH)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_UNION_CELLS)
-        ;
-        this.activeControllers = new String[]{
-                "UNION CELLS"
-        };
+    public String getSmallShooRatio() {
+        if (shopArea > 0) {
+            float small = 0;
+            for (Polygon p : shopCell_interact) {
+                if (p.getArea() < 150) {
+                    small += 1;
+                }
+            }
+            return String.format("%.2f", (small / shopCell_interact.size()) * 100) + "%";
+        } else {
+            return "";
+        }
     }
 
     /* ------------- site boundary interact ------------- */
@@ -316,23 +126,26 @@ public class MallInteract {
      * @return void
      */
     public void initSiteBoundary(WB_Polygon _site, WB_Polygon _boundary, double redLineDist, double siteBufferDist) {
-        this.site = ZTransform.validateWB_Polygon(ZGeoMath.polygonFaceUp(_site));
+        this.site = ZTransform.WB_PolygonToPolygon(ZGeoMath.polygonFaceUp(_site));
         if (_boundary != null) {
-            this.boundary = ZTransform.validateWB_Polygon(ZGeoMath.polygonFaceUp(_boundary));
+            this.boundary = ZTransform.WB_PolygonToPolygon(ZGeoMath.polygonFaceUp(_boundary));
             this.boundaryNode_interact = new ArrayList<>();
-            for (int i = 0; i < boundary.getNumberOfPoints(); i++) {
-                boundaryNode_interact.add(boundary.getPoint(i));
+            for (int i = 0; i < boundary.getNumPoints(); i++) {
+                boundaryNode_interact.add(boundary.getCoordinates()[i]);
             }
         } else {
             WB_Polygon redLineSite = ZFactory.wbgf.createBufferedPolygons2D(
                     _site, -1 * redLineDist
             ).get(0);
-            this.redLine = ZGeoMath.polygonFaceUp(ZTransform.validateWB_Polygon(redLineSite));
+            this.redLine = ZTransform.WB_PolygonToPolygon(ZGeoMath.polygonFaceUp(redLineSite));
 
-            this.boundary = generateBoundary(redLine, boundaryBase, siteBufferDist);
+            this.boundary = ZTransform.WB_PolygonToPolygon(
+                    generateBoundary(ZTransform.PolygonToWB_Polygon(redLine), boundaryBase, siteBufferDist)
+            );
+
             this.boundaryNode_interact = new ArrayList<>();
-            for (int i = 0; i < boundary.getNumberOfPoints(); i++) {
-                boundaryNode_interact.add(boundary.getPoint(i));
+            for (int i = 0; i < boundary.getNumPoints(); i++) {
+                boundaryNode_interact.add(boundary.getCoordinates()[i]);
             }
         }
     }
@@ -344,13 +157,14 @@ public class MallInteract {
      * @param _boundary input boundary
      * @return void
      */
-    public void updateSiteBoundary(WB_Polygon _site, WB_Polygon _boundary) {
+    public void updateSiteBoundary(Polygon _site, Polygon _boundary) {
         this.site = _site;
         this.boundary = _boundary;
         this.boundaryNode_interact = new ArrayList<>();
-        for (int i = 0; i < boundary.getNumberOfPoints(); i++) {
-            boundaryNode_interact.add(boundary.getPoint(i));
+        for (int i = 0; i < boundary.getNumPoints(); i++) {
+            boundaryNode_interact.add(boundary.getCoordinates()[i]);
         }
+        System.out.println(boundary);
     }
 
     /**
@@ -361,10 +175,12 @@ public class MallInteract {
      */
     public void switchBoundary(double siteBufferDist) {
         this.boundaryBase = (boundaryBase + 1) % 4;
-        this.boundary = generateBoundary(redLine, boundaryBase, siteBufferDist);
+        this.boundary = ZTransform.WB_PolygonToPolygon(
+                generateBoundary(ZTransform.PolygonToWB_Polygon(redLine), boundaryBase, siteBufferDist)
+        );
         this.boundaryNode_interact = new ArrayList<>();
-        for (int i = 0; i < boundary.getNumberOfPoints(); i++) {
-            boundaryNode_interact.add(boundary.getPoint(i));
+        for (int i = 0; i < boundary.getNumPoints(); i++) {
+            boundaryNode_interact.add(boundary.getCoordinates()[i]);
         }
     }
 
@@ -377,20 +193,20 @@ public class MallInteract {
      */
     public void dragUpdateBoundary(double x, double y) {
         for (int i = 0; i < boundaryNode_interact.size() - 1; i++) {
-            WB_Point p = boundaryNode_interact.get(i);
-            if (distance(p.xd(), p.yd(), x, y) <= MallConst.BOUNDARY_NODE_R) {
-                p.set(x, y);
+            Coordinate c = boundaryNode_interact.get(i);
+            if (distance(c.getX(), c.getY(), x, y) <= MallConst.BOUNDARY_NODE_R) {
+                boundaryNode_interact.set(i, new Coordinate(x, y));
                 if (i == 0) {
-                    WB_Point last = boundaryNode_interact.get(boundaryNode_interact.size() - 1);
-                    last.set(x, y);
+                    boundaryNode_interact.set(boundaryNode_interact.size() - 1, new Coordinate(x, y));
                 }
+                boundary = ZFactory.createPolygonFromList(boundaryNode_interact);
                 break;
             }
         }
     }
 
     /**
-     * generate a L-shape building boundary from a quad site
+     * generate an L-shape building boundary from a quad site
      *
      * @param validRedLine quad site red line
      * @param base         base index of point of validRedLine
@@ -437,10 +253,11 @@ public class MallInteract {
      * @return void
      */
     public void dragUpdateNode(double x, double y) {
+        WB_Polygon boundTemp = ZTransform.PolygonToWB_Polygon(boundary);
         for (WB_Point p : innerNode_interact) {
             if (distance(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
                 WB_Point point = new WB_Point(x, y);
-                if (WB_GeometryOp.contains2D(point, boundary) && WB_GeometryOp.getDistance2D(point, boundary) > MallConst.TRAFFIC_NODE_R) {
+                if (WB_GeometryOp.contains2D(point, boundTemp) && WB_GeometryOp.getDistance2D(point, boundTemp) > MallConst.TRAFFIC_NODE_R) {
                     p.set(x, y);
                 }
                 return;
@@ -449,7 +266,7 @@ public class MallInteract {
         for (WB_Point p : entryNode_interact) {
             if (distance(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
                 WB_Point point = new WB_Point(x, y);
-                p.set(WB_GeometryOp2D.getClosestPoint2D(point, ZTransform.WB_PolygonToWB_PolyLine(boundary)));
+                p.set(WB_GeometryOp2D.getClosestPoint2D(point, ZTransform.WB_PolygonToWB_PolyLine(boundTemp).get(0)));
                 return;
             }
         }
@@ -548,8 +365,8 @@ public class MallInteract {
         } else {
             // select atrium
             if (selectedAtrium == null) {
-                for (AtriumNew a : rawAtriums) {
-                    WB_Polygon shape = a.getShape();
+                for (AtriumRaw a : rawAtriums) {
+                    WB_Polygon shape = ZTransform.PolygonToWB_Polygon(a.getShape());
                     if (WB_GeometryOp.contains2D(p, shape)) {
                         this.selectedAtrium = a;
                         this.atriumNode_interact = new WB_Point[a.getShapePtsNum() + 1];
@@ -561,7 +378,7 @@ public class MallInteract {
                     }
                 }
             } else {
-                WB_Polygon shape = selectedAtrium.getShape();
+                WB_Polygon shape = ZTransform.PolygonToWB_Polygon(selectedAtrium.getShape());
                 if (!WB_GeometryOp.contains2D(p, shape)) {
                     this.selectedAtrium = null;
                     this.atriumNode_interact = null;
@@ -675,7 +492,6 @@ public class MallInteract {
     /**
      * release mouse to update
      *
-     * @param
      * @return void
      */
     public void releaseUpdateAtrium() {
@@ -693,7 +509,6 @@ public class MallInteract {
             for (int i = 0; i < selectedAtrium.getShapePtsNum(); i++) {
                 atriumNode_interact[i + 1] = selectedAtrium.getShapePoints()[i].copy();
             }
-            System.out.println(selectedAtrium.getArea());
             atriumDragFlag = -1;
             atriumNodeID = -1;
         }
@@ -701,6 +516,14 @@ public class MallInteract {
 
     /* ------------- public space interact ------------- */
 
+    public void dragUpdatePublicSpace(double x, double y) {
+        for (ZPoint p : publicSpaceNode_interact) {
+            if (distance(p.xd(), p.yd(), x, y) <= MallConst.ATRIUM_CTRL_R) {
+                p.set(x, y);
+                return;
+            }
+        }
+    }
 
     /* ------------- structure grid interact ------------- */
 
@@ -737,12 +560,21 @@ public class MallInteract {
             }
         } else {
             if (!selectedRect.contains(mouse)) {
-                selectedRect = null;
-                selectedRectID = -1;
-                rectCentralLine = null;
-                rectNode_interact = null;
+                unselectGridRect();
             }
         }
+    }
+
+    /**
+     * clear selected grid rectangle
+     *
+     * @return void
+     */
+    public void unselectGridRect() {
+        selectedRect = null;
+        selectedRectID = -1;
+        rectCentralLine = null;
+        rectNode_interact = null;
     }
 
     /**
@@ -789,13 +621,130 @@ public class MallInteract {
         }
     }
 
+    /* ------------- shop cell interact ------------- */
 
-    public void changeColumnDist() {
-
+    /**
+     * select shop cell
+     *
+     * @param x pointer x
+     * @param y pointer y
+     * @return void
+     */
+    public void selectShopCell(double x, double y) {
+        int size = shopCell_interact.size();
+        Point pointer = ZFactory.jtsgf.createPoint(new Coordinate(x, y));
+        for (int i = 0; i < size; i++) {
+            Polygon cell = shopCell_interact.get(i);
+            if (cell.contains(pointer)) {
+                if (this.shopCell_selected.contains(cell)) {
+                    shopCell_selected.remove(cell);
+                } else {
+                    shopCell_selected.add(cell);
+                }
+                break;
+            }
+        }
     }
 
-    public void rotateGrid() {
+    /**
+     * union selected shop cells
+     *
+     * @return void
+     */
+    public void unionShopCell() {
+        if (shopCell_selected.size() > 1) {
+            shopCell_interact.removeAll(shopCell_selected);
 
+            Polygon[] polygons = new Polygon[shopCell_selected.size()];
+            for (int i = 0; i < shopCell_selected.size(); i++) {
+                polygons[i] = shopCell_selected.get(i);
+            }
+            GeometryCollection collection = ZFactory.jtsgf.createGeometryCollection(polygons);
+            Geometry union = collection.buffer(0);
+
+            if (union instanceof Polygon) {
+                shopCell_interact.add((Polygon) union);
+            } else if (union instanceof MultiPolygon) {
+                for (int i = 0; i < union.getNumGeometries(); i++) {
+                    shopCell_interact.add((Polygon) union.getGeometryN(i));
+                }
+            } else {
+                System.out.println(union.getGeometryType());
+            }
+        }
+        shopCell_selected.clear();
+    }
+
+    /* ------------- main corridor interact ------------- */
+
+    /**
+     * select corridor node
+     *
+     * @param x pointer x
+     * @param y pointer y
+     * @return void
+     */
+    public void selectCorridorNode(double x, double y) {
+        if (selectedCorridorNode == null) {
+            for (int i = 0; i < corridorNode_interact.size(); i++) {
+                WB_Point p0, p1;
+
+                WB_Point curr = corridorNode_interact.get(i);
+                if (distance(curr.xd(), curr.yd(), x, y) <= MallConst.CORRIDOR_NODE_R) {
+                    if (i % 2 == 0) {
+                        p0 = curr;
+                        p1 = corridorNode_interact.get(i + 1);
+                    } else {
+                        p1 = curr;
+                        p0 = corridorNode_interact.get(i - 1);
+                    }
+                    this.selectedCorridorNode = new WB_Point[]{p0, p1};
+                    break;
+                }
+            }
+        } else {
+            WB_Point p0 = selectedCorridorNode[0];
+            WB_Point p1 = selectedCorridorNode[1];
+            if (distance(p0.xd(), p0.yd(), x, y) > MallConst.CORRIDOR_NODE_R
+                    &&
+                    distance(p1.xd(), p1.yd(), x, y) > MallConst.CORRIDOR_NODE_R
+            ) {
+                selectedCorridorNode = null;
+            }
+        }
+    }
+
+    /**
+     * drag to change corridor node
+     *
+     * @param x pointer x
+     * @param y pointer y
+     * @return void
+     */
+    public void dragUpdateCorridor(double x, double y) {
+        if (selectedCorridorNode != null) {
+            for (WB_Point p : selectedCorridorNode) {
+                if (distance(p.xd(), p.yd(), x, y) <= MallConst.CORRIDOR_NODE_R) {
+                    WB_Point point = new WB_Point(x, y);
+                    p.set(x, y);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * remove the corridor node (divide line)
+     *
+     * @param
+     * @return void
+     */
+    public void removeCorridorNode() {
+        if (selectedCorridorNode != null) {
+            corridorNode_interact.remove(selectedCorridorNode[0]);
+            corridorNode_interact.remove(selectedCorridorNode[1]);
+            selectedCorridorNode = null;
+        }
     }
 
     /* ------------- buffer curve shape interact ------------- */
@@ -804,9 +753,6 @@ public class MallInteract {
 
     }
 
-    private double distance(double x1, double y1, double x2, double y2) {
-        return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-    }
 
     public void drawBufferCurve(PApplet app, JtsRender jtsRender) {
         app.pushStyle();
@@ -840,72 +786,13 @@ public class MallInteract {
 
     /* ------------- shop cell interact ------------- */
 
-    public void selectShopCell(double x, double y) {
-        int size = cellPolys_interact.size();
-        Point pointer = ZFactory.jtsgf.createPoint(new Coordinate(x, y));
-        for (int i = 0; i < size; i++) {
-            Polygon cell = cellPolys_interact.get(i);
-            if (cell.contains(pointer)) {
-                if (this.cellPolys_selected.contains(cell)) {
-                    cellPolys_selected.remove(cell);
-                } else {
-                    cellPolys_selected.add(cell);
-                }
-                break;
-            }
-        }
-    }
-
-    public void clickUpdateShop() {
-        if (cellPolys_selected.size() > 1) {
-            cellPolys_interact.removeAll(cellPolys_selected);
-//            Geometry union = cellPolys_selected.get(0);
-//            for (int i = 1; i < cellPolys_selected.size(); i++) {
-//                union = union.union(cellPolys_interact.get(i));
-//            }
-
-            Polygon[] polygons = new Polygon[cellPolys_selected.size()];
-            for (int i = 0; i < cellPolys_selected.size(); i++) {
-                polygons[i] = cellPolys_selected.get(i);
-            }
-            GeometryCollection collection = ZFactory.jtsgf.createGeometryCollection(polygons);
-            Geometry union = collection.buffer(0);
-
-            if (union instanceof Polygon) {
-                cellPolys_interact.add((Polygon) union);
-            } else if (union instanceof MultiPolygon) {
-                for (int i = 0; i < union.getNumGeometries(); i++) {
-                    cellPolys_interact.add((Polygon) union.getGeometryN(i));
-                }
-            } else {
-                System.out.println(union.getGeometryType());
-            }
-        }
-        cellPolys_selected.clear();
-    }
-
-    public void drawCellSelected(PApplet app, JtsRender jtsRender) {
-        if (cellPolys_selected != null) {
-            app.pushStyle();
-
-            app.noFill();
-            app.stroke(0, 255, 0);
-            app.strokeWeight(5);
-            for (Polygon p : cellPolys_selected) {
-                jtsRender.drawGeometry(p);
-            }
-
-            app.popStyle();
-        }
-    }
-
     /* ------------- setter & getter ------------- */
 
-    public WB_Polygon getSite() {
+    public Polygon getSite() {
         return site;
     }
 
-    public WB_Polygon getBoundary() {
+    public Polygon getBoundary() {
         return boundary;
     }
 
@@ -941,16 +828,24 @@ public class MallInteract {
         this.selectedAtriumType = selectedAtriumType;
     }
 
-    public void setRawAtriums(List<AtriumNew> rawAtriums) {
+    public void setRawAtriums(List<AtriumRaw> rawAtriums) {
         this.rawAtriums = rawAtriums;
     }
 
-    public List<WB_Polygon> getRawAtriumShapes() {
-        List<WB_Polygon> atriums = new ArrayList<>();
-        for (AtriumNew a : rawAtriums) {
+    public List<Polygon> getRawAtriumShapes() {
+        List<Polygon> atriums = new ArrayList<>();
+        for (AtriumRaw a : rawAtriums) {
             atriums.add(a.getShape());
         }
         return atriums;
+    }
+
+    public void setPublicSpaceNode_interact(List<ZPoint> publicSpaceNode_interact) {
+        this.publicSpaceNode_interact = publicSpaceNode_interact;
+    }
+
+    public List<ZPoint> getPublicSpaceNode_interact() {
+        return publicSpaceNode_interact;
     }
 
     public void setRect_interact(Polygon[] rect_interact) {
@@ -965,79 +860,95 @@ public class MallInteract {
         return selectedRectID;
     }
 
+    public void setShopCell_interact(List<Shop> currentShops) {
+        this.shopCell_interact = new ArrayList<>();
+        for (Shop shop : currentShops) {
+            shopCell_interact.add(shop.getShape());
+        }
+        this.shopCell_selected = new ArrayList<>();
+    }
+
+    public List<Polygon> getShopCell_interact() {
+        return shopCell_interact;
+    }
+
+    public void setCorridorNode_interact(List<WB_Point> corridorNode_interact) {
+        this.corridorNode_interact = corridorNode_interact;
+    }
+
+    public List<WB_Point> getCorridorNode_interact() {
+        return corridorNode_interact;
+    }
+
     //    public void setBufferCurve_interact(List<LineString> bufferCurve_interact) {
 //        this.bufferCurve_interact = bufferCurve_interact;
 //    }
 //
-//    public void setCellPolys_interact(List<Shop> currentShops) {
-//        this.cellPolys_interact = new ArrayList<>();
-//        for (Shop shop : currentShops) {
-//            cellPolys_interact.add(shop.getShape());
-//        }
-//        this.cellPolys_selected = new ArrayList<>();
-//    }
-//
 //    public List<LineString> getBufferCurve_interact() {
 //        return bufferCurve_interact;
-//    }
-//
-//    public List<Shop> getCellPolys_interact() {
-//        System.out.println(cellPolys_interact.size());
-//        List<Shop> shopCells = new ArrayList<>();
-//        for (Polygon p : cellPolys_interact) {
-//            shopCells.add(new Shop(p));
-//        }
-//        return shopCells;
 //    }
 
     /* ------------- draw ------------- */
 
     public void displayLocal(PApplet app, WB_Render render, JtsRender jtsRender, int status) {
         app.pushStyle();
-
         switch (status) {
             case -1:
                 break;
             case 0:
-                displaySiteBoundary(app, render);
+                displaySiteBoundary(app, jtsRender);
                 break;
             case 1:
                 displayTraffic(app, render);
                 break;
             case 2:
-                displayRawAtrium(app, render);
+                displayRawAtrium(app, jtsRender);
                 if (selectedAtrium != null) {
-                    displaySelectedAtrium(app, render);
+                    displaySelectedAtrium(app, jtsRender);
                 }
+                break;
+            case 3:
+                displayPublicSpaceNodes(app);
                 break;
             case 4:
                 if (selectedRect != null) {
                     displaySelectedGrid(app, jtsRender);
                 }
                 break;
+            case 5:
+                if (shopCell_selected != null) {
+                    displaySelectedCell(app, jtsRender);
+                }
+                break;
+            case 6:
+                displayCorridorNode(app);
+                if (selectedCorridorNode != null) {
+                    displaySelectedCorridorNode(app);
+                }
+                break;
         }
         app.popStyle();
     }
 
-    public void displaySiteBoundary(PApplet app, WB_Render render) {
+    private void displaySiteBoundary(PApplet app, JtsRender render) {
         // draw boundary control nodes
         app.noStroke();
         app.fill(255, 97, 136);
-        for (WB_Point p : boundaryNode_interact) {
-            app.ellipse(p.xf(), p.yf(), (float) MallConst.BOUNDARY_NODE_R, (float) MallConst.BOUNDARY_NODE_R);
+        for (Coordinate p : boundaryNode_interact) {
+            app.ellipse((float) p.getX(), (float) p.getY(), (float) MallConst.BOUNDARY_NODE_R, (float) MallConst.BOUNDARY_NODE_R);
         }
 
         // draw boundary and site
         app.noFill();
         app.stroke(255);
         app.strokeWeight(6);
-        render.drawPolygonEdges2D(boundary);
+        render.drawGeometry(boundary);
         app.stroke(255, 0, 0);
         app.strokeWeight(3);
-        render.drawPolygonEdges2D(site);
+        render.drawGeometry(site);
     }
 
-    public void displayTraffic(PApplet app, WB_Render render) {
+    private void displayTraffic(PApplet app, WB_Render render) {
         // draw traffic control nodes
         app.noStroke();
         app.fill(255, 97, 136);
@@ -1050,17 +961,17 @@ public class MallInteract {
         }
     }
 
-    public void displayRawAtrium(PApplet app, WB_Render render) {
+    private void displayRawAtrium(PApplet app, JtsRender render) {
         // draw all raw atriums
         app.stroke(55, 103, 171);
         app.strokeWeight(2);
         app.noFill();
-        for (AtriumNew an : rawAtriums) {
-            render.drawPolygonEdges2D(an.getShape());
+        for (AtriumRaw an : rawAtriums) {
+            render.drawGeometry(an.getShape());
         }
     }
 
-    public void displaySelectedAtrium(PApplet app, WB_Render render) {
+    private void displaySelectedAtrium(PApplet app, JtsRender render) {
         // draw center
         app.noStroke();
         app.fill(255, 97, 136);
@@ -1076,10 +987,18 @@ public class MallInteract {
         app.stroke(0, 255, 0);
         app.strokeWeight(4);
         app.noFill();
-        render.drawPolygonEdges2D(selectedAtrium.getShape());
+        render.drawGeometry(selectedAtrium.getShape());
     }
 
-    public void displaySelectedGrid(PApplet app, JtsRender jtsRender) {
+    private void displayPublicSpaceNodes(PApplet app){
+        app.noStroke();
+        app.fill(169, 210, 118);
+        for (ZPoint p : publicSpaceNode_interact) {
+            app.ellipse(p.xf(), p.yf(), MallConst.ATRIUM_CTRL_R, MallConst.ATRIUM_CTRL_R);
+        }
+    }
+
+    private void displaySelectedGrid(PApplet app, JtsRender jtsRender) {
         // draw rect
         app.stroke(0, 255, 0);
         app.strokeWeight(4);
@@ -1094,4 +1013,33 @@ public class MallInteract {
         }
     }
 
+    private void displaySelectedCell(PApplet app, JtsRender jtsRender) {
+        app.noFill();
+        app.stroke(0, 255, 0);
+        app.strokeWeight(5);
+        for (Polygon p : shopCell_selected) {
+            jtsRender.drawGeometry(p);
+        }
+    }
+
+    private void displayCorridorNode(PApplet app) {
+        app.stroke(0, 255, 0);
+        for (int i = 0; i < corridorNode_interact.size(); i += 2) {
+            WB_Point p1 = corridorNode_interact.get(i);
+            WB_Point p2 = corridorNode_interact.get(i + 1);
+            app.line(p1.xf(), p1.yf(), p2.xf(), p2.yf());
+        }
+        app.noStroke();
+        app.fill(80);
+        for (WB_Point p : corridorNode_interact) {
+            app.ellipse(p.xf(), p.yf(), MallConst.CORRIDOR_NODE_R, MallConst.CORRIDOR_NODE_R);
+        }
+    }
+
+    private void displaySelectedCorridorNode(PApplet app) {
+        app.fill(255, 97, 136);
+        for (WB_Point p : selectedCorridorNode) {
+            app.ellipse(p.xf(), p.yf(), MallConst.CORRIDOR_NODE_R, MallConst.CORRIDOR_NODE_R);
+        }
+    }
 }

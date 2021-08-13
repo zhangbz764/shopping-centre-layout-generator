@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class StructureGrid {
     private Polygon rect;
-    private double dist = -1;
+    private double model = -1;
     private double[] threshold;
 
     private double length10;
@@ -41,10 +41,10 @@ public class StructureGrid {
 
     }
 
-    public StructureGrid(Polygon rect, double dist) {
+    public StructureGrid(Polygon rect, double model) {
         this.rect = rect;
-        this.dist = dist;
-        initDist();
+        this.model = model;
+        initModel();
     }
 
     public StructureGrid(Polygon rect, double[] threshold) {
@@ -55,7 +55,12 @@ public class StructureGrid {
 
     /* ------------- member function ------------- */
 
-    public void initDist() {
+    /**
+     * initialize grid by a given model
+     *
+     * @return void
+     */
+    public void initModel() {
         Coordinate c0 = rect.getCoordinates()[0];
         Coordinate c1 = rect.getCoordinates()[1];
         Coordinate c2 = rect.getCoordinates()[2];
@@ -70,8 +75,8 @@ public class StructureGrid {
         ZPoint dir12 = new ZPoint(c2.x - c1.x, c2.y - c1.y);
 
         // lines
-        List<ZPoint> dividePoint10 = line10.divideByStep(dist);
-        List<ZPoint> dividePoint12 = line12.divideByStep(dist);
+        List<ZPoint> dividePoint10 = line10.divideByStep(model);
+        List<ZPoint> dividePoint12 = line12.divideByStep(model);
 
         this.lon10 = new ArrayList<>();
         this.lat12 = new ArrayList<>();
@@ -97,6 +102,11 @@ public class StructureGrid {
         }
     }
 
+    /**
+     * initialize grid by a model threshold
+     *
+     * @return void
+     */
     public void initThreshold() {
         Coordinate c0 = rect.getCoordinates()[0];
         Coordinate c1 = rect.getCoordinates()[1];
@@ -139,14 +149,42 @@ public class StructureGrid {
         }
     }
 
+    /**
+     * update grid by new rectangle
+     *
+     * @param rect new rectangle
+     * @return void
+     */
     public void updateRect(Polygon rect) {
-        if (dist > 0) {
+        if (model > 0) {
             this.rect = rect;
-            initDist();
+            initModel();
         } else if (threshold != null) {
             this.rect = rect;
             initThreshold();
         }
+    }
+
+    /**
+     * update grid by new model
+     *
+     * @param model new model
+     * @return void
+     */
+    public void updateModel(double model) {
+        this.model = model;
+        initModel();
+    }
+
+    /**
+     * update grid by new threshold
+     *
+     * @param threshold new model
+     * @return void
+     */
+    public void updateThreshold(double[] threshold) {
+        this.threshold = threshold;
+        initThreshold();
     }
 
     /* ------------- setter & getter ------------- */

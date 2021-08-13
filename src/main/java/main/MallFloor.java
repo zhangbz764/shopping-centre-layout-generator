@@ -8,19 +8,15 @@ import mallElementNew.TrafficNodeTree;
 import mallElementNew.StructureGrid;
 import mallElementNew.Shop;
 import math.ZGeoMath;
-import math.ZGraphMath;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
 import transform.ZTransform;
 import wblut.geom.*;
-import wblut.hemesh.HEC_FromPolygons;
-import wblut.hemesh.HE_Mesh;
-import wblut.hemesh.HE_Vertex;
 
 import java.util.*;
 
 /**
- * a floor of a shopping mall
+ * a single floor of a shopping mall
  *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
@@ -29,11 +25,11 @@ import java.util.*;
  */
 public class MallFloor {
     private int floorNum; // 层数
-    private WB_Polygon boundary; // 外轮廓
+    private Polygon boundary; // 外轮廓
     private int status; // 本层当前编辑状态
 
     // public space
-    private TrafficGraph graph; // 动线轴线
+//    private TrafficGraph graph; // 动线轴线
     private List<List<WB_Coord>> bufferControlPoints; // 动线边界的细分控制点
 
     // split
@@ -44,98 +40,98 @@ public class MallFloor {
     private Point verify;
     private List<ZPoint> turning; // 记录需要拐角的剖分线所属的轴网交点
     private List<LineString> allSubLines; // 初次剖分线
-    private List<Shop> allCells; // 初次剖分结果
+    private List<Shop> allShops; // 初次剖分结果
 
     // evacuation
     private List<WB_Point> evacuationPoint; // 疏散楼梯位置
 
     /* ------------- constructor ------------- */
 
-    public MallFloor(int floorNum, WB_Polygon boundary_receive) {
+    public MallFloor(int floorNum, Polygon boundary_receive) {
         setFloorNum(floorNum);
         setBoundary(boundary_receive);
     }
 
     /* ------------- member function ------------- */
 
-    /**
-     * update traffic graph
-     *
-     * @param innerNode_receive inner node from frontend
-     * @param entryNode_receive entry node from frontend
-     * @return void
-     */
-    public void updateGraph(List<WB_Point> innerNode_receive, List<WB_Point> entryNode_receive) {
-        List<TrafficNode> innerNodes = new ArrayList<>();
-        for (WB_Point p : innerNode_receive) {
-            TrafficNodeTree treeNode = new TrafficNodeTree(p);
-            treeNode.setBoundary(boundary);
-            treeNode.setByRestriction(p.xd(), p.yd());
-            innerNodes.add(treeNode);
-        }
-        List<TrafficNode> entryNodes = new ArrayList<>();
-        for (WB_Point p : entryNode_receive) {
-            TrafficNodeFixed fixedNode = new TrafficNodeFixed(p, boundary);
-            fixedNode.setByRestriction(p.xd(), p.yd());
-            entryNodes.add(fixedNode);
-        }
-        this.graph = new TrafficGraph(innerNodes, entryNodes);
-    }
-
-    /**
-     * generate buffer geometries of public space
-     *
-     * @param polyAtrium_receive atriums shape received from frontend
-     * @param dist               buffer distance
-     * @param curvePtsNum        curve subdivide number
-     * @return void
-     */
-    public void updateBuffer(List<WB_Polygon> polyAtrium_receive, double dist, int curvePtsNum) {
-        // receive geometries and generate buffer
-        List<Geometry> geos = new ArrayList<>(graph.toLineStrings());
-        if (polyAtrium_receive != null && polyAtrium_receive.size() > 0) {
-            for (WB_Polygon p : polyAtrium_receive) {
-                geos.add(ZTransform.WB_PolygonToPolygon(p));
-            }
-        }
-        Geometry[] geometries = geos.toArray(new Geometry[0]);
-        GeometryCollection collection = ZFactory.jtsgf.createGeometryCollection(geometries);
-        Geometry originBuffer = collection.buffer(dist);
-
-        // record control points
-        // make intersection if floor is 1
-        // otherwise, use the original buffer polygon
-        this.bufferControlPoints = new ArrayList<>();
-        if (this.floorNum == 1) {
-            if (originBuffer instanceof Polygon) {
-                LineString bufferLS = ZTransform.PolygonToLineString((Polygon) originBuffer).get(0);
-                Polygon b = ZTransform.WB_PolygonToPolygon(boundary);
-                Geometry intersection = bufferLS.intersection(b);
-                if (intersection instanceof MultiLineString) {
-                    for (int i = 0; i < intersection.getNumGeometries(); i++) {
-                        List<ZPoint> splitPoints = ZGeoMath.splitPolyLineEdge((LineString) intersection.getGeometryN(i), curvePtsNum);
-                        List<WB_Coord> splitPointsEach = new ArrayList<>();
-                        for (ZPoint p : splitPoints) {
-                            splitPointsEach.add(p.toWB_Point());
-                        }
-                        bufferControlPoints.add(splitPointsEach);
-                    }
-                } else {
-                    System.out.println("not MultiLineString");
-                }
-            }
-        } else {
-            if (originBuffer instanceof Polygon) {
-                List<ZPoint> splitPoints = ZGeoMath.splitPolygonEdge((Polygon) originBuffer, curvePtsNum);
-                List<WB_Coord> splitPointsEach = new ArrayList<>();
-                for (ZPoint p : splitPoints) {
-                    splitPointsEach.add(p.toWB_Point());
-                }
-                bufferControlPoints.add(splitPointsEach);
-            }
-        }
-
-    }
+//    /**
+//     * update traffic graph
+//     *
+//     * @param innerNode_receive inner node from frontend
+//     * @param entryNode_receive entry node from frontend
+//     * @return void
+//     */
+//    public void updateGraph(List<WB_Point> innerNode_receive, List<WB_Point> entryNode_receive) {
+//        List<TrafficNode> innerNodes = new ArrayList<>();
+//        for (WB_Point p : innerNode_receive) {
+//            TrafficNodeTree treeNode = new TrafficNodeTree(p);
+//            treeNode.setBoundary(boundary);
+//            treeNode.setByRestriction(p.xd(), p.yd());
+//            innerNodes.add(treeNode);
+//        }
+//        List<TrafficNode> entryNodes = new ArrayList<>();
+//        for (WB_Point p : entryNode_receive) {
+//            TrafficNodeFixed fixedNode = new TrafficNodeFixed(p, boundary);
+//            fixedNode.setByRestriction(p.xd(), p.yd());
+//            entryNodes.add(fixedNode);
+//        }
+//        this.graph = new TrafficGraph(innerNodes, entryNodes);
+//    }
+//
+//    /**
+//     * generate buffer geometries of public space
+//     *
+//     * @param polyAtrium_receive atriums shape received from frontend
+//     * @param dist               buffer distance
+//     * @param curvePtsNum        curve subdivide number
+//     * @return void
+//     */
+//    public void updateBuffer(List<WB_Polygon> polyAtrium_receive, double dist, int curvePtsNum) {
+//        // receive geometries and generate buffer
+//        List<Geometry> geos = new ArrayList<>(graph.toLineStrings());
+//        if (polyAtrium_receive != null && polyAtrium_receive.size() > 0) {
+//            for (WB_Polygon p : polyAtrium_receive) {
+//                geos.add(ZTransform.WB_PolygonToPolygon(p));
+//            }
+//        }
+//        Geometry[] geometries = geos.toArray(new Geometry[0]);
+//        GeometryCollection collection = ZFactory.jtsgf.createGeometryCollection(geometries);
+//        Geometry originBuffer = collection.buffer(dist);
+//
+//        // record control points
+//        // make intersection if floor is 1
+//        // otherwise, use the original buffer polygon
+//        this.bufferControlPoints = new ArrayList<>();
+//        if (this.floorNum == 1) {
+//            if (originBuffer instanceof Polygon) {
+//                LineString bufferLS = ZTransform.PolygonToLineString((Polygon) originBuffer).get(0);
+//                Polygon b =boundary;
+//                Geometry intersection = bufferLS.intersection(b);
+//                if (intersection instanceof MultiLineString) {
+//                    for (int i = 0; i < intersection.getNumGeometries(); i++) {
+//                        List<ZPoint> splitPoints = ZGeoMath.splitPolyLineEdge((LineString) intersection.getGeometryN(i), curvePtsNum);
+//                        List<WB_Coord> splitPointsEach = new ArrayList<>();
+//                        for (ZPoint p : splitPoints) {
+//                            splitPointsEach.add(p.toWB_Point());
+//                        }
+//                        bufferControlPoints.add(splitPointsEach);
+//                    }
+//                } else {
+//                    System.out.println("not MultiLineString");
+//                }
+//            }
+//        } else {
+//            if (originBuffer instanceof Polygon) {
+//                List<ZPoint> splitPoints = ZGeoMath.splitPolygonEdge((Polygon) originBuffer, curvePtsNum);
+//                List<WB_Coord> splitPointsEach = new ArrayList<>();
+//                for (ZPoint p : splitPoints) {
+//                    splitPointsEach.add(p.toWB_Point());
+//                }
+//                bufferControlPoints.add(splitPointsEach);
+//            }
+//        }
+//
+//    }
 
     /**
      * split boundary by Polygonizer, find public block and shop blocks
@@ -146,7 +142,7 @@ public class MallFloor {
     private void updatePolygonizer(List<LineString> bufferCurve_receive) {
         // spilt blocks
         Polygonizer pr = new Polygonizer();
-        Geometry nodedLineStrings = ZTransform.WB_PolyLineToLineString(boundary);
+        Geometry nodedLineStrings = ZTransform.PolygonToLineString(boundary).get(0);
         if (this.floorNum == 1) {
             for (LineString ls : bufferCurve_receive) {
                 LineString newLs = ZFactory.createExtendedLineString(ls, 0.1);
@@ -188,7 +184,7 @@ public class MallFloor {
     public void updateSubdivision(List<LineString> bufferCurve_receive, StructureGrid[] grid) {
         updatePolygonizer(bufferCurve_receive);
 
-        this.allCells = new ArrayList<>();
+        this.allShops = new ArrayList<>();
         this.allSubLines = new ArrayList<>();
 
         Map<ZPoint, ZLine> intersectGrid = selectIntersection(bufferCurve_receive, grid);
@@ -282,7 +278,7 @@ public class MallFloor {
                         }
                         // 两段线：延长线和最近点连线 合成一条LineString
                         ZPoint[] newRay = new ZPoint[]{nextNode, ray[1]};
-                        ZLine extend = ZGeoMath.extendSegmentToPolygon(newRay, boundary);
+                        ZLine extend = ZGeoMath.extendSegmentToPolygon(newRay, ZTransform.PolygonToWB_Polygon(boundary));
                         if (extend != null) {
                             if (extend.getLength() < 4 * MallConst.SHOP_SPAN_THRESHOLD[1]) {
                                 // 剔除过长剖分线
@@ -299,7 +295,7 @@ public class MallFloor {
                         }
                     }
                 } else {
-                    ZLine extend = ZGeoMath.extendSegmentToPolygon(ray, boundary);
+                    ZLine extend = ZGeoMath.extendSegmentToPolygon(ray, ZTransform.PolygonToWB_Polygon(boundary));
                     if (extend != null) {
                         if (extend.getLength() < 4 * MallConst.SHOP_SPAN_THRESHOLD[1]) {
                             // 剔除过长剖分线
@@ -325,7 +321,7 @@ public class MallFloor {
                 for (Polygon poly : allPolys) {
                     if (poly.getArea() > 1.0) {
                         // 防止 polygonizer 时出现极小误差
-                        allCells.add(new Shop(poly));
+                        allShops.add(new Shop(poly));
                     }
                 }
             }
@@ -396,7 +392,7 @@ public class MallFloor {
                         }
                         // 两段线：延长线和最近点连线 合成一条LineString
                         ZPoint[] newRay = new ZPoint[]{nextNode, ray[1]};
-                        ZLine extend = ZGeoMath.extendSegmentToPolygon(newRay, boundary);
+                        ZLine extend = ZGeoMath.extendSegmentToPolygon(newRay, ZTransform.PolygonToWB_Polygon(boundary));
                         if (extend != null) {
                             if (extend.getLength() < 4 * MallConst.SHOP_SPAN_THRESHOLD[1]) {
                                 // 剔除过长剖分线
@@ -416,7 +412,7 @@ public class MallFloor {
                         }
                     }
                 } else {
-                    ZLine extend = ZGeoMath.extendSegmentToPolygon(ray, boundary);
+                    ZLine extend = ZGeoMath.extendSegmentToPolygon(ray, ZTransform.PolygonToWB_Polygon(boundary));
                     if (extend != null) {
                         if (extend.getLength() < 4 * MallConst.SHOP_SPAN_THRESHOLD[1]) {
                             // 剔除过长剖分线
@@ -439,7 +435,6 @@ public class MallFloor {
             }
             for (int j = 0; j < subLines.size(); j++) {
                 LineString sl = ZFactory.createExtendedLineString(subLines.get(j), 0.1);
-                System.out.println(sl.toString());
                 nodedLineStrings = nodedLineStrings.union(sl);
             }
             pr.add(nodedLineStrings);
@@ -456,7 +451,7 @@ public class MallFloor {
                             continue;
                         }
                     }
-                    allCells.add(new Shop(poly));
+                    allShops.add(new Shop(poly));
                 }
             }
         }
@@ -718,7 +713,7 @@ public class MallFloor {
     }
 
     public void disposeSubdivision() {
-        this.allCells = new ArrayList<>();
+        this.allShops = new ArrayList<>();
     }
 
     public void disposeEvacuation() {
@@ -731,7 +726,7 @@ public class MallFloor {
         this.floorNum = floorNum;
     }
 
-    public void setBoundary(WB_Polygon boundary) {
+    public void setBoundary(Polygon boundary) {
         this.boundary = boundary;
     }
 
@@ -739,17 +734,17 @@ public class MallFloor {
         this.status = status;
     }
 
-    public void setAllCells(List<Shop> allCells) {
-        this.allCells = allCells;
+    public void setAllShops(List<Shop> allShops) {
+        this.allShops = allShops;
     }
 
     public int getStatus() {
         return status;
     }
 
-    public TrafficGraph getGraph() {
-        return graph;
-    }
+//    public TrafficGraph getGraph() {
+//        return graph;
+//    }
 
     public List<Polygon> getShopBlocks() {
         return shopBlocks;
@@ -759,8 +754,8 @@ public class MallFloor {
         return bufferControlPoints;
     }
 
-    public List<Shop> getAllCells() {
-        return allCells;
+    public List<Shop> getAllShops() {
+        return allShops;
     }
 
     public List<LineString> getAllSubLines() {

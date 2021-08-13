@@ -32,22 +32,17 @@ public class MallNew extends PApplet {
     // main
     private final ImportData input = new ImportData();
     private MallGenerator mallGenerator;
+    private MallGUI mallGUI;
     private MallInteract mallInteract;
-//    private MallParam mallParam;
-
-    // stats
-    public int FLOOR_NUM = 2;
-    private String currFloorStats = "指标显示……"
-//            +"\n" +
-//            "\n" + "本层面积：" +
-//            "\n" + "可租赁面积：" +
-//            "\n" + "动线长度：" +
-//            "\n" + "得铺率：" +
-//            "\n" + "小铺率"
-            ;
+    private MallParam mallParam;
+    private MallConst mallConst;
+    private final SaveLoad sl = new SaveLoad();
 
     // edit switches
     public int EDIT_STATUS = -1;
+
+    // stats
+    public int FLOOR_NUM = 2;
 
     /* ------------- settings ------------- */
 
@@ -68,19 +63,23 @@ public class MallNew extends PApplet {
         PFont font = createFont("./src/main/resources/simhei.ttf", 32);
         textFont(font);
         textAlign(CENTER, CENTER);
-        textSize(18);
-
-        this.cp5 = new ControlP5(this);
-        this.cp5H = (int) (height * 0.5 / 9);
-        initCp5Button();
+        textSize(14);
 
         // import
         String importPath = "./src/main/resources/0310.3dm";
         this.input.loadData(importPath);
-        // initialize generator and interact
+
+        // initialize core managers
         this.mallInteract = new MallInteract();
         this.mallGenerator = new MallGenerator();
-//        this.mallParam = new MallParam();
+        this.mallGUI = new MallGUI(font);
+        this.mallParam = new MallParam();
+        this.mallConst = new MallConst();
+
+        this.cp5 = new ControlP5(this);
+        this.cp5H = (int) (height * 0.5 / 9);
+        mallGUI.initstatusButton(cp5, cp5H);
+
     }
 
     /* ------------- draw ------------- */
@@ -97,6 +96,7 @@ public class MallNew extends PApplet {
         pushStyle();
         showGUI();
         showStats();
+        mallGUI.infoDisplay(this, EDIT_STATUS);
         popStyle();
     }
 
@@ -116,6 +116,9 @@ public class MallNew extends PApplet {
             strokeWeight(3);
             rect(0, cp5H * EDIT_STATUS, MallConst.STATUS_W, cp5H);
         }
+
+        // info right-top
+
     }
 
     /**
@@ -124,12 +127,13 @@ public class MallNew extends PApplet {
     public void showStats() {
         textAlign(LEFT);
 
-//        stroke(255);
-//        strokeWeight(3);
-//        line(0, height * 0.5f, 300, height * 0.5f);
         fill(255);
-        text(currFloorStats, 20, height * 0.5f + 50);
-//        text("stats start here", 40, height * 0.5f + 50);
+        String stats = "本层面积" + "\n" + mallInteract.getBoundaryArea() + "\n"
+                + "\n" + "可租赁面积" + "\n" + mallInteract.getRentArea() + "\n"
+                + "\n" + "动线长度" + "\n" + mallGenerator.getTrafficLength() + "\n" + mallGenerator.getInnerTrafficLength() + "\n"
+                + "\n" + "得铺率" + "\n" + mallInteract.getShopRatio() + "\n"
+                + "\n" + "小铺率" + "\n" + mallInteract.getSmallShooRatio() + "\n";
+        text(stats, 20, height * 0.5f + 50);
     }
 
     /* ------------- interact ------------- */
@@ -137,7 +141,6 @@ public class MallNew extends PApplet {
     /**
      * key interact
      *
-     * @param
      * @return void
      */
     public void keyPressed() {
@@ -196,12 +199,27 @@ public class MallNew extends PApplet {
 //            mallInteract.setCellPolys_interact(mallGenerator.getShopCells(FLOOR_NUM));
 //            println("edit shop cells");
 //        }
+
+
+//        if (key == 's') {
+//            sl.saveEdit(EDIT_STATUS, mallInteract, mallGenerator);
+//        }
+//        if (key == 'l') {
+//            List data = sl.loadEdit();
+//            if (data.size() == 3) {
+//                EDIT_STATUS = (int) data.get(0);
+//                mallInteract = (MallInteract) data.get(1);
+//                mallGenerator = (MallGenerator) data.get(2);
+//                mallGUI.updateGUI(EDIT_STATUS, cp5, cp5H);
+//            } else {
+//                System.out.println("?");
+//            }
+//        }
     }
 
     /**
      * mouse drag interact
      *
-     * @param
      * @return void
      */
     public void mouseDragged() {
@@ -218,8 +236,14 @@ public class MallNew extends PApplet {
                 case MallConst.E_RAW_ATRIUM:
                     mallInteract.dragUpdateAtrium(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
                     break;
+                case MallConst.E_PUBLIC_SPACE:
+                    mallInteract.dragUpdatePublicSpace(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
+                    break;
                 case MallConst.E_STRUCTURE_GRID:
                     mallInteract.dragUpdateGrid(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
+                    break;
+                case MallConst.E_MAIN_CORRIDOR:
+                    mallInteract.dragUpdateCorridor(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
                     break;
             }
         }
@@ -228,23 +252,28 @@ public class MallNew extends PApplet {
     /**
      * mouse release interact
      *
-     * @param
      * @return void
      */
     public void mouseReleased() {
         if (mouseButton == LEFT) {
-            switch (EDIT_STATUS) {
-                case MallConst.E_MAIN_TRAFFIC:
-                    mallGenerator.setInnerNode_receive(mallInteract.getInnerNode_interact());
-                    mallGenerator.setEntryNode_receive(mallInteract.getEntryNode_interact());
-                    mallGenerator.updateTraffic(MallConst.TRAFFIC_BUFFER_DIST);
-                    break;
-                case MallConst.E_RAW_ATRIUM:
-                    mallInteract.releaseUpdateAtrium();
-                    break;
-                case MallConst.E_STRUCTURE_GRID:
-                    mallGenerator.updateGridByRect(mallInteract.getSelectedRectID(), mallInteract.getSelectedRect());
-                    break;
+            if (mouseX > MallConst.CONTROLLER_W + MallConst.STATUS_W) {  // 不碰到GUI
+                switch (EDIT_STATUS) {
+                    case MallConst.E_MAIN_TRAFFIC:
+                        mallGenerator.setInnerNode_receive(mallInteract.getInnerNode_interact());
+                        mallGenerator.setEntryNode_receive(mallInteract.getEntryNode_interact());
+                        mallGenerator.updateTraffic(mallParam.trafficWidth);
+                        break;
+                    case MallConst.E_RAW_ATRIUM:
+                        mallInteract.releaseUpdateAtrium();
+                        break;
+                    case MallConst.E_PUBLIC_SPACE:
+                        mallGenerator.setPublicSpaceCurveCtrls(mallInteract.getPublicSpaceNode_interact());
+                        mallGenerator.updatePublicSpace();
+                        break;
+                    case MallConst.E_STRUCTURE_GRID:
+                        mallGenerator.updateGridByRect(mallInteract.getSelectedRectID(), mallInteract.getSelectedRect());
+                        break;
+                }
             }
         }
     }
@@ -252,25 +281,27 @@ public class MallNew extends PApplet {
     /**
      * mouse click interact
      *
-     * @param
      * @return void
      */
     public void mouseClicked() {
         if (mouseButton == LEFT) {
-            if (mouseX > 300) {  // 不碰到GUI
-                if (EDIT_STATUS == MallConst.E_RAW_ATRIUM) {
-                    pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
-                    mallInteract.clickUpdateAtrium(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
-                } else if (EDIT_STATUS == MallConst.E_STRUCTURE_GRID) {
-                    pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
-                    mallInteract.selectGridRect(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
+            if (mouseX > MallConst.CONTROLLER_W + MallConst.STATUS_W) {  // 不碰到GUI
+                pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
+                switch (EDIT_STATUS) {
+                    case MallConst.E_RAW_ATRIUM:
+                        mallInteract.clickUpdateAtrium(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
+                        break;
+                    case MallConst.E_STRUCTURE_GRID:
+                        mallInteract.selectGridRect(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
+                        break;
+                    case MallConst.E_SHOP_EDIT:
+                        mallInteract.selectShopCell(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
+                        break;
+                    case MallConst.E_MAIN_CORRIDOR:
+                        mallInteract.selectCorridorNode(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
+                        break;
                 }
             }
-
-//            if (EDIT_CELL) {
-//                pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
-//                mallInteract.selectShopCell(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
-//            }
         }
     }
 
@@ -282,7 +313,6 @@ public class MallNew extends PApplet {
      */
     public void controlEvent(ControlEvent theEvent) {
         int id = theEvent.getController().getId();
-//        println("dsdsd " + id);
 
         switch (id) {
             // edit status
@@ -293,16 +323,18 @@ public class MallNew extends PApplet {
                         mallInteract.initSiteBoundary(
                                 input.getInputSite(),
                                 input.getInputBoundary(),
-                                MallConst.SITE_REDLINE_DIST,
-                                MallConst.SITE_BUFFER_DIST
+                                mallParam.siteRedLineDist,
+                                mallParam.siteBufferDist
                         );
                     } else {
+                        System.out.println(mallGenerator.getBoundary_receive());
                         mallInteract.updateSiteBoundary(
                                 mallGenerator.getSite_receive(),
                                 mallGenerator.getBoundary_receive()
                         );
                     }
-                    mallInteract.updateStatus0GUI(cp5, 0);
+                    mallGUI.updateStatus0GUI(cp5, 0);
+                    System.out.println(mallInteract.getBoundary());
                     this.EDIT_STATUS = MallConst.E_SITE_BOUNDARY;
                     println("edit boundary");
                 }
@@ -310,13 +342,14 @@ public class MallNew extends PApplet {
             case (MallConst.E_MAIN_TRAFFIC):
                 if (EDIT_STATUS >= MallConst.E_MAIN_TRAFFIC - 1) {
                     // 外轮廓不可编辑，编辑主路径
+                    System.out.println(mallInteract.getBoundary());
                     mallGenerator.setSite_receive(mallInteract.getSite());
                     mallGenerator.setBoundary_receive(mallInteract.getBoundary());
                     mallGenerator.initTraffic(MallConst.TRAFFIC_BUFFER_DIST);
                     mallInteract.setInnerNode_interact(mallGenerator.getTrafficInnerNodes());
                     mallInteract.setEntryNode_interact(mallGenerator.getTrafficEntryNodes());
 
-                    mallInteract.updateStatus1GUI(cp5, cp5H);
+                    mallGUI.updateStatus1GUI(cp5, cp5H);
                     this.EDIT_STATUS = MallConst.E_MAIN_TRAFFIC;
                     println("edit traffic");
                 }
@@ -327,7 +360,7 @@ public class MallNew extends PApplet {
                     mallInteract.setMainTraffic_interact(mallGenerator.getMainTrafficBuffer());
                     mallInteract.setRawAtriums(new ArrayList<>());
 
-                    mallInteract.updateStatus2GUI(cp5, cp5H * 2);
+                    mallGUI.updateStatus2GUI(cp5, cp5H * 2);
                     this.EDIT_STATUS = MallConst.E_RAW_ATRIUM;
                     println("edit raw atrium");
                 }
@@ -335,19 +368,20 @@ public class MallNew extends PApplet {
             case (MallConst.E_PUBLIC_SPACE):
                 if (EDIT_STATUS >= MallConst.E_PUBLIC_SPACE - 1) {
                     mallGenerator.setRawAtrium_receive(mallInteract.getRawAtriumShapes());
-                    mallGenerator.updatePublicSpace();
+                    mallGenerator.initPublicSpace();
+                    mallInteract.setPublicSpaceNode_interact(mallGenerator.getPublicSpaceCurveCtrls());
 
-                    mallInteract.updateStatus3GUI(cp5, cp5H * 3);
+                    mallGUI.updateStatus3GUI(cp5, cp5H * 3);
                     this.EDIT_STATUS = MallConst.E_PUBLIC_SPACE;
                     println("edit public space");
                 }
                 break;
             case (MallConst.E_STRUCTURE_GRID):
                 if (EDIT_STATUS >= MallConst.E_STRUCTURE_GRID - 1) {
-                    mallGenerator.initGrid(MallConst.STRUCTURE_GRID_NUM, MallConst.STRUCTURE_DIST);
+                    mallGenerator.initGrid(MallConst.STRUCTURE_GRID_NUM, MallConst.STRUCTURE_MODEL);
                     mallInteract.setRect_interact(mallGenerator.getGridRects());
 
-                    mallInteract.updateStatus4GUI(cp5, cp5H * 4);
+                    mallGUI.updateStatus4GUI(cp5, cp5H * 4);
                     this.EDIT_STATUS = MallConst.E_STRUCTURE_GRID;
                     println("edit structure grid");
                 }
@@ -355,15 +389,21 @@ public class MallNew extends PApplet {
             case (MallConst.E_SHOP_EDIT):
                 if (EDIT_STATUS >= MallConst.E_SHOP_EDIT - 1) {
                     mallGenerator.initShopCells(FLOOR_NUM);
+                    mallInteract.setShopCell_interact(mallGenerator.getShopCells(FLOOR_NUM));
 
-                    mallInteract.updateStatus5GUI(cp5, cp5H * 5);
+                    mallGUI.updateStatus5GUI(cp5, cp5H * 5);
                     this.EDIT_STATUS = MallConst.E_SHOP_EDIT;
                     println("edit shop cells");
                 }
                 break;
             case (MallConst.E_MAIN_CORRIDOR):
                 if (EDIT_STATUS >= MallConst.E_MAIN_CORRIDOR - 1) {
+                    mallGenerator.initMainCorridor(mallParam.corridorWidth);
+                    mallInteract.setCorridorNode_interact(mallGenerator.getCorridorNode());
 
+                    mallGUI.updateStatus6GUI(cp5, cp5H * 6);
+                    this.EDIT_STATUS = MallConst.E_MAIN_CORRIDOR;
+                    println("edit main corridor");
                 }
                 break;
             case (MallConst.E_ESCALATOR):
@@ -380,36 +420,34 @@ public class MallNew extends PApplet {
             // function controllers
             // 0
             case (MallConst.BUTTON_SWITCH_BOUNDARY):
-                mallInteract.switchBoundary(MallConst.SITE_BUFFER_DIST);
+                mallInteract.switchBoundary(mallParam.siteBufferDist);
                 break;
             case (MallConst.SLIDER_REDLINE_DIST):
-                float redLine = theEvent.getController().getValue();
-                float buffer = cp5.getController("SITE BUFFER DIST").getValue();
+                mallParam.siteRedLineDist = theEvent.getController().getValue();
                 mallInteract.initSiteBoundary(
                         input.getInputSite(),
                         input.getInputBoundary(),
-                        redLine,
-                        buffer
+                        mallParam.siteRedLineDist,
+                        mallParam.siteBufferDist
                 );
                 break;
             case (MallConst.SLIDER_SITE_BUFFER):
-                float buffer_ = theEvent.getController().getValue();
-                float redLine_ = cp5.getController("SITE REDLINE DIST").getValue();
+                mallParam.siteBufferDist = theEvent.getController().getValue();
                 mallInteract.initSiteBoundary(
                         input.getInputSite(),
                         input.getInputBoundary(),
-                        redLine_,
-                        buffer_
+                        mallParam.siteRedLineDist,
+                        mallParam.siteBufferDist
                 );
                 break;
             // 1
-            case (MallConst.BUTTON_DELETE_INNERNODE):
-                break;
-            case (MallConst.BUTTON_DELETE_ENTRYNODE):
-                break;
+//            case (MallConst.BUTTON_DELETE_INNERNODE):
+//                break;
+//            case (MallConst.BUTTON_DELETE_ENTRYNODE):
+//                break;
             case (MallConst.SLIDER_TRAFFIC_WIDTH):
-                float width = theEvent.getController().getValue();
-                mallGenerator.initTraffic(width);
+                mallParam.trafficWidth = theEvent.getController().getValue();
+                mallGenerator.updateTraffic(mallParam.trafficWidth);
                 break;
             // 2
             case (MallConst.BUTTON_CURVE_ATRIUM):
@@ -431,62 +469,37 @@ public class MallNew extends PApplet {
                 int atriumTypeNum = (int) theEvent.getController().getValue();
                 mallInteract.setSelectedAtriumType(atriumTypeNum);
                 break;
+            // 3
+            case (MallConst.SLIDER_BUFFER_DIST):
+
+                break;
+            // 4
+            case (MallConst.BUTTON_GRID_MODEL):
+                mallGenerator.switchGridModel();
+                break;
+            case (MallConst.LIST_GRID_NUM):
+                int gridNum = (int) theEvent.getController().getValue() + 1;
+                mallGenerator.initGrid(gridNum, MallConst.STRUCTURE_MODEL);
+                mallInteract.setRect_interact(mallGenerator.getGridRects());
+                mallInteract.unselectGridRect();
+                break;
+            // 5
+            case (MallConst.BUTTON_UNION_CELLS):
+                mallInteract.unionShopCell();
+                mallGenerator.setShopCells(FLOOR_NUM, mallInteract.getShopCell_interact());
+                break;
+            // 6
+            case (MallConst.BUTTON_UPDATE_CORRIDOR):
+                mallGenerator.setDivLines(mallInteract.getCorridorNode_interact());
+                mallGenerator.updateMainCorridor(mallParam.corridorWidth);
+                mallInteract.setCorridorNode_interact(mallGenerator.getCorridorNode());
+                break;
+            case (MallConst.BUTTON_DELETE_CORRIDOR):
+                mallInteract.removeCorridorNode();
+                break;
+            case (MallConst.SLIDER_CORRIDOR_WIDTH):
+                mallParam.corridorWidth = theEvent.getController().getValue();
+                break;
         }
-    }
-
-    /* ------------- member function ------------- */
-
-    /**
-     * initialize 9 edit status buttons
-     *
-     * @return void
-     */
-    private void initCp5Button() {
-        int cp5H = (int) (height * 0.5 / 9);
-        cp5.addButton("SITE & BOUNDARY")
-                .setPosition(0, 0)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_SITE_BOUNDARY)
-        ;
-        cp5.addButton("MAIN TRAFFIC")
-                .setPosition(0, cp5H)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_MAIN_TRAFFIC)
-        ;
-        cp5.addButton("RAW ATRIUM")
-                .setPosition(0, cp5H * 2)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_RAW_ATRIUM)
-        ;
-        cp5.addButton("PUBLIC SPACE")
-                .setPosition(0, cp5H * 3)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_PUBLIC_SPACE)
-        ;
-        cp5.addButton("STRUCTURE GRID")
-                .setPosition(0, cp5H * 4)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_STRUCTURE_GRID)
-        ;
-        cp5.addButton("SHOP EDIT")
-                .setPosition(0, cp5H * 5)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_SHOP_EDIT)
-        ;
-        cp5.addButton("MAIN CORRIDOR")
-                .setPosition(0, cp5H * 6)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_MAIN_CORRIDOR)
-        ;
-        cp5.addButton("ESCALATOR")
-                .setPosition(0, cp5H * 7)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_ESCALATOR)
-        ;
-        cp5.addButton("EVACUATION")
-                .setPosition(0, cp5H * 8)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_EVACUATION)
-        ;
     }
 }

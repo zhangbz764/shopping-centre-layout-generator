@@ -12,6 +12,8 @@ public class MallConst {
     // shopping mall constants
     public static final int FLOOR_TOTAL = 5;              // 总层数
 
+    public int siteRedLineDist = 10;
+    public float siteBufferDist = 67.2f;
     public static final float SITE_REDLINE_DIST = 10;     // 场地红线距离
     public static final float SITE_BUFFER_MIN = 62;       // 场地退界最小值
     public static final float SITE_BUFFER_DIST = 67.2f;   // 场地退界预设距离
@@ -21,17 +23,25 @@ public class MallConst {
     public static final float TRAFFIC_BUFFER_DIST = 8;    // 主路径预设偏移距离
     public static final double TRAFFIC_NODE_R = 5;        // 主路径控制点判定范围
 
-    public static final float ATRIUM_AREA_MAX = 600;      // 最大中庭面积
-    public static final float ATRIUM_AREA_MIN = 280;      // 最小中庭面积
+    public static final float ATRIUM_AREA_MAX = 1500;     // 最大中庭面积
+    public static final float ATRIUM_AREA_MIN = 200;      // 最小中庭面积
     public static final float ATRIUM_AREA_INIT = 500;     // 中庭预设面积
     public static final float ATRIUM_POS_R = 5;           // 中庭中心点判定范围
     public static final float ATRIUM_CTRL_R = 3;          // 中庭控制点判定范围
 
-    public static final float STRUCTURE_DIST = 8.4f;      // 柱距预设值
+    public static final double STRUCTURE_MODEL = 8.4;     // 柱距预设值8.4m
+    public static final double STRUCTURE_MODEL_2 = 9;     // 柱距预设值9m
     public static final int STRUCTURE_GRID_NUM = 2;       // 柱网体系预设数量
     public static final int STRUCTURE_GRID_MAX = 4;       // 柱网体系最大数量
     public static final float STRUCTURE_CTRL_R = 5;       // 柱网控制点判定范围
 
+    public static final double ATRIUM_AREA_MAIN = 550;
+    public static final double ATRIUM_AREA_SUB = 350;
+    public static final float CORRIDOR_WIDTH_MAX = 4.8f;  // 公区走道最大宽度
+    public static final float CORRIDOR_WIDTH_MIN = 2.4f;  // 公区走道最小宽度
+    public static final float CORRIDOR_WIDTH = 3.6f;      // 公区走道预设宽度
+    public static final double ATRIUM_ROUND_R = 1.5;      // 中庭倒角半径
+    public static final float CORRIDOR_NODE_R = 5;
 
     public static double ATRIUM_R = 10;
 
@@ -42,10 +52,10 @@ public class MallConst {
 
     // cp5 constants
     public static final int STATUS_W = 120;
-    public static final int CONTROLLER_W = 180;         // controller宽度
-    public static final int CONTROLLER_H = 30;          // controller高度
+    public static final int CONTROLLER_W = 180;           // controller宽度
+    public static final int CONTROLLER_H = 30;            // controller高度
 
-    // cp5 button id
+    /* cp5 button id */
     // edit status
     public static final int E_SITE_BOUNDARY = 0;
     public static final int E_MAIN_TRAFFIC = 1;
@@ -81,9 +91,14 @@ public class MallConst {
     // 3
     public static final int SLIDER_BUFFER_DIST = 27;
     // 4
-    public static final int SLIDER_COLUMN_DIST = 31;
+    public static final int BUTTON_GRID_MODEL = 31;
     public static final int SLIDER_GRID_ANGLE = 32;
     public static final int LIST_GRID_NUM = 30;
     // 5
     public static final int BUTTON_UNION_CELLS = 33;
+    // 6
+    public static final int BUTTON_UPDATE_CORRIDOR = 34;
+    public static final int BUTTON_DELETE_CORRIDOR = 35;
+    public static final int SLIDER_CORRIDOR_WIDTH = 36;
+
 }

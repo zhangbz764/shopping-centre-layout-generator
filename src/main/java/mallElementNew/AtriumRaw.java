@@ -1,7 +1,10 @@
 package mallElementNew;
 
 import advancedGeometry.ZCatmullRom;
+import basicGeometry.ZFactory;
 import math.ZGeoMath;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Polygon;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.geom.WB_Vector;
@@ -9,21 +12,21 @@ import wblut.geom.WB_Vector;
 import java.util.Arrays;
 
 /**
- * description
+ * raw atrium shape in the shopping mall
  *
  * @author ZHANG Bai-zhou zhangbz
  * @project shopping_mall
  * @date 2021/7/1
  * @time 23:22
  */
-public class AtriumNew {
+public class AtriumRaw {
     private final int shapePtsNum;
     private boolean curve;
     private WB_Point center;
 
     private WB_Point[] shapePoints;
     private WB_Vector[] shapeVectors;
-    private WB_Polygon shape;
+    private Polygon shape;
     private double area;
     private String atriumType;
 
@@ -31,7 +34,7 @@ public class AtriumNew {
 
     /* ------------- constructor ------------- */
 
-    public AtriumNew(WB_Point _center, WB_Point[] _shapePoints, boolean _ifCurve) {
+    public AtriumRaw(WB_Point _center, WB_Point[] _shapePoints, boolean _ifCurve) {
         this.center = _center;
         this.shapePoints = _shapePoints;
         this.shapePtsNum = shapePoints.length;
@@ -162,12 +165,14 @@ public class AtriumNew {
     public void updateShape() {
         if (curve) {
             ZCatmullRom catmullRom = new ZCatmullRom(shapePoints, 10, true);
-            this.shape = catmullRom.getAsWB_Polygon();
+            this.shape = catmullRom.getAsPolygon();
         } else {
-            WB_Point[] constructor = new WB_Point[shapePtsNum + 1];
-            System.arraycopy(shapePoints, 0, constructor, 0, shapePtsNum);
+            Coordinate[] constructor = new Coordinate[shapePtsNum + 1];
+            for (int i = 0; i < shapePoints.length; i++) {
+                constructor[i] = new Coordinate(shapePoints[i].xd(), shapePoints[i].yd(), shapePoints[i].zd());
+            }
             constructor[constructor.length - 1] = constructor[0];
-            this.shape = new WB_Polygon(constructor);
+            this.shape = ZFactory.jtsgf.createPolygon(constructor);
         }
     }
 
@@ -175,7 +180,7 @@ public class AtriumNew {
      * update area and type
      */
     public void updateArea() {
-        this.area = Math.abs(shape.getSignedArea());
+        this.area = shape.getArea();
         if (area >= 450 && area <= 600) {
             atriumType = "main";
         } else if (area >= 280 && area <= 400) {
@@ -203,7 +208,7 @@ public class AtriumNew {
         return shapePoints;
     }
 
-    public WB_Polygon getShape() {
+    public Polygon getShape() {
         return shape;
     }
 
