@@ -56,7 +56,6 @@ public class MallNew extends PApplet {
         // utils
         this.gcam = new CameraController(this);
         gcam.top();
-
         this.render = new WB_Render(this);
         this.jtsRender = new JtsRender(this);
 
@@ -76,10 +75,10 @@ public class MallNew extends PApplet {
         this.mallParam = new MallParam();
         this.mallConst = new MallConst();
 
+        // GUI
         this.cp5 = new ControlP5(this);
         this.cp5H = (int) (height * 0.5 / 9);
-        mallGUI.initstatusButton(cp5, cp5H);
-
+        mallGUI.initGUI(cp5, cp5H);
     }
 
     /* ------------- draw ------------- */
@@ -87,16 +86,17 @@ public class MallNew extends PApplet {
     public void draw() {
         background(33, 40, 48);
 
+        // main
         gcam.begin3d();
         mallGenerator.displayLocal(this, render, jtsRender, EDIT_STATUS, FLOOR_NUM);
         mallInteract.displayLocal(this, render, jtsRender, EDIT_STATUS);
 
-
+        // stats and info
         gcam.begin2d();
         pushStyle();
         showGUI();
-        showStats();
-        mallGUI.infoDisplay(this, EDIT_STATUS);
+        displayStats();
+        mallGUI.displayInfo(this, EDIT_STATUS);
         popStyle();
     }
 
@@ -124,7 +124,7 @@ public class MallNew extends PApplet {
     /**
      * display shopping mall statistics
      */
-    public void showStats() {
+    public void displayStats() {
         textAlign(LEFT);
 
         fill(255);
@@ -313,13 +313,13 @@ public class MallNew extends PApplet {
      */
     public void controlEvent(ControlEvent theEvent) {
         int id = theEvent.getController().getId();
-
         switch (id) {
             // edit status
             case (MallConst.E_SITE_BOUNDARY):
                 if (EDIT_STATUS >= MallConst.E_SITE_BOUNDARY - 1) {
                     // 编辑外轮廓
                     if (EDIT_STATUS == MallConst.E_SITE_BOUNDARY - 1) {
+                        // initialize
                         mallInteract.initSiteBoundary(
                                 input.getInputSite(),
                                 input.getInputBoundary(),
@@ -327,30 +327,31 @@ public class MallNew extends PApplet {
                                 mallParam.siteBufferDist
                         );
                     } else {
-                        System.out.println(mallGenerator.getBoundary_receive());
+                        // load existing site and boundary
                         mallInteract.updateSiteBoundary(
                                 mallGenerator.getSite_receive(),
                                 mallGenerator.getBoundary_receive()
                         );
                     }
-                    mallGUI.updateStatus0GUI(cp5, 0);
-                    System.out.println(mallInteract.getBoundary());
                     this.EDIT_STATUS = MallConst.E_SITE_BOUNDARY;
+                    mallGUI.updateGUI(EDIT_STATUS, cp5);
                     println("edit boundary");
                 }
+
                 break;
             case (MallConst.E_MAIN_TRAFFIC):
                 if (EDIT_STATUS >= MallConst.E_MAIN_TRAFFIC - 1) {
-                    // 外轮廓不可编辑，编辑主路径
-                    System.out.println(mallInteract.getBoundary());
-                    mallGenerator.setSite_receive(mallInteract.getSite());
-                    mallGenerator.setBoundary_receive(mallInteract.getBoundary());
-                    mallGenerator.initTraffic(MallConst.TRAFFIC_BUFFER_DIST);
-                    mallInteract.setInnerNode_interact(mallGenerator.getTrafficInnerNodes());
-                    mallInteract.setEntryNode_interact(mallGenerator.getTrafficEntryNodes());
+                    if (EDIT_STATUS == MallConst.E_MAIN_TRAFFIC - 1) {
+                        // 外轮廓不可编辑，编辑主路径
+                        mallGenerator.setSite_receive(mallInteract.getSite());
+                        mallGenerator.setBoundary_receive(mallInteract.getBoundary());
+                        mallGenerator.initTraffic(MallConst.TRAFFIC_BUFFER_DIST);
+                        mallInteract.setInnerNode_interact(mallGenerator.getTrafficInnerNodes());
+                        mallInteract.setEntryNode_interact(mallGenerator.getTrafficEntryNodes());
+                    }
 
-                    mallGUI.updateStatus1GUI(cp5, cp5H);
                     this.EDIT_STATUS = MallConst.E_MAIN_TRAFFIC;
+                    mallGUI.updateGUI(EDIT_STATUS, cp5);
                     println("edit traffic");
                 }
                 break;
@@ -358,10 +359,10 @@ public class MallNew extends PApplet {
                 if (EDIT_STATUS >= MallConst.E_RAW_ATRIUM - 1) {
                     // 开始添加原始中庭形状并编辑
                     mallInteract.setMainTraffic_interact(mallGenerator.getMainTrafficBuffer());
-                    mallInteract.setRawAtriums(new ArrayList<>());
+                    mallInteract.setRawAtriums(new ArrayList<>(), mallGenerator.getMainTrafficCurve());
 
-                    mallGUI.updateStatus2GUI(cp5, cp5H * 2);
                     this.EDIT_STATUS = MallConst.E_RAW_ATRIUM;
+                    mallGUI.updateGUI(EDIT_STATUS, cp5);
                     println("edit raw atrium");
                 }
                 break;
@@ -371,8 +372,8 @@ public class MallNew extends PApplet {
                     mallGenerator.initPublicSpace();
                     mallInteract.setPublicSpaceNode_interact(mallGenerator.getPublicSpaceCurveCtrls());
 
-                    mallGUI.updateStatus3GUI(cp5, cp5H * 3);
                     this.EDIT_STATUS = MallConst.E_PUBLIC_SPACE;
+                    mallGUI.updateGUI(EDIT_STATUS, cp5);
                     println("edit public space");
                 }
                 break;
@@ -381,8 +382,8 @@ public class MallNew extends PApplet {
                     mallGenerator.initGrid(MallConst.STRUCTURE_GRID_NUM, MallConst.STRUCTURE_MODEL);
                     mallInteract.setRect_interact(mallGenerator.getGridRects());
 
-                    mallGUI.updateStatus4GUI(cp5, cp5H * 4);
                     this.EDIT_STATUS = MallConst.E_STRUCTURE_GRID;
+                    mallGUI.updateGUI(EDIT_STATUS, cp5);
                     println("edit structure grid");
                 }
                 break;
@@ -391,8 +392,8 @@ public class MallNew extends PApplet {
                     mallGenerator.initShopCells(FLOOR_NUM);
                     mallInteract.setShopCell_interact(mallGenerator.getShopCells(FLOOR_NUM));
 
-                    mallGUI.updateStatus5GUI(cp5, cp5H * 5);
                     this.EDIT_STATUS = MallConst.E_SHOP_EDIT;
+                    mallGUI.updateGUI(EDIT_STATUS, cp5);
                     println("edit shop cells");
                 }
                 break;
@@ -401,8 +402,8 @@ public class MallNew extends PApplet {
                     mallGenerator.initMainCorridor(mallParam.corridorWidth);
                     mallInteract.setCorridorNode_interact(mallGenerator.getCorridorNode());
 
-                    mallGUI.updateStatus6GUI(cp5, cp5H * 6);
                     this.EDIT_STATUS = MallConst.E_MAIN_CORRIDOR;
+                    mallGUI.updateGUI(EDIT_STATUS, cp5);
                     println("edit main corridor");
                 }
                 break;
@@ -416,89 +417,121 @@ public class MallNew extends PApplet {
 
                 }
                 break;
+        }
+        switch (EDIT_STATUS) {
+            case (MallConst.E_SITE_BOUNDARY):
+                switch (id) {
+                    // 0
+                    case (MallConst.BUTTON_SWITCH_BOUNDARY):
+                        mallInteract.switchBoundary(mallParam.siteBufferDist);
+                        break;
+                    case (MallConst.SLIDER_REDLINE_DIST):
+                        mallParam.siteRedLineDist = theEvent.getController().getValue();
+                        mallInteract.initSiteBoundary(
+                                input.getInputSite(),
+                                input.getInputBoundary(),
+                                mallParam.siteRedLineDist,
+                                mallParam.siteBufferDist
+                        );
+                        break;
+                    case (MallConst.SLIDER_SITE_BUFFER):
+                        mallParam.siteBufferDist = theEvent.getController().getValue();
+                        mallInteract.initSiteBoundary(
+                                input.getInputSite(),
+                                input.getInputBoundary(),
+                                mallParam.siteRedLineDist,
+                                mallParam.siteBufferDist
+                        );
+                        break;
+                }
+                break;
+            case (MallConst.E_MAIN_TRAFFIC):
+                switch (id) {
+                    // 1
+//                    case (MallConst.BUTTON_DELETE_INNERNODE):
+//                        break;
+//                    case (MallConst.BUTTON_DELETE_ENTRYNODE):
+//                        break;
+                    case (MallConst.SLIDER_TRAFFIC_WIDTH):
+                        mallParam.trafficWidth = theEvent.getController().getValue();
+                        mallGenerator.updateTraffic(mallParam.trafficWidth);
+                        break;
+                }
+                break;
+            case (MallConst.E_RAW_ATRIUM):
+                switch (id) {
+                    // 2
+                    case (MallConst.BUTTON_CURVE_ATRIUM):
+                        mallInteract.changeAtriumCurve();
+                        break;
+                    case (MallConst.BUTTON_DELETE_ATRIUM):
+                        mallInteract.removeAtrium();
+                        break;
+                    case (MallConst.SLIDER_ATRIUM_ANGLE):
+                        float angle = theEvent.getController().getValue();
+                        double anglePI = 2 * Math.PI * (angle / 360);
+                        mallInteract.rotateAtrium(anglePI);
+                        break;
+                    case (MallConst.SLIDER_ATRIUM_AREA):
+                        float area = theEvent.getController().getValue();
+                        mallInteract.changeAtriumArea(area);
+                        break;
+                    case (MallConst.LIST_ATRIUM_FACTORY):
+                        int atriumTypeNum = (int) theEvent.getController().getValue();
+                        mallInteract.setSelectedAtriumType(atriumTypeNum);
+                        break;
+                }
+                break;
+            case (MallConst.E_PUBLIC_SPACE):
+                switch (id) {
+                    // 3
+                    case (MallConst.SLIDER_BUFFER_DIST):
 
-            // function controllers
-            // 0
-            case (MallConst.BUTTON_SWITCH_BOUNDARY):
-                mallInteract.switchBoundary(mallParam.siteBufferDist);
+                        break;
+                }
                 break;
-            case (MallConst.SLIDER_REDLINE_DIST):
-                mallParam.siteRedLineDist = theEvent.getController().getValue();
-                mallInteract.initSiteBoundary(
-                        input.getInputSite(),
-                        input.getInputBoundary(),
-                        mallParam.siteRedLineDist,
-                        mallParam.siteBufferDist
-                );
+            case (MallConst.E_STRUCTURE_GRID):
+                switch (id) {
+                    // 4
+                    case (MallConst.BUTTON_GRID_MODEL):
+                        mallGenerator.switchGridModel();
+                        break;
+                    case (MallConst.LIST_GRID_NUM):
+                        int gridNum = (int) theEvent.getController().getValue() + 1;
+                        mallGenerator.initGrid(gridNum, MallConst.STRUCTURE_MODEL);
+                        mallInteract.setRect_interact(mallGenerator.getGridRects());
+                        mallInteract.unselectGridRect();
+                        break;
+                }
                 break;
-            case (MallConst.SLIDER_SITE_BUFFER):
-                mallParam.siteBufferDist = theEvent.getController().getValue();
-                mallInteract.initSiteBoundary(
-                        input.getInputSite(),
-                        input.getInputBoundary(),
-                        mallParam.siteRedLineDist,
-                        mallParam.siteBufferDist
-                );
+            case (MallConst.E_SHOP_EDIT):
+                switch (id) {
+                    // 5
+                    case (MallConst.BUTTON_UNION_CELLS):
+                        mallInteract.unionShopCell();
+                        mallGenerator.setShopCells(FLOOR_NUM, mallInteract.getShopCell_interact());
+                        break;
+                }
                 break;
-            // 1
-//            case (MallConst.BUTTON_DELETE_INNERNODE):
-//                break;
-//            case (MallConst.BUTTON_DELETE_ENTRYNODE):
-//                break;
-            case (MallConst.SLIDER_TRAFFIC_WIDTH):
-                mallParam.trafficWidth = theEvent.getController().getValue();
-                mallGenerator.updateTraffic(mallParam.trafficWidth);
+            case (MallConst.E_MAIN_CORRIDOR):
+                switch (id) {
+                    // 6
+                    case (MallConst.BUTTON_UPDATE_CORRIDOR):
+                        mallGenerator.setDivLines(mallInteract.getCorridorNode_interact());
+                        mallGenerator.updateMainCorridor(mallParam.corridorWidth);
+                        mallInteract.setCorridorNode_interact(mallGenerator.getCorridorNode());
+                        break;
+                    case (MallConst.BUTTON_DELETE_CORRIDOR):
+                        mallInteract.removeCorridorNode();
+                        break;
+                    case (MallConst.SLIDER_CORRIDOR_WIDTH):
+                        mallParam.corridorWidth = theEvent.getController().getValue();
+                        break;
+                }
                 break;
-            // 2
-            case (MallConst.BUTTON_CURVE_ATRIUM):
-                mallInteract.changeAtriumCurve();
+            case (MallConst.E_ESCALATOR):
                 break;
-            case (MallConst.BUTTON_DELETE_ATRIUM):
-                mallInteract.removeAtrium();
-                break;
-            case (MallConst.SLIDER_ATRIUM_ANGLE):
-                float angle = theEvent.getController().getValue();
-                double anglePI = 2 * Math.PI * (angle / 360);
-                mallInteract.rotateAtrium(anglePI);
-                break;
-            case (MallConst.SLIDER_ATRIUM_AREA):
-                float area = theEvent.getController().getValue();
-                mallInteract.changeAtriumArea(area);
-                break;
-            case (MallConst.LIST_ATRIUM_FACTORY):
-                int atriumTypeNum = (int) theEvent.getController().getValue();
-                mallInteract.setSelectedAtriumType(atriumTypeNum);
-                break;
-            // 3
-            case (MallConst.SLIDER_BUFFER_DIST):
-
-                break;
-            // 4
-            case (MallConst.BUTTON_GRID_MODEL):
-                mallGenerator.switchGridModel();
-                break;
-            case (MallConst.LIST_GRID_NUM):
-                int gridNum = (int) theEvent.getController().getValue() + 1;
-                mallGenerator.initGrid(gridNum, MallConst.STRUCTURE_MODEL);
-                mallInteract.setRect_interact(mallGenerator.getGridRects());
-                mallInteract.unselectGridRect();
-                break;
-            // 5
-            case (MallConst.BUTTON_UNION_CELLS):
-                mallInteract.unionShopCell();
-                mallGenerator.setShopCells(FLOOR_NUM, mallInteract.getShopCell_interact());
-                break;
-            // 6
-            case (MallConst.BUTTON_UPDATE_CORRIDOR):
-                mallGenerator.setDivLines(mallInteract.getCorridorNode_interact());
-                mallGenerator.updateMainCorridor(mallParam.corridorWidth);
-                mallInteract.setCorridorNode_interact(mallGenerator.getCorridorNode());
-                break;
-            case (MallConst.BUTTON_DELETE_CORRIDOR):
-                mallInteract.removeCorridorNode();
-                break;
-            case (MallConst.SLIDER_CORRIDOR_WIDTH):
-                mallParam.corridorWidth = theEvent.getController().getValue();
+            case (MallConst.E_EVACUATION):
                 break;
         }
     }
