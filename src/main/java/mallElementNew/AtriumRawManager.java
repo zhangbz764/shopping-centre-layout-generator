@@ -1,8 +1,6 @@
 package mallElementNew;
 
 import advancedGeometry.ZBSpline;
-import basicGeometry.ZFactory;
-import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
 import math.ZGeoMath;
 import wblut.geom.WB_GeometryOp2D;

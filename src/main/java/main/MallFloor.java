@@ -1,17 +1,17 @@
 package main;
 
-import basicGeometry.*;
-import mallElementNew.TrafficGraph;
-import mallElementNew.TrafficNode;
-import mallElementNew.TrafficNodeFixed;
-import mallElementNew.TrafficNodeTree;
-import mallElementNew.StructureGrid;
+import basicGeometry.ZFactory;
+import basicGeometry.ZLine;
+import basicGeometry.ZPoint;
 import mallElementNew.Shop;
+import mallElementNew.StructureGrid;
 import math.ZGeoMath;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
 import transform.ZTransform;
-import wblut.geom.*;
+import wblut.geom.WB_Coord;
+import wblut.geom.WB_GeometryOp;
+import wblut.geom.WB_Point;
 
 import java.util.*;
 

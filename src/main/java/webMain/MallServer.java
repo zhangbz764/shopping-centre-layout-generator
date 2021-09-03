@@ -1,17 +1,7 @@
 package webMain;
 
-import com.google.gson.Gson;
-import io.socket.client.IO;
 import io.socket.client.Socket;
 import main.MallGenerator;
-import org.locationtech.jts.geom.LineString;
-import transform.ZTransform;
-import wblut.geom.WB_PolyLine;
-import wblut.geom.WB_Polygon;
-
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * description

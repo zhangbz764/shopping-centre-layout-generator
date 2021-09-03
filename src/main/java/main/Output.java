@@ -1,7 +1,7 @@
 package main;
 
-import oldVersion.Floor;
 import igeo.IG;
+import oldVersion.Floor;
 
 /**
  * output all generated model

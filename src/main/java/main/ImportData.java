@@ -1,14 +1,11 @@
 package main;
 
-import basicGeometry.ZFactory;
 import igeo.ICurve;
 import igeo.IG;
 import igeo.IPoint;
-import math.ZGeoMath;
 import processing.core.PApplet;
 import transform.ZTransform;
 import wblut.geom.WB_Point;
-import wblut.geom.WB_PolyLine;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
 

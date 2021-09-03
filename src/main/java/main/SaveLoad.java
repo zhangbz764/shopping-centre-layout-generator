@@ -1,14 +1,11 @@
 package main;
 
-import basicGeometry.ZPoint;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fileManager.ZFileOP;
 import org.locationtech.jts.geom.CoordinateSequence;
 
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**

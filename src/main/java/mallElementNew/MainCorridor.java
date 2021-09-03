@@ -1,7 +1,6 @@
 package mallElementNew;
 
 import basicGeometry.ZLine;
-import basicGeometry.ZPoint;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
 

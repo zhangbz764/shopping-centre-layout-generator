@@ -2,10 +2,10 @@ package oldVersion.mallElements;
 
 import advancedGeometry.ZCatmullRom;
 import basicGeometry.ZPoint;
+import main.MallConst;
 import math.ZGeoMath;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
-import main.MallConst;
 
 import java.util.List;
 

@@ -1,9 +1,7 @@
 package mallElementNew;
 
 import advancedGeometry.ZBSpline;
-import advancedGeometry.ZCatmullRom;
 import basicGeometry.ZFactory;
-import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
 import math.ZGeoMath;
 import org.locationtech.jts.geom.Coordinate;
@@ -12,9 +10,6 @@ import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.geom.WB_Transform2D;
 import wblut.geom.WB_Vector;
-import wblut.nurbs.WB_BSpline;
-
-import java.util.Arrays;
 
 /**
  * raw atrium shape in the shopping mall

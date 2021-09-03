@@ -1,9 +1,5 @@
 package demoTest;
 
-import basicGeometry.ZPoint;
-
-import java.util.ArrayList;
-
 /**
  * description
  *

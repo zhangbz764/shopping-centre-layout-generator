@@ -7,14 +7,9 @@ import math.ZGeoMath;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Polygon;
-import transform.ZTransform;
-import wblut.geom.WB_Coord;
-import wblut.geom.WB_Polygon;
-
-import java.util.ArrayList;
 
 /**
- * description
+ * site and base boundary
  *
  * @author zhangbz ZHANG Baizhou
  * @project shopping_mall
