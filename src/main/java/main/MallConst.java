@@ -9,7 +9,9 @@ package main;
  * @time 23:34
  */
 public class MallConst {
-    // shopping mall constants
+
+    /* shopping mall constants */
+
     public static final int FLOOR_TOTAL = 5;              // 总层数
 
     public int siteRedLineDist = 10;
@@ -35,46 +37,56 @@ public class MallConst {
     public static final int STRUCTURE_GRID_MAX = 4;       // 柱网体系最大数量
     public static final float STRUCTURE_CTRL_R = 5;       // 柱网控制点判定范围
 
-    public static final double ATRIUM_AREA_MAIN = 550;
-    public static final double ATRIUM_AREA_SUB = 350;
+    public static final double ATRIUM_AREA_MAIN = 550;    // 主中庭默认面积
+    public static final double ATRIUM_AREA_SUB = 350;     // 次中庭默认面积
     public static final float CORRIDOR_WIDTH_MAX = 4.8f;  // 公区走道最大宽度
     public static final float CORRIDOR_WIDTH_MIN = 2.4f;  // 公区走道最小宽度
     public static final float CORRIDOR_WIDTH = 3.6f;      // 公区走道预设宽度
     public static final double ATRIUM_ROUND_R = 1.5;      // 中庭倒角半径
-    public static final float CORRIDOR_NODE_R = 5;
+    public static final float CORRIDOR_NODE_R = 5;        // 走廊控制点判定范围
+
+    public static final double ESCALATOR_DIST_MAX = 50;   // 扶梯服务半径上限
+    public static final double ESCALATOR_DIST_MIN = 30;   // 扶梯服务半径上限
+
 
     public static double ATRIUM_R = 10;
 
     public static double[] SHOP_SPAN_THRESHOLD = {7, 9};
 
-    public static double EVACUATION_WIDTH = 2.4;
-    public static double EVACUATION_DIST = 70;
+//    public static double EVACUATION_WIDTH = 2.4;
+//    public static double EVACUATION_DIST = 70;
 
-    // cp5 constants
+    /* cp5 constants */
+
     public static final int STATUS_W = 120;
     public static final int CONTROLLER_W = 180;           // controller宽度
     public static final int CONTROLLER_H = 30;            // controller高度
 
+    /* number of status */
+
+    public static final int STATUS_NUM = 8;
+
     /* cp5 button id */
+
     // edit status
     public static final int E_SITE_BOUNDARY = 0;
-    public static final int E_MAIN_TRAFFIC = 1;
-    public static final int E_RAW_ATRIUM = 2;
+    public static final int E_TRAFFIC_ATRIUM = 1;
+    public static final int E_MAIN_CORRIDOR = 2;
     public static final int E_PUBLIC_SPACE = 3;
     public static final int E_STRUCTURE_GRID = 4;
     public static final int E_SHOP_EDIT = 5;
-    public static final int E_MAIN_CORRIDOR = 6;
-    public static final int E_ESCALATOR = 7;
-    public static final int E_EVACUATION = 8;
+    public static final int E_ESCALATOR = 6;
+    public static final int E_EVACUATION = 7;
     // 0
     public static final int BUTTON_SWITCH_BOUNDARY = 10;
     public static final int SLIDER_REDLINE_DIST = 28;
     public static final int SLIDER_SITE_BUFFER = 29;
     // 1
-    public static final int BUTTON_DELETE_INNERNODE = 11;
-    public static final int BUTTON_DELETE_ENTRYNODE = 12;
+//    public static final int BUTTON_DELETE_INNERNODE = 11;
+//    public static final int BUTTON_DELETE_ENTRYNODE = 12;
+    public static final int BUTTON_TRAFFIC_CONTROLLERS = 12;
     public static final int SLIDER_TRAFFIC_WIDTH = 13;
-    // 2
+
     public static final int BUTTON_CURVE_ATRIUM = 14;
     public static final int BUTTON_DELETE_ATRIUM = 26;
     public static final int SLIDER_ATRIUM_ANGLE = 15;
@@ -88,6 +100,10 @@ public class MallConst {
     public static final int ITEM_A_HEXAGON2 = 23;
     public static final int ITEM_A_L_SHAPE = 24;
     public static final int ITEM_A_OCTAGON = 25;
+    // 2
+    public static final int BUTTON_UPDATE_CORRIDOR = 34;
+    public static final int BUTTON_DELETE_CORRIDOR = 35;
+    public static final int SLIDER_CORRIDOR_WIDTH = 36;
     // 3
     public static final int SLIDER_BUFFER_DIST = 27;
     // 4
@@ -96,9 +112,4 @@ public class MallConst {
     public static final int LIST_GRID_NUM = 30;
     // 5
     public static final int BUTTON_UNION_CELLS = 33;
-    // 6
-    public static final int BUTTON_UPDATE_CORRIDOR = 34;
-    public static final int BUTTON_DELETE_CORRIDOR = 35;
-    public static final int SLIDER_CORRIDOR_WIDTH = 36;
-
 }

@@ -1,18 +1,147 @@
 package mallElementNew;
 
+import advancedGeometry.ZBSpline;
+import basicGeometry.ZFactory;
+import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
 import math.ZGeoMath;
+import wblut.geom.WB_GeometryOp2D;
 import wblut.geom.WB_Point;
+import wblut.geom.WB_PolyLine;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * initial factory for regular raw atrium
+ * the manager and creator of raw atriums
  *
- * @author ZHANG Bai-zhou zhangbz
+ * @author zhangbz ZHANG Baizhou
  * @project shopping_mall
- * @date 2021/6/16
- * @time 15:54
+ * @date 2021/8/25
+ * @time 16:09
  */
-public class AtriumFactory {
+public class AtriumRawManager {
+    private WB_PolyLine trafficLine;
+    private double trafficLength;
+
+    private List<AtriumRaw> atriumRaws;
+    private List<Double> posPercentage;
+
+    /* ------------- constructor ------------- */
+
+    public AtriumRawManager(ZBSpline mainTrafficCurve) {
+        this.trafficLine = mainTrafficCurve.getAsWB_PolyLine();
+        this.trafficLength = ZGeoMath.getPolyLength(trafficLine);
+
+        this.posPercentage = new ArrayList<>();
+        this.atriumRaws = new ArrayList<>();
+    }
+
+    /* ------------- member function ------------- */
+
+    /**
+     * add an AtriumRaw to the manager, sort by position, and set anchor etc.
+     *
+     * @param atriumRaw new AtriumRaw
+     * @return void
+     */
+    public void addAtriumRaw(AtriumRaw atriumRaw) {
+        WB_Point center = atriumRaw.getCenter();
+        WB_Point closestAnchor = WB_GeometryOp2D.getClosestPoint2D(center, trafficLine);
+        double dist = ZGeoMath.distFromStart(trafficLine, closestAnchor);
+        double p = dist / trafficLength;
+
+        if (posPercentage.size() == 0) {
+            posPercentage.add(p);
+            atriumRaw.setPercentTraffic(p);
+            ZPoint vec = new ZPoint(atriumRaw.getCenter()).sub(new ZPoint(closestAnchor));
+            atriumRaw.setVecFromAnchor(vec);
+            ZPoint[] ptsBesidesAnchor = ZGeoMath.pointOnEdgeByDist(new ZPoint(closestAnchor), trafficLine, 0.1);
+            ZPoint anchorTangent = ptsBesidesAnchor[0].sub(ptsBesidesAnchor[1]).normalize();
+            atriumRaw.setAnchorTangent(anchorTangent);
+            atriumRaws.add(atriumRaw);
+        } else {
+            if (p >= posPercentage.get(posPercentage.size() - 1)) {
+                posPercentage.add(p);
+                atriumRaw.setPercentTraffic(p);
+                ZPoint vec = new ZPoint(atriumRaw.getCenter()).sub(new ZPoint(closestAnchor));
+                atriumRaw.setVecFromAnchor(vec);
+                ZPoint[] ptsBesidesAnchor = ZGeoMath.pointOnEdgeByDist(new ZPoint(closestAnchor), trafficLine, 0.1);
+                ZPoint anchorTangent = ptsBesidesAnchor[0].sub(ptsBesidesAnchor[1]).normalize();
+                atriumRaw.setAnchorTangent(anchorTangent);
+                atriumRaws.add(atriumRaw);
+            } else {
+                for (int i = 0; i < posPercentage.size(); i++) {
+                    if (p < posPercentage.get(i)) {
+                        posPercentage.add(i, p);
+                        atriumRaw.setPercentTraffic(p);
+                        ZPoint vec = new ZPoint(atriumRaw.getCenter()).sub(new ZPoint(closestAnchor));
+                        atriumRaw.setVecFromAnchor(vec);
+                        ZPoint[] ptsBesidesAnchor = ZGeoMath.pointOnEdgeByDist(new ZPoint(closestAnchor), trafficLine, 0.1);
+                        ZPoint anchorTangent = ptsBesidesAnchor[0].sub(ptsBesidesAnchor[1]).normalize();
+                        atriumRaw.setAnchorTangent(anchorTangent);
+                        atriumRaws.add(i, atriumRaw);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * remove an AtriumRaw from the manager
+     *
+     * @param a AtriumRaw
+     * @return void
+     */
+    public void removeAtriumRaw(AtriumRaw a) {
+        int index = atriumRaws.indexOf(a);
+        atriumRaws.remove(a);
+        posPercentage.remove(index);
+    }
+
+    /**
+     * update the position of AtriumRaws by a new traffic line
+     *
+     * @param newCenterLine new traffic center line
+     * @return void
+     */
+    public void updateAtriumRawByTraffic(ZBSpline newCenterLine) {
+        this.trafficLine = newCenterLine.getAsWB_PolyLine();
+        this.trafficLength = ZGeoMath.getPolyLength(trafficLine);
+        for (int i = 0; i < atriumRaws.size(); i++) {
+            AtriumRaw a = atriumRaws.get(i);
+            double pct = a.getPercentTraffic();
+
+            double dist = trafficLength * pct;
+            WB_Point newAnchor = ZGeoMath.getPointOnPolyEdge(trafficLine, dist);
+            ZPoint[] ptsBesidesAnchor = ZGeoMath.pointOnEdgeByDist(new ZPoint(newAnchor), trafficLine, 0.1);
+            ZPoint newAnchorTangent = ptsBesidesAnchor[0].sub(ptsBesidesAnchor[1]).normalize();
+            double angle = a.getAnchorTangent().angleWith(newAnchorTangent);
+            ZPoint newVecFromAnchor = a.getVecFromAnchor().rotate2D(Math.PI * (angle / 180));
+
+            a.setAnchorTangent(newAnchorTangent);
+            a.setVecFromAnchor(newVecFromAnchor);
+            WB_Point newCenter = newAnchor.add(newVecFromAnchor.toWB_Point());
+            a.moveByCenter(newCenter);
+            a.rotateByAngle(Math.PI * (angle / 180));
+        }
+    }
+
+    public void initMainCorridor() {
+
+        for (int i = 0; i < atriumRaws.size(); i++) {
+
+        }
+    }
+
+    /* ------------- setter & getter ------------- */
+
+    public List<AtriumRaw> getAtriumRaws() {
+        return atriumRaws;
+    }
+
+    /* ------------- atrium creator ------------- */
 
     /**
      * create a triangle atrium
@@ -20,9 +149,9 @@ public class AtriumFactory {
      * @param base  base (center) point
      * @param area  initial area
      * @param curve curve of polygon
-     * @return mallElementNew.AtriumNew
+     * @return void
      */
-    public static AtriumRaw createAtrium3(WB_Point base, double area, boolean curve) {
+    public void createAtrium3(WB_Point base, double area, boolean curve) {
         double ratio = Math.sqrt((area * 2) / (2 * 7.28));
         WB_Point[] pts = new WB_Point[3];
         pts[0] = new WB_Point(base.xd(), base.yd() - ratio);
@@ -36,7 +165,7 @@ public class AtriumFactory {
         } else {
             a = new AtriumRaw(base, pts, false);
         }
-        return a;
+        this.addAtriumRaw(a);
     }
 
     /**
@@ -45,9 +174,9 @@ public class AtriumFactory {
      * @param base  base (center) point
      * @param area  initial area
      * @param curve curve of polygon
-     * @return mallElementNew.AtriumNew
+     * @return void
      */
-    public static AtriumRaw createAtrium4(WB_Point base, double area, boolean curve) {
+    public void createAtrium4(WB_Point base, double area, boolean curve) {
         double d = Math.sqrt(area) * 0.5;
         WB_Point[] pts = new WB_Point[4];
         pts[0] = new WB_Point(base.xd() - d, base.yd() - d);
@@ -62,7 +191,7 @@ public class AtriumFactory {
         } else {
             a = new AtriumRaw(base, pts, false);
         }
-        return a;
+        this.addAtriumRaw(a);
     }
 
     /**
@@ -71,9 +200,9 @@ public class AtriumFactory {
      * @param base  base (center) point
      * @param area  initial area
      * @param curve curve of polygon
-     * @return mallElementNew.AtriumNew
+     * @return void
      */
-    public static AtriumRaw createAtrium4_(WB_Point base, double area, boolean curve) {
+    public void createAtrium4_(WB_Point base, double area, boolean curve) {
         double ratio = Math.sqrt(area / 4.098);
         WB_Point[] pts = new WB_Point[4];
         pts[0] = new WB_Point(base.xd() - 1.366 * ratio, base.yd() - ratio);
@@ -88,7 +217,7 @@ public class AtriumFactory {
         } else {
             a = new AtriumRaw(base, pts, false);
         }
-        return a;
+        this.addAtriumRaw(a);
     }
 
     /**
@@ -97,9 +226,9 @@ public class AtriumFactory {
      * @param base  base (center) point
      * @param area  initial area
      * @param curve curve of polygon
-     * @return mallElementNew.AtriumNew
+     * @return void
      */
-    public static AtriumRaw createAtrium5(WB_Point base, double area, boolean curve) {
+    public void createAtrium5(WB_Point base, double area, boolean curve) {
         ZPoint[] temp = new ZPoint[5];
         temp[0] = new ZPoint(base.xd(), base.yd() - 3);
         temp[1] = new ZPoint(base.xd() + 5.4, base.yd() - 1);
@@ -123,7 +252,7 @@ public class AtriumFactory {
         } else {
             a = new AtriumRaw(base, pts, false);
         }
-        return a;
+        this.addAtriumRaw(a);
     }
 
     /**
@@ -132,9 +261,9 @@ public class AtriumFactory {
      * @param base  base (center) point
      * @param area  initial area
      * @param curve curve of polygon
-     * @return mallElementNew.AtriumNew
+     * @return void
      */
-    public static AtriumRaw createAtrium6(WB_Point base, double area, boolean curve) {
+    public void createAtrium6(WB_Point base, double area, boolean curve) {
         ZPoint[] temp = new ZPoint[6];
         temp[0] = new ZPoint(base.xd(), base.yd() - 2);
         temp[1] = new ZPoint(base.xd() + 2.7, base.yd() - 1);
@@ -160,7 +289,7 @@ public class AtriumFactory {
         } else {
             a = new AtriumRaw(base, pts, false);
         }
-        return a;
+        this.addAtriumRaw(a);
     }
 
     /**
@@ -169,9 +298,9 @@ public class AtriumFactory {
      * @param base  base (center) point
      * @param area  initial area
      * @param curve curve of polygon
-     * @return mallElementNew.AtriumNew
+     * @return void
      */
-    public static AtriumRaw createAtrium6_(WB_Point base, double area, boolean curve) {
+    public void createAtrium6_(WB_Point base, double area, boolean curve) {
         ZPoint[] temp = new ZPoint[6];
         temp[0] = new ZPoint(base.xd() - 2, base.yd());
         temp[1] = new ZPoint(base.xd() - 1, base.yd() - 1.67);
@@ -197,7 +326,7 @@ public class AtriumFactory {
         } else {
             a = new AtriumRaw(base, pts, false);
         }
-        return a;
+        this.addAtriumRaw(a);
     }
 
     /**
@@ -206,9 +335,9 @@ public class AtriumFactory {
      * @param base  base (center) point
      * @param area  initial area
      * @param curve curve of polygon
-     * @return mallElementNew.AtriumNew
+     * @return void
      */
-    public static AtriumRaw createAtrium7(WB_Point base, double area, boolean curve) {
+    public void createAtrium7(WB_Point base, double area, boolean curve) {
         ZPoint[] temp = new ZPoint[7];
         temp[0] = new ZPoint(base.xd(), base.yd() - 4);
         temp[1] = new ZPoint(base.xd() + 3.4, base.yd() - 1);
@@ -236,7 +365,7 @@ public class AtriumFactory {
         } else {
             a = new AtriumRaw(base, pts, false);
         }
-        return a;
+        this.addAtriumRaw(a);
     }
 
     /**
@@ -245,9 +374,9 @@ public class AtriumFactory {
      * @param base  base (center) point
      * @param area  initial area
      * @param curve curve of polygon
-     * @return mallElementNew.AtriumNew
+     * @return void
      */
-    public static AtriumRaw createAtrium8(WB_Point base, double area, boolean curve) {
+    public void createAtrium8(WB_Point base, double area, boolean curve) {
         ZPoint[] temp = new ZPoint[8];
         temp[0] = new ZPoint(base.xd() - 2.732, base.yd() - 1);
         temp[1] = new ZPoint(base.xd() - 1, base.yd() - 2);
@@ -277,6 +406,6 @@ public class AtriumFactory {
         } else {
             a = new AtriumRaw(base, pts, false);
         }
-        return a;
+        this.addAtriumRaw(a);
     }
 }

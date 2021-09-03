@@ -1,13 +1,18 @@
 package mallElementNew;
 
+import advancedGeometry.ZBSpline;
 import advancedGeometry.ZCatmullRom;
 import basicGeometry.ZFactory;
+import basicGeometry.ZLine;
+import basicGeometry.ZPoint;
 import math.ZGeoMath;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Polygon;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
+import wblut.geom.WB_Transform2D;
 import wblut.geom.WB_Vector;
+import wblut.nurbs.WB_BSpline;
 
 import java.util.Arrays;
 
@@ -20,17 +25,24 @@ import java.util.Arrays;
  * @time 23:22
  */
 public class AtriumRaw {
-    private final int shapePtsNum;
-    private boolean curve;
-    private WB_Point center;
+    private final int shapePtsNum;      // number of shape control points
+    private boolean curve;              // if the raw atrium is curve
+    private WB_Point center;            // center (anchor) of raw atrium
 
-    private WB_Point[] shapePoints;
-    private WB_Vector[] shapeVectors;
-    private Polygon shape;
-    private double area;
-    private String atriumType;
+    // distance percentage on main traffic
+    private double percentTraffic = 0;
+    // vector from anchor on main traffic to center
+    private ZPoint vecFromAnchor = new ZPoint(0, 0);
+    // tangent vector at anchor
+    private ZPoint anchorTangent = new ZPoint(0, 1);
 
-    private WB_Point[] originalShapePoints;
+    private WB_Point[] shapePoints;     // shape control points
+    private WB_Vector[] shapeVectors;   // vectors from center to shape control points
+    private Polygon shape;              // shape
+    private double area;                // area of the shape
+    private String atriumType;          // type of raw atrium
+
+    private WB_Point[] originalShapePoints; // shape control points of last position
 
     /* ------------- constructor ------------- */
 
@@ -64,7 +76,8 @@ public class AtriumRaw {
             updateShape();
             updateArea();
         } else {
-            WB_Polygon curveTemp = new ZCatmullRom(shapePoints, 10, true).getAsWB_Polygon();
+            WB_Polygon curveTemp = new ZBSpline(shapePoints, 3, 25, ZBSpline.CLOSE).getAsWB_Polygon();
+//            WB_Polygon curveTemp = new ZCatmullRom(shapePoints, 10, true).getAsWB_Polygon();
             double ratio = Math.sqrt(this.area / Math.abs(curveTemp.getSignedArea()));
             for (int i = 0; i < shapePtsNum; i++) {
                 shapeVectors[i].scaleSelf(ratio);
@@ -91,6 +104,19 @@ public class AtriumRaw {
         updateShape();
     }
 
+    public void rotateByAngle(double angle){
+        WB_Transform2D transform2D = new WB_Transform2D();
+        WB_Point[] ori = this.getOriginalShapePoints();
+        WB_Point[] shapePoints = this.getShapePoints();
+        WB_Point center = this.getCenter();
+        transform2D.addRotateAboutPoint(angle, center);
+        for (int i = 0; i < shapePoints.length; i++) {
+            shapePoints[i].set(transform2D.applyAsPoint2D(ori[i]));
+        }
+        this.updateVectors();
+        this.updateShape();
+    }
+
     /**
      * update shape by a changed shape point while area remains
      *
@@ -101,7 +127,8 @@ public class AtriumRaw {
         this.shapePoints[id].set(newControl);
         double ratio = 1;
         if (curve) {
-            WB_Polygon curveTemp = new ZCatmullRom(shapePoints, 10, true).getAsWB_Polygon();
+            WB_Polygon curveTemp = new ZBSpline(shapePoints, 3, 25, ZBSpline.CLOSE).getAsWB_Polygon();
+//            WB_Polygon curveTemp = new ZCatmullRom(shapePoints, 10, true).getAsWB_Polygon();
             ratio = Math.sqrt(this.area / Math.abs(curveTemp.getSignedArea()));
         } else {
             WB_Polygon polyTemp = new WB_Polygon(shapePoints);
@@ -164,8 +191,10 @@ public class AtriumRaw {
      */
     public void updateShape() {
         if (curve) {
-            ZCatmullRom catmullRom = new ZCatmullRom(shapePoints, 10, true);
-            this.shape = catmullRom.getAsPolygon();
+            ZBSpline spline = new ZBSpline(shapePoints, 3, 25, ZBSpline.CLOSE);
+            this.shape = spline.getAsPolygon();
+//            ZCatmullRom catmullRom = new ZCatmullRom(shapePoints, 10, true);
+//            this.shape = catmullRom.getAsPolygon();
         } else {
             Coordinate[] constructor = new Coordinate[shapePtsNum + 1];
             for (int i = 0; i < shapePoints.length; i++) {
@@ -214,6 +243,30 @@ public class AtriumRaw {
 
     public double getArea() {
         return area;
+    }
+
+    public void setPercentTraffic(double percentTraffic) {
+        this.percentTraffic = percentTraffic;
+    }
+
+    public double getPercentTraffic() {
+        return percentTraffic;
+    }
+
+    public void setVecFromAnchor(ZPoint vecFromAnchor) {
+        this.vecFromAnchor = vecFromAnchor;
+    }
+
+    public ZPoint getVecFromAnchor() {
+        return vecFromAnchor;
+    }
+
+    public void setAnchorTangent(ZPoint anchorTangent) {
+        this.anchorTangent = anchorTangent;
+    }
+
+    public ZPoint getAnchorTangent() {
+        return anchorTangent;
     }
 
     /* ------------- draw ------------- */

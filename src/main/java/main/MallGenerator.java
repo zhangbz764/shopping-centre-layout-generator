@@ -1,5 +1,6 @@
 package main;
 
+import advancedGeometry.ZBSpline;
 import advancedGeometry.ZCatmullRom;
 import advancedGeometry.ZSkeleton;
 import advancedGeometry.rectCover.ZRectCover;
@@ -7,13 +8,11 @@ import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
 import mallElementNew.Shop;
+import mallElementNew.SiteBase_L;
 import mallElementNew.StructureGrid;
 import math.ZGeoMath;
 import math.ZMath;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.*;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
 import processing.core.PApplet;
 import render.JtsRender;
@@ -35,12 +34,16 @@ import java.util.*;
  */
 public class MallGenerator {
     // site & boundary
-    private Polygon site_receive;                // 场地（共用）
-    private Polygon boundary_receive;            // 轮廓（共用）
+    private SiteBase_L siteBaseL;
+    private double boundaryArea = 0;
 
     // main traffic
-    private ZCatmullRom mainTrafficCurve;           // 主路径轴线（共用）
-    private ZCatmullRom innerTrafficCurve;          // 内部主路径轴线（除去入口）
+
+
+    private ZBSpline mainTrafficCurve;           // 主路径轴线（共用）
+    private ZBSpline innerTrafficCurve;          // 内部主路径轴线（除去入口）
+    //    private ZCatmullRom mainTrafficCurve;           // 主路径轴线（共用）
+//    private ZCatmullRom innerTrafficCurve;          // 内部主路径轴线（除去入口）
     private Polygon mainTrafficBuffer;              // 主路径区域（共用）
     private List<WB_Point> innerNode_receive;       // 内部控制点（共用）
     private List<WB_Point> entryNode_receive;       // 轮廓控制点（共用）
@@ -122,6 +125,22 @@ public class MallGenerator {
         return s;
     }
 
+    /* ------------- generating site & boundary ------------- */
+
+    public void initSiteBoundary(WB_Polygon _site, WB_Polygon _boundary, int base, double redLineDist, double siteBufferDist) {
+        this.siteBaseL = new SiteBase_L(
+                ZTransform.WB_PolygonToPolygon(_site),
+                _boundary == null ? null : ZTransform.WB_PolygonToPolygon(_boundary), // TODO: 2021/9/2 null
+                base, redLineDist, siteBufferDist
+        );
+        this.boundaryArea = siteBaseL.getBoundaryArea();
+    }
+
+    public void updateSiteBoundary(int base, double redLineDist, double siteBufferDist) {
+        siteBaseL.update_L(base, redLineDist, siteBufferDist);
+        this.boundaryArea = siteBaseL.getBoundaryArea();
+    }
+
     /* ------------- generating main traffic ------------- */
 
     /**
@@ -132,7 +151,7 @@ public class MallGenerator {
      */
     public void initTraffic(double bufferDist) {
         // find ridges of skeleton
-        ZSkeleton boundarySkel = new ZSkeleton(ZTransform.PolygonToWB_Polygon(boundary_receive));
+        ZSkeleton boundarySkel = new ZSkeleton(ZTransform.PolygonToWB_Polygon(siteBaseL.getBoundary()));
         List<ZLine> centralSegs = boundarySkel.getRidges();
         centralSegs.addAll(boundarySkel.getExtendedRidges());
         LineString centralLs = ZFactory.createLineString(centralSegs);
@@ -145,26 +164,29 @@ public class MallGenerator {
         for (int i = 0; i < dividePts.size(); i++) {
             pts[i + 1] = dividePts.get(i).toWB_Point();
         }
-        WB_PolyLine boundLS = ZTransform.PolygonToWB_PolyLine(boundary_receive).get(0);
+        WB_PolyLine boundLS = ZTransform.PolygonToWB_PolyLine(siteBaseL.getBoundary()).get(0);
         WB_Point entryP1 = WB_GeometryOp.getClosestPoint2D(dividePts.get(0).toWB_Point(), boundLS);
         WB_Point entryP2 = WB_GeometryOp.getClosestPoint2D(dividePts.get(dividePts.size() - 1).toWB_Point(), boundLS);
         pts[0] = entryP1;
         pts[pts.length - 1] = entryP2;
 
         // build traffic curve, and make buffer polygon
-        this.mainTrafficCurve = new ZCatmullRom(pts, 10, false);
+//        this.mainTrafficCurve = new ZCatmullRom(pts, 10, false);
+        this.mainTrafficCurve = new ZBSpline(pts, 3, 50, ZBSpline.CLAMPED);
         this.mainTrafficBuffer = (Polygon) mainTrafficCurve.getAsLineString().buffer(bufferDist);
 
-
         this.innerNode_receive = new ArrayList<>();
-        List<ZPoint> controlsI = mainTrafficCurve.getCurveControlPts();
-        for (int i = 1; i < controlsI.size() - 1; i++) {
-            innerNode_receive.add(controlsI.get(i).toWB_Point());
-        }
+        innerNode_receive.addAll(Arrays.asList(pts).subList(1, pts.length - 1));
+//        List<ZPoint> controlsI = mainTrafficCurve.getCurveControlPts();
+//        for (int i = 1; i < controlsI.size() - 1; i++) {
+//            innerNode_receive.add(controlsI.get(i).toWB_Point());
+//        }
         this.entryNode_receive = new ArrayList<>();
-        List<ZPoint> controlsE = mainTrafficCurve.getCurveControlPts();
-        entryNode_receive.add(controlsE.get(0).toWB_Point());
-        entryNode_receive.add(controlsE.get(controlsE.size() - 1).toWB_Point());
+//        List<ZPoint> controlsE = mainTrafficCurve.getCurveControlPts();
+//        entryNode_receive.add(controlsE.get(0).toWB_Point());
+//        entryNode_receive.add(controlsE.get(controlsE.size() - 1).toWB_Point());
+        entryNode_receive.add(pts[0]);
+        entryNode_receive.add(pts[pts.length - 1]);
     }
 
     /**
@@ -181,7 +203,8 @@ public class MallGenerator {
         }
         generatePts[generatePts.length - 1] = entryNode_receive.get(entryNode_receive.size() - 1);
         // build traffic curve, and make buffer polygon
-        this.mainTrafficCurve = new ZCatmullRom(generatePts, 10, false);
+//        this.mainTrafficCurve = new ZCatmullRom(generatePts, 10, false);
+        this.mainTrafficCurve = new ZBSpline(generatePts, 3, 50, ZBSpline.CLAMPED);
         this.mainTrafficBuffer = (Polygon) mainTrafficCurve.getAsLineString().buffer(bufferDist);
     }
 
@@ -195,7 +218,8 @@ public class MallGenerator {
     public void initPublicSpace() {
         if (rawAtrium_receive == null || rawAtrium_receive.size() == 0) {
             WB_Point[] generatePtsTemp = innerNode_receive.toArray(new WB_Point[0]);
-            this.innerTrafficCurve = new ZCatmullRom(generatePtsTemp, 10, false);
+//            this.innerTrafficCurve = new ZCatmullRom(generatePtsTemp, 10, false);
+            this.innerTrafficCurve = new ZBSpline(generatePtsTemp, 3, 50, ZBSpline.CLAMPED);
             Polygon buffer = (Polygon) innerTrafficCurve.getAsLineString().buffer(MallConst.TRAFFIC_BUFFER_DIST);
             this.publicSpaceCurveCtrls = ZGeoMath.splitPolygonEdge(buffer, 30);
 
@@ -215,7 +239,7 @@ public class MallGenerator {
         }
     }
 
-    public void updatePublicSpace(){
+    public void updatePublicSpace() {
         ZCatmullRom catmullRom = new ZCatmullRom(publicSpaceCurveCtrls, 8, true);
         this.publicSpace = catmullRom.getAsPolygon();
     }
@@ -230,7 +254,7 @@ public class MallGenerator {
      * @return void
      */
     public void initGrid(int gridNum, double dist) {
-        ZRectCover zrc = new ZRectCover(boundary_receive, gridNum);
+        ZRectCover zrc = new ZRectCover(siteBaseL.getBoundary(), gridNum);
         List<Polygon> rects = zrc.getBestRects();
         this.grids = new StructureGrid[gridNum];
         for (int i = 0; i < rects.size(); i++) {
@@ -253,7 +277,7 @@ public class MallGenerator {
                 union = union.union(grids[i].getRect());
             }
             union = union.buffer(1);
-            this.validGrids = union.contains(boundary_receive);
+            this.validGrids = union.contains(siteBaseL.getBoundary());
         }
     }
 
@@ -286,12 +310,12 @@ public class MallGenerator {
     public void initShopCells(int floorNum) {
         if (floorNum == 1) {
             List<LineString> publicSpaceLS = new ArrayList<>(ZTransform.PolygonToLineString(publicSpace));
-            floors[floorNum - 1] = new MallFloor(floorNum, boundary_receive);
+            floors[floorNum - 1] = new MallFloor(floorNum, siteBaseL.getBoundary());
             floors[floorNum - 1].setStatus(0);
             this.floors[floorNum - 1].updateSubdivision(publicSpaceLS, grids);
         } else {
             List<LineString> publicSpaceLS = new ArrayList<>(ZTransform.PolygonToLineString(publicSpace));
-            floors[floorNum - 1] = new MallFloor(floorNum, boundary_receive);
+            floors[floorNum - 1] = new MallFloor(floorNum, siteBaseL.getBoundary());
             floors[floorNum - 1].setStatus(0);
             Point verify = publicSpace.getInteriorPoint();
             floors[floorNum - 1].setVerify(verify);
@@ -312,7 +336,8 @@ public class MallGenerator {
 //        ridges = skeleton.getRidges();
 //        LineString ls = ZFactory.createLineString(ridges);
         WB_Point[] generatePtsTemp = innerNode_receive.toArray(new WB_Point[0]);
-        this.innerTrafficCurve = new ZCatmullRom(generatePtsTemp, 10, false);
+//        this.innerTrafficCurve = new ZCatmullRom(generatePtsTemp, 10, false);
+        this.innerTrafficCurve = new ZBSpline(generatePtsTemp, 2, 50, ZBSpline.CLAMPED);
         LineString ls = innerTrafficCurve.getAsLineString();
         if (ls != null) {
             double mainAtriumDist = MallConst.ATRIUM_AREA_MAIN / (MallConst.TRAFFIC_BUFFER_DIST * 2);
@@ -392,23 +417,23 @@ public class MallGenerator {
 
     /* ------------- setter & getter ------------- */
 
-    public void setSite_receive(Polygon site_receive) {
-        this.site_receive = site_receive;
+    public void setBoundary(Coordinate[] boundaryNodes_receive) {
+        this.siteBaseL.setBoundary(ZFactory.jtsgf.createPolygon(boundaryNodes_receive));
     }
 
-    public Polygon getSite_receive() {
-        return site_receive;
+    public Polygon getBoundary() {
+        return siteBaseL.getBoundary();
     }
 
-    public void setBoundary_receive(Polygon boundary_receive) {
-        this.boundary_receive = boundary_receive;
+    public Coordinate[] getBoundaryNodes() {
+        return siteBaseL.getBoundary().getCoordinates();
     }
 
-    public Polygon getBoundary_receive() {
-        return boundary_receive;
+    public String getBoundaryAreaAsString() {
+        return boundaryArea > 0 ? String.format("%.2f", boundaryArea) + "㎡" : "";
     }
 
-    public ZCatmullRom getMainTrafficCurve() {
+    public ZBSpline getMainTrafficCurve() {
         return mainTrafficCurve;
     }
 
@@ -486,7 +511,9 @@ public class MallGenerator {
         app.pushStyle();
         switch (status) {
             case -1:
+                break;
             case 0:
+                displaySiteBoundaryLocal(app, jtsRender);
                 break;
             case 1:
             case 2:
@@ -524,10 +551,10 @@ public class MallGenerator {
         app.noFill();
         app.stroke(255);
         app.strokeWeight(6);
-        render.drawGeometry(boundary_receive);
+        render.drawGeometry(siteBaseL.getBoundary());
         app.stroke(255, 0, 0);
         app.strokeWeight(3);
-        render.drawGeometry(site_receive);
+        render.drawGeometry(siteBaseL.getSite());
     }
 
     public void displayTrafficLocal(PApplet app, JtsRender jtsRender) {

@@ -31,7 +31,6 @@ public class MallGUI {
                 new String[]{},
                 new String[]{},
                 new String[]{},
-                new String[]{},
                 new String[]{}
         };
     }
@@ -50,19 +49,19 @@ public class MallGUI {
                 .setId(MallConst.E_SITE_BOUNDARY)
                 .setFont(font)
         ;
-        cp5.addButton("主路径")
+        cp5.addButton("主路径+中庭形状")
                 .setPosition(0, cp5H)
                 .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_MAIN_TRAFFIC)
+                .setId(MallConst.E_TRAFFIC_ATRIUM)
                 .setFont(font)
         ;
-        cp5.addButton("原始中庭形状")
+        cp5.addButton("空中走廊")
                 .setPosition(0, cp5H * 2)
                 .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_RAW_ATRIUM)
+                .setId(MallConst.E_MAIN_CORRIDOR)
                 .setFont(font)
         ;
-        cp5.addButton("中央交通空间轮廓")
+        cp5.addButton("交通空间轮廓")
                 .setPosition(0, cp5H * 3)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_PUBLIC_SPACE)
@@ -80,20 +79,15 @@ public class MallGUI {
                 .setId(MallConst.E_SHOP_EDIT)
                 .setFont(font)
         ;
-        cp5.addButton("中庭&空中走廊")
-                .setPosition(0, cp5H * 6)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_MAIN_CORRIDOR)
-                .setFont(font)
-        ;
+
         cp5.addButton("自动扶梯（无效）")
-                .setPosition(0, cp5H * 7)
+                .setPosition(0, cp5H * 6)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_ESCALATOR)
                 .setFont(font)
         ;
         cp5.addButton("疏散楼梯（无效）")
-                .setPosition(0, cp5H * 8)
+                .setPosition(0, cp5H * 7)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_EVACUATION)
                 .setFont(font)
@@ -105,7 +99,8 @@ public class MallGUI {
         addStatus3GUI(cp5, cp5H * 3);
         addStatus4GUI(cp5, cp5H * 4);
         addStatus5GUI(cp5, cp5H * 5);
-        addStatus6GUI(cp5, cp5H * 6);
+//        addStatus6GUI(cp5, cp5H * 6);
+//        addStatus7GUI(cp5, cp5H * 7);
     }
 
 
@@ -121,11 +116,11 @@ public class MallGUI {
             case (MallConst.E_SITE_BOUNDARY):
                 setVisible(cp5, MallConst.E_SITE_BOUNDARY);
                 break;
-            case (MallConst.E_MAIN_TRAFFIC):
-                setVisible(cp5, MallConst.E_MAIN_TRAFFIC);
+            case (MallConst.E_TRAFFIC_ATRIUM):
+                setVisible(cp5, MallConst.E_TRAFFIC_ATRIUM);
                 break;
-            case (MallConst.E_RAW_ATRIUM):
-                setVisible(cp5, MallConst.E_RAW_ATRIUM);
+            case (MallConst.E_MAIN_CORRIDOR):
+                setVisible(cp5, MallConst.E_MAIN_CORRIDOR);
                 break;
             case (MallConst.E_PUBLIC_SPACE):
                 setVisible(cp5, MallConst.E_PUBLIC_SPACE);
@@ -136,9 +131,7 @@ public class MallGUI {
             case (MallConst.E_SHOP_EDIT):
                 setVisible(cp5, MallConst.E_SHOP_EDIT);
                 break;
-            case (MallConst.E_MAIN_CORRIDOR):
-                setVisible(cp5, MallConst.E_MAIN_CORRIDOR);
-                break;
+
             case (MallConst.E_ESCALATOR):
                 break;
             case (MallConst.E_EVACUATION):
@@ -146,6 +139,13 @@ public class MallGUI {
         }
     }
 
+    /**
+     * set controller's visibility
+     *
+     * @param cp5    controlP5
+     * @param status status ID
+     * @return void
+     */
     private void setVisible(ControlP5 cp5, int status) {
         for (int i = 0; i < controllerNames.length; i++) {
             if (i == status) {
@@ -159,18 +159,6 @@ public class MallGUI {
             }
         }
     }
-
-//    /**
-//     * remove current GUIs
-//     *
-//     * @param cp5 controlP5
-//     * @return void
-//     */
-//    private void removeGUI(ControlP5 cp5) {
-//        for (String s : activeControllers) {
-//            cp5.remove(s);
-//        }
-//    }
 
     /**
      * update status 0 GUI
@@ -236,73 +224,70 @@ public class MallGUI {
 //                .setId(MallConst.BUTTON_DELETE_ENTRYNODE)
 //                .setFont(font)
 //        ;
-        cp5.addSlider("trafficBufferDist")
+
+        // traffic controllers' visibility
+        cp5.addButton("trafficControllers")
                 .setPosition(MallConst.STATUS_W, startH)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.BUTTON_TRAFFIC_CONTROLLERS)
+                .setFont(font)
+                .setLabel("显示/隐藏路径控制点")
+                .setVisible(false)
+        ;
+        // traffic buffer distance
+        cp5.addSlider("trafficBufferDist")
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_TRAFFIC_WIDTH)
                 .setRange(MallConst.TRAFFIC_BUFFER_DIST - 2, MallConst.TRAFFIC_BUFFER_DIST + 2)
                 .setValue(MallConst.TRAFFIC_BUFFER_DIST)
                 .setFont(font)
-                .setLabel("偏移距离")
+                .setLabel("路径偏移距离")
                 .setVisible(false)
         ;
-
-        this.controllerNames[1] = new String[]{
-                "trafficBufferDist"
-        };
-    }
-
-    /**
-     * update status 2 GUI
-     *
-     * @param cp5    controlP5
-     * @param startH start height of the controllers
-     * @return void
-     */
-    public void addStatus2GUI(ControlP5 cp5, int startH) {
         // curve button
         cp5.addButton("curveOrPoly")
-                .setPosition(MallConst.STATUS_W, startH)
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_CURVE_ATRIUM)
                 .setFont(font)
-                .setLabel("曲线/折线")
+                .setLabel("中庭曲线/折线")
                 .setVisible(false)
         ;
         // delete button
         cp5.addButton("deleteAtrium")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 3)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_DELETE_ATRIUM)
                 .setFont(font)
-                .setLabel("删除")
+                .setLabel("删除中庭")
                 .setVisible(false)
         ;
         // angle slider
         cp5.addSlider("rotateAtrium")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 4)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_ATRIUM_ANGLE)
-                .setRange(0, 360)
+                .setRange(-180, 180)
                 .setValue(0)
                 .setFont(font)
-                .setLabel("旋转角度")
+                .setLabel("中庭旋转角度")
                 .setVisible(false)
         ;
         // area slider
         cp5.addSlider("areaAtrium")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 3)
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 5)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_ATRIUM_AREA)
                 .setRange(MallConst.ATRIUM_AREA_MIN, MallConst.ATRIUM_AREA_MAX)
                 .setValue(MallConst.ATRIUM_AREA_INIT)
                 .setFont(font)
-                .setLabel("面积")
+                .setLabel("中庭面积")
                 .setVisible(false)
         ;
         // atrium type DropdownList
         DropdownList ddl = cp5.addDropdownList("atriumShape")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 4)
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 6)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H * 9)
                 .setId(MallConst.LIST_ATRIUM_FACTORY)
                 .setFont(font)
@@ -323,12 +308,59 @@ public class MallGUI {
         ddl.addItem("L形", MallConst.ITEM_A_L_SHAPE);
         ddl.addItem("八边形", MallConst.ITEM_A_OCTAGON);
 
-        this.controllerNames[2] = new String[]{
+        this.controllerNames[1] = new String[]{
+                "trafficControllers",
+                "trafficBufferDist",
                 "curveOrPoly",
                 "deleteAtrium",
                 "rotateAtrium",
                 "areaAtrium",
                 "atriumShape"
+        };
+    }
+
+    /**
+     * update status 2 GUI
+     *
+     * @param cp5    controlP5
+     * @param startH start height of the controllers
+     * @return void
+     */
+    public void addStatus2GUI(ControlP5 cp5, int startH) {
+        // update public corridor
+        cp5.addButton("updateMainCorridor")
+                .setPosition(MallConst.STATUS_W, startH)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.BUTTON_UPDATE_CORRIDOR)
+                .setFont(font)
+                .setLabel("更新中庭&走廊划分")
+                .setVisible(false)
+        ;
+        // delete
+        cp5.addButton("deleteCorridor")
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.BUTTON_DELETE_CORRIDOR)
+                .setFont(font)
+                .setLabel("删除")
+                .setVisible(false)
+        ;
+        // public corridor width
+        cp5.addSlider("corridorWidth")
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.SLIDER_CORRIDOR_WIDTH)
+                .setRange(MallConst.CORRIDOR_WIDTH_MIN, MallConst.CORRIDOR_WIDTH_MAX)
+                .setValue(MallConst.CORRIDOR_WIDTH)
+                .setFont(font)
+                .setLabel("公区走道宽度")
+                .setVisible(false)
+        ;
+
+        this.controllerNames[2] = new String[]{
+                "updateMainCorridor",
+                "deleteCorridor",
+                "corridorWidth"
         };
     }
 
@@ -437,41 +469,18 @@ public class MallGUI {
      * @return void
      */
     public void addStatus6GUI(ControlP5 cp5, int startH) {
-        // update public corridor
-        cp5.addButton("updateMainCorridor")
-                .setPosition(MallConst.STATUS_W, startH)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_UPDATE_CORRIDOR)
-                .setFont(font)
-                .setLabel("更新中庭&走廊划分")
-                .setVisible(false)
-        ;
-        // delete
-        cp5.addButton("deleteCorridor")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_DELETE_CORRIDOR)
-                .setFont(font)
-                .setLabel("删除")
-                .setVisible(false)
-        ;
-        // public corridor width
-        cp5.addSlider("corridorWidth")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.SLIDER_CORRIDOR_WIDTH)
-                .setRange(MallConst.CORRIDOR_WIDTH_MIN, MallConst.CORRIDOR_WIDTH_MAX)
-                .setValue(MallConst.CORRIDOR_WIDTH)
-                .setFont(font)
-                .setLabel("公区走道宽度")
-                .setVisible(false)
-        ;
 
-        this.controllerNames[6] = new String[]{
-                "updateMainCorridor",
-                "deleteCorridor",
-                "corridorWidth"
-        };
+    }
+
+    /**
+     * update status 7 GUI
+     *
+     * @param cp5    controlP5
+     * @param startH start height of the controllers
+     * @return void
+     */
+    public void addStatus7GUI(ControlP5 cp5, int startH) {
+
     }
 
     /* ------------- info display ------------- */
