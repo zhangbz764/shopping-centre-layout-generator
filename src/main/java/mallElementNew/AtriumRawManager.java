@@ -1,8 +1,13 @@
 package mallElementNew;
 
 import advancedGeometry.ZBSpline;
+import basicGeometry.ZFactory;
 import basicGeometry.ZPoint;
 import math.ZGeoMath;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Polygon;
 import wblut.geom.WB_GeometryOp2D;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_PolyLine;
@@ -25,10 +30,12 @@ public class AtriumRawManager {
     private List<AtriumRaw> atriumRaws;
     private List<Double> posPercentage;
 
+    private boolean validAtriumRaw = true;
+
     /* ------------- constructor ------------- */
 
-    public AtriumRawManager(ZBSpline mainTrafficCurve) {
-        this.trafficLine = mainTrafficCurve.getAsWB_PolyLine();
+    public AtriumRawManager(WB_PolyLine mainTrafficCurve) {
+        this.trafficLine = mainTrafficCurve;
         this.trafficLength = ZGeoMath.getPolyLength(trafficLine);
 
         this.posPercentage = new ArrayList<>();
@@ -84,6 +91,8 @@ public class AtriumRawManager {
                 }
             }
         }
+
+        validateAtriumRaw();
     }
 
     /**
@@ -104,8 +113,8 @@ public class AtriumRawManager {
      * @param newCenterLine new traffic center line
      * @return void
      */
-    public void updateAtriumRawByTraffic(ZBSpline newCenterLine) {
-        this.trafficLine = newCenterLine.getAsWB_PolyLine();
+    public void updateAtriumRawByTraffic(WB_PolyLine newCenterLine) {
+        this.trafficLine = newCenterLine;
         this.trafficLength = ZGeoMath.getPolyLength(trafficLine);
         for (int i = 0; i < atriumRaws.size(); i++) {
             AtriumRaw a = atriumRaws.get(i);
@@ -126,10 +135,38 @@ public class AtriumRawManager {
         }
     }
 
-    public void initMainCorridor() {
+    /**
+     * validate if any raw atriums are overlap
+     *
+     * @return void
+     */
+    public void validateAtriumRaw() {
+        if (atriumRaws == null || atriumRaws.size() < 2) {
+            this.validAtriumRaw = true;
+        } else {
+            boolean flag = true;
 
-        for (int i = 0; i < atriumRaws.size(); i++) {
+            List<Geometry> geometryList;
+            Geometry[] geometries;
+            GeometryCollection gc;
 
+            geometryList = new ArrayList<>();
+            geometryList.add(atriumRaws.get(0).getShape());
+
+            for (int i = 1; i < atriumRaws.size(); i++) {
+                geometries = geometryList.toArray(new Geometry[0]);
+                gc = ZFactory.jtsgf.createGeometryCollection(geometries);
+
+                Polygon shape = atriumRaws.get(i).getShape();
+                if (gc.intersects(shape)) {
+                    flag = false;
+                    break;
+                } else {
+                    geometryList.add(shape);
+                }
+            }
+
+            this.validAtriumRaw = flag;
         }
     }
 
@@ -137,6 +174,14 @@ public class AtriumRawManager {
 
     public List<AtriumRaw> getAtriumRaws() {
         return atriumRaws;
+    }
+
+    public int getNumAtriumRaw() {
+        return atriumRaws.size();
+    }
+
+    public boolean getValidAtriumRaw() {
+        return validAtriumRaw;
     }
 
     /* ------------- atrium creator ------------- */

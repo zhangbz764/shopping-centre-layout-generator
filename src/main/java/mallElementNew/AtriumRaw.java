@@ -46,7 +46,6 @@ public class AtriumRaw {
         this.shapePoints = _shapePoints;
         this.shapePtsNum = shapePoints.length;
         this.curve = _ifCurve;
-
         updateOriginalShapePoints();
         updateVectors();
         updateShape();

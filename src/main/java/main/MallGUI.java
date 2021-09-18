@@ -42,7 +42,7 @@ public class MallGUI {
      *
      * @return void
      */
-    public void initGUI(ControlP5 cp5, int cp5H) {
+    public void initGUI(ControlP5 cp5, int cp5H, MallParam mallParam) {
         cp5.addButton("场地&建筑轮廓")
                 .setPosition(0, 0)
                 .setSize(MallConst.STATUS_W, cp5H)
@@ -93,8 +93,8 @@ public class MallGUI {
                 .setFont(font)
         ;
 
-        addStatus0GUI(cp5, 0);
-        addStatus1GUI(cp5, cp5H);
+        addStatus0GUI(cp5, 0, mallParam);
+        addStatus1GUI(cp5, cp5H, mallParam);
         addStatus2GUI(cp5, cp5H * 2);
         addStatus3GUI(cp5, cp5H * 3);
         addStatus4GUI(cp5, cp5H * 4);
@@ -167,7 +167,7 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus0GUI(ControlP5 cp5, int startH) {
+    public void addStatus0GUI(ControlP5 cp5, int startH, MallParam mallParam) {
         cp5.addButton("switchDirection")
                 .setPosition(MallConst.STATUS_W, startH)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
@@ -180,21 +180,23 @@ public class MallGUI {
                 .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_REDLINE_DIST)
-                .setRange(0, MallConst.SITE_REDLINE_DIST * 2)
-                .setValue(MallConst.SITE_REDLINE_DIST)
+                .setRange(0, MallConst.SITE_REDLINEDIST_MAX)
+                .setValue(mallParam.siteRedLineDist)
                 .setFont(font)
                 .setLabel("红线距离")
                 .setVisible(false)
+                .plugTo(mallParam)
         ;
         cp5.addSlider("siteBufferDist")
                 .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_SITE_BUFFER)
                 .setRange(MallConst.SITE_BUFFER_MIN, MallConst.SITE_BUFFER_MAX)
-                .setValue(MallConst.SITE_BUFFER_DIST)
+                .setValue(mallParam.siteBufferDist)
                 .setFont(font)
                 .setLabel("退界距离")
                 .setVisible(false)
+                .plugTo(mallParam)
         ;
 
         this.controllerNames[0] = new String[]{
@@ -211,7 +213,7 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus1GUI(ControlP5 cp5, int startH) {
+    public void addStatus1GUI(ControlP5 cp5, int startH, MallParam mallParam) {
 //        cp5.addButton("删除内部控制点")
 //                .setPosition(MallConst.STATUS_W, startH)
 //                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
@@ -239,11 +241,12 @@ public class MallGUI {
                 .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_TRAFFIC_WIDTH)
-                .setRange(MallConst.TRAFFIC_BUFFER_DIST - 2, MallConst.TRAFFIC_BUFFER_DIST + 2)
-                .setValue(MallConst.TRAFFIC_BUFFER_DIST)
+                .setRange(MallConst.TRAFFIC_BUFFER_DIST_MIN, MallConst.TRAFFIC_BUFFER_DIST_MAX)
+                .setValue(mallParam.trafficBufferDist)
                 .setFont(font)
                 .setLabel("路径偏移距离")
                 .setVisible(false)
+                .plugTo(mallParam)
         ;
         // curve button
         cp5.addButton("curveOrPoly")
@@ -264,26 +267,28 @@ public class MallGUI {
                 .setVisible(false)
         ;
         // angle slider
-        cp5.addSlider("rotateAtrium")
+        cp5.addSlider("atriumAngle")
                 .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 4)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_ATRIUM_ANGLE)
                 .setRange(-180, 180)
-                .setValue(0)
+                .setValue(mallParam.atriumAngle)
                 .setFont(font)
                 .setLabel("中庭旋转角度")
                 .setVisible(false)
+                .plugTo(mallParam)
         ;
         // area slider
-        cp5.addSlider("areaAtrium")
+        cp5.addSlider("atriumArea")
                 .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 5)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_ATRIUM_AREA)
                 .setRange(MallConst.ATRIUM_AREA_MIN, MallConst.ATRIUM_AREA_MAX)
-                .setValue(MallConst.ATRIUM_AREA_INIT)
+                .setValue(mallParam.atriumArea)
                 .setFont(font)
                 .setLabel("中庭面积")
                 .setVisible(false)
+                .plugTo(mallParam)
         ;
         // atrium type DropdownList
         DropdownList ddl = cp5.addDropdownList("atriumShape")
@@ -313,8 +318,8 @@ public class MallGUI {
                 "trafficBufferDist",
                 "curveOrPoly",
                 "deleteAtrium",
-                "rotateAtrium",
-                "areaAtrium",
+                "atriumAngle",
+                "atriumArea",
                 "atriumShape"
         };
     }
@@ -351,7 +356,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_CORRIDOR_WIDTH)
                 .setRange(MallConst.CORRIDOR_WIDTH_MIN, MallConst.CORRIDOR_WIDTH_MAX)
-                .setValue(MallConst.CORRIDOR_WIDTH)
+                .setValue(MallConst.CORRIDOR_WIDTH_INIT)
                 .setFont(font)
                 .setLabel("公区走道宽度")
                 .setVisible(false)

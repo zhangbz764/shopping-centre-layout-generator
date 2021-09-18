@@ -13,23 +13,27 @@ public class MallConst {
     /* shopping mall constants */
 
     public static final int FLOOR_TOTAL = 5;              // 总层数
-
-    public int siteRedLineDist = 10;
-    public float siteBufferDist = 67.2f;
-    public static final float SITE_REDLINE_DIST = 10;     // 场地红线距离
+    // 0
+    public static final float SITE_REDLINEDIST_MAX = 20;  // 场地红线最大值
     public static final float SITE_BUFFER_MIN = 62;       // 场地退界最小值
-    public static final float SITE_BUFFER_DIST = 67.2f;   // 场地退界预设距离
     public static final float SITE_BUFFER_MAX = 70;       // 场地退界最大值
     public static final double BOUNDARY_NODE_R = 5;       // 轮廓控制点判定范围
-
-    public static final float TRAFFIC_BUFFER_DIST = 8;    // 主路径预设偏移距离
+    // 1
+    public static final float TRAFFIC_BUFFER_DIST = 8;      // 主路径预设偏移距离
+    public static final float TRAFFIC_BUFFER_DIST_MIN = 6; // 主路径预设偏移距离
+    public static final float TRAFFIC_BUFFER_DIST_MAX = 10; // 主路径预设偏移距离
     public static final double TRAFFIC_NODE_R = 5;        // 主路径控制点判定范围
-
+    public static final float ATRIUM_AREA_INIT = 500;     // 中庭预设面积
     public static final float ATRIUM_AREA_MAX = 1500;     // 最大中庭面积
     public static final float ATRIUM_AREA_MIN = 200;      // 最小中庭面积
-    public static final float ATRIUM_AREA_INIT = 500;     // 中庭预设面积
     public static final float ATRIUM_POS_R = 5;           // 中庭中心点判定范围
     public static final float ATRIUM_CTRL_R = 3;          // 中庭控制点判定范围
+    // 2
+    public static final float CORRIDOR_WIDTH_INIT = 3.6f;      // 公区走道预设宽度
+    public static final float CORRIDOR_WIDTH_MAX = 4.8f;  // 公区走道最大宽度
+    public static final float CORRIDOR_WIDTH_MIN = 2.4f;  // 公区走道最小宽度
+    public static final float CORRIDOR_NODE_R = 5;        // 走廊控制点判定范围
+
 
     public static final double STRUCTURE_MODEL = 8.4;     // 柱距预设值8.4m
     public static final double STRUCTURE_MODEL_2 = 9;     // 柱距预设值9m
@@ -39,11 +43,7 @@ public class MallConst {
 
     public static final double ATRIUM_AREA_MAIN = 550;    // 主中庭默认面积
     public static final double ATRIUM_AREA_SUB = 350;     // 次中庭默认面积
-    public static final float CORRIDOR_WIDTH_MAX = 4.8f;  // 公区走道最大宽度
-    public static final float CORRIDOR_WIDTH_MIN = 2.4f;  // 公区走道最小宽度
-    public static final float CORRIDOR_WIDTH = 3.6f;      // 公区走道预设宽度
     public static final double ATRIUM_ROUND_R = 1.5;      // 中庭倒角半径
-    public static final float CORRIDOR_NODE_R = 5;        // 走廊控制点判定范围
 
     public static final double ESCALATOR_DIST_MAX = 50;   // 扶梯服务半径上限
     public static final double ESCALATOR_DIST_MIN = 30;   // 扶梯服务半径上限
