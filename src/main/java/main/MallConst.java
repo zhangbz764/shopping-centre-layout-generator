@@ -19,7 +19,6 @@ public class MallConst {
     public static final float SITE_BUFFER_MAX = 70;       // 场地退界最大值
     public static final double BOUNDARY_NODE_R = 5;       // 轮廓控制点判定范围
     // 1
-    public static final float TRAFFIC_BUFFER_DIST = 8;      // 主路径预设偏移距离
     public static final float TRAFFIC_BUFFER_DIST_MIN = 6; // 主路径预设偏移距离
     public static final float TRAFFIC_BUFFER_DIST_MAX = 10; // 主路径预设偏移距离
     public static final double TRAFFIC_NODE_R = 5;        // 主路径控制点判定范围
@@ -29,12 +28,19 @@ public class MallConst {
     public static final float ATRIUM_POS_R = 5;           // 中庭中心点判定范围
     public static final float ATRIUM_CTRL_R = 3;          // 中庭控制点判定范围
     // 2
-    public static final float CORRIDOR_WIDTH_INIT = 3.6f;      // 公区走道预设宽度
-    public static final float CORRIDOR_WIDTH_MAX = 4.8f;  // 公区走道最大宽度
-    public static final float CORRIDOR_WIDTH_MIN = 2.4f;  // 公区走道最小宽度
-    public static final float CORRIDOR_NODE_R = 5;        // 走廊控制点判定范围
-
-
+    public static final float CORRIDOR_WIDTH_INIT = 6f;      // 空中走廊预设宽度
+    public static final float CORRIDOR_WIDTH_MAX = 10f;  // 空中走廊最大宽度
+    public static final float CORRIDOR_WIDTH_MIN = 2.4f;  // 空中走廊最小宽度
+    public static final double CORRIDOR_NODE_R = 5;        // 走廊控制点判定范围
+    // 3
+    public static final float PUBLIC_BUFFER_DIST_INIT = 3.6f; // 中央交通空间偏移预设距离
+    public static final float PUBLIC_BUFFER_DIST_MAX = 6f;  // 中央交通空间偏移最大距离
+    public static final float PUBLIC_BUFFER_DIST_MIN = 1.2f;    // 中央交通空间偏移最小距离
+    public static final double PUBLIC_SPACE_NODE_R = 5;       // 中央交通空间控制点范围
+    public static final float ATRIUM_ROUND_RADIUS_INIT = 1.5f;
+    public static final float ATRIUM_ROUND_RADIUS_MAX = 5f;
+    public static final float ATRIUM_ROUND_RADIUS_MIN = 0.5f;
+    // 4
     public static final double STRUCTURE_MODEL = 8.4;     // 柱距预设值8.4m
     public static final double STRUCTURE_MODEL_2 = 9;     // 柱距预设值9m
     public static final int STRUCTURE_GRID_NUM = 2;       // 柱网体系预设数量
@@ -86,7 +92,6 @@ public class MallConst {
 //    public static final int BUTTON_DELETE_ENTRYNODE = 12;
     public static final int BUTTON_TRAFFIC_CONTROLLERS = 12;
     public static final int SLIDER_TRAFFIC_WIDTH = 13;
-
     public static final int BUTTON_CURVE_ATRIUM = 14;
     public static final int BUTTON_DELETE_ATRIUM = 26;
     public static final int SLIDER_ATRIUM_ANGLE = 15;
@@ -101,11 +106,15 @@ public class MallConst {
     public static final int ITEM_A_L_SHAPE = 24;
     public static final int ITEM_A_OCTAGON = 25;
     // 2
-    public static final int BUTTON_UPDATE_CORRIDOR = 34;
-    public static final int BUTTON_DELETE_CORRIDOR = 35;
     public static final int SLIDER_CORRIDOR_WIDTH = 36;
     // 3
+    public static final int BUTTON_DELETE_PUBLIC_NODE = 96;
     public static final int SLIDER_BUFFER_DIST = 27;
+    public static final int BUTTON_ATRIUM_ROUND = 99;
+    public static final int SLIDER_ROUND_RADIUS = 98;
+    public static final int SLIDER_SMOOTH_TIMES = 97;
+
+
     // 4
     public static final int BUTTON_GRID_MODEL = 31;
     public static final int SLIDER_GRID_ANGLE = 32;

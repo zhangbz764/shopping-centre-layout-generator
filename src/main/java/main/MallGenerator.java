@@ -1,10 +1,8 @@
 package main;
 
-import advancedGeometry.ZCatmullRom;
 import advancedGeometry.rectCover.ZRectCover;
 import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
-import basicGeometry.ZPoint;
 import mallElementNew.*;
 import org.locationtech.jts.geom.*;
 import processing.core.PApplet;
@@ -38,9 +36,8 @@ public class MallGenerator {
     private Polygon[] rawAtrium_receive;       // 中庭多边形（共用）
     private PublicSpace publicSpace;
 
-    // raw atriums & public space
+    // public space
     private Polygon publicSpacePoly;                 // 收敛后的中央交通空间轮廓
-    private List<ZPoint> publicSpaceCurveCtrls;
 
     // structure grid
     private StructureGrid[] grids;                  // 结构轴网（共用）
@@ -174,9 +171,10 @@ public class MallGenerator {
     }
 
     /**
-     * update main corridor
+     * update main corridor position
      *
      * @param corridorID id of changed corridor
+     * @param newNodes   new corridor nodes
      * @return void
      */
     public void updateMainCorridorPos(int corridorID, WB_Point[] newNodes) {
@@ -185,13 +183,19 @@ public class MallGenerator {
         }
     }
 
-    public void setDivLines(List<WB_Point> divControls) {
-        List<ZLine> divLines = new ArrayList<>();
-        for (int i = 0; i < divControls.size(); i += 2) {
-            divLines.add(new ZLine(new ZPoint(divControls.get(i)), new ZPoint(divControls.get(i + 1))));
+    /**
+     * update main corridor width
+     *
+     * @param corridorID id of changed corridor
+     * @param width      new width
+     * @return void
+     */
+    public void updateMainCorridorWidth(int corridorID, double width) {
+        if (corridorID > -1) {
+            publicSpace.updateCorridorWidth(corridorID, width);
         }
-
     }
+
     /* ------------- generating public space ------------- */
 
     /**
@@ -200,32 +204,63 @@ public class MallGenerator {
      * @return void
      */
     public void initPublicSpace() {
-//        if (rawAtrium_receive == null || rawAtrium_receive.length == 0) {
-//            WB_Point[] generatePtsTemp = innerNode_receive.toArray(new WB_Point[0]);
-////            this.innerTrafficCurve = new ZCatmullRom(generatePtsTemp, 10, false);
-//            this.innerTrafficCurve = new ZBSpline(generatePtsTemp, 3, 50, ZBSpline.CLAMPED).getAsLineString();
-//            Polygon buffer = (Polygon) innerTrafficCurve.buffer(MallConst.TRAFFIC_BUFFER_DIST);
-//            this.publicSpaceCurveCtrls = ZGeoMath.splitPolygonEdge(buffer, 30);
-//
-//            ZCatmullRom catmullRom = new ZCatmullRom(publicSpaceCurveCtrls, 8, true);
-//            this.publicSpacePoly = catmullRom.getAsPolygon();
-//        } else {
-//            List<WB_Polygon> rawAtriums = new ArrayList<>();
-//            for (Polygon p : rawAtrium_receive) {
-//                rawAtriums.add(ZTransform.PolygonToWB_Polygon(p));
-//            }
-//            WB_Polygon bufferOut = ZFactory.wbgf.createBufferedPolygons2D(rawAtriums, 40).get(0);
-//            WB_Polygon bufferIn = ZFactory.wbgf.createBufferedPolygons2D(bufferOut, -40).get(0);
-//            this.publicSpaceCurveCtrls = ZGeoMath.splitPolyLineEdge(bufferIn, 30);
-//
-//            ZCatmullRom catmullRom = new ZCatmullRom(publicSpaceCurveCtrls, 8, true);
-//            this.publicSpacePoly = catmullRom.getAsPolygon();
-//        }
+        publicSpace.initPublicShape();
     }
 
-    public void updatePublicSpace() {
-        ZCatmullRom catmullRom = new ZCatmullRom(publicSpaceCurveCtrls, 8, true);
-        this.publicSpacePoly = catmullRom.getAsPolygon();
+    /**
+     * update public space by a new set of control points
+     *
+     * @param publicSpaceNode_interact new control points
+     * @return void
+     */
+    public void updatePublicSpace(List<WB_Point> publicSpaceNode_interact) {
+        Coordinate[] ctrls = new Coordinate[publicSpaceNode_interact.size()];
+        for (int i = 0; i < ctrls.length; i++) {
+            ctrls[i] = ZTransform.WB_CoordToCoordinate(publicSpaceNode_interact.get(i));
+        }
+        publicSpace.updatePublicShape(ctrls);
+    }
+
+    /**
+     * update public space by buffer distance
+     *
+     * @param dist buffer distance
+     * @return void
+     */
+    public void updatePublicSpaceBuffer(double dist) {
+        publicSpace.updatePublicShapeBuffer(dist);
+    }
+
+    /**
+     * switch between round mode and smooth mode
+     *
+     * @param atriumID index of the atrium to switch
+     * @return void
+     */
+    public void switchAtriumRoundType(int atriumID) {
+        publicSpace.switchAtriumRoundType(atriumID);
+    }
+
+    /**
+     * update the radius of rounding atrium
+     *
+     * @param atriumID index of atrium
+     * @param radius   new radius
+     * @return void
+     */
+    public void updateAtriumRoundRadius(int atriumID, double radius) {
+        publicSpace.updateAtriumRoundRadius(atriumID, radius);
+    }
+
+    /**
+     * update smooth times of the atrium
+     *
+     * @param atriumID index of atrium
+     * @param times    smooth count times
+     * @return void
+     */
+    public void updateAtriumSmoothTimes(int atriumID, int times) {
+        publicSpace.updateAtriumSmoothTimes(atriumID, times);
     }
 
     /* ------------- generating structure grid ------------- */
@@ -345,12 +380,16 @@ public class MallGenerator {
         this.rawAtrium_receive = rawAtrium_receive;
     }
 
-    public List<ZPoint> getPublicSpaceCurveCtrls() {
-        return publicSpaceCurveCtrls;
+    public Coordinate[] getPublicSpaceCurveCtrls() {
+        return publicSpace.getPublicSpaceShapeBufferCtrls();
     }
 
-    public void setPublicSpaceCurveCtrls(List<ZPoint> publicSpaceCurveCtrls) {
-        this.publicSpaceCurveCtrls = publicSpaceCurveCtrls;
+    public Polygon[] getAtriumCurrShapes() {
+        return publicSpace.getAtriumCurrShapes();
+    }
+
+    public Polygon getAtriumCurrShape(int index) {
+        return publicSpace.getAtriumCurrShapeN(index);
     }
 
     public Polygon[] getGridRects() {
@@ -405,23 +444,23 @@ public class MallGenerator {
                 displaySiteBoundaryLocal(app, jtsRender);
                 displayPublicSpaceLocal(app, jtsRender);
                 break;
-            case 4:
-                displaySiteBoundaryLocal(app, jtsRender);
-                displayPublicSpaceLocal(app, jtsRender);
-                displayGridLocal(app);
-                break;
-            case 5:
-                displaySiteBoundaryLocal(app, jtsRender);
-                displayPublicSpaceLocal(app, jtsRender);
-                displayGridLocal(app);
-                displayShopCellsLocal(floorNum, app, jtsRender);
-                break;
-            case 6:
-                displaySiteBoundaryLocal(app, jtsRender);
-                displayPublicSpaceLocal(app, jtsRender);
-                displayGridLocal(app);
-                displayShopCellsLocal(floorNum, app, jtsRender);
-                break;
+//            case 4:
+//                displaySiteBoundaryLocal(app, jtsRender);
+//                displayPublicSpaceLocal(app, jtsRender);
+//                displayGridLocal(app);
+//                break;
+//            case 5:
+//                displaySiteBoundaryLocal(app, jtsRender);
+//                displayPublicSpaceLocal(app, jtsRender);
+//                displayGridLocal(app);
+//                displayShopCellsLocal(floorNum, app, jtsRender);
+//                break;
+//            case 6:
+//                displaySiteBoundaryLocal(app, jtsRender);
+//                displayPublicSpaceLocal(app, jtsRender);
+//                displayGridLocal(app);
+//                displayShopCellsLocal(floorNum, app, jtsRender);
+//                break;
         }
         app.popStyle();
     }
@@ -451,7 +490,7 @@ public class MallGenerator {
         app.strokeWeight(3);
         app.stroke(55, 103, 171);
         app.noFill();
-        for (Polygon a : publicSpace.getAtriumShapes()) {
+        for (Polygon a : publicSpace.getAtriumTrimShapes()) {
             jtsRender.drawGeometry(a);
         }
 
@@ -463,21 +502,24 @@ public class MallGenerator {
 
         app.fill(255);
         app.textSize(2);
-        for (int i = 0; i < publicSpace.getAtriumShapes().length; i++) {
-            Polygon p = publicSpace.getAtriumShapes()[i];
+        for (int i = 0; i < publicSpace.getAtriumTrimShapes().length; i++) {
+            Polygon p = publicSpace.getAtriumTrimShapes()[i];
             app.pushMatrix();
             app.scale(1, -1);
             app.translate(0, (float) (-2 * p.getCentroid().getY()));
-            app.text(String.format("%.2f", publicSpace.getAtriumAreas()[i]), (float) p.getCentroid().getX(), (float) p.getCentroid().getY());
+            app.text(String.format("%.2f", publicSpace.getAtriumCurrAreas()[i]), (float) p.getCentroid().getX(), (float) p.getCentroid().getY());
             app.popMatrix();
         }
     }
 
     public void displayPublicSpaceLocal(PApplet app, JtsRender jtsRender) {
-        // draw public space generated by raw atriums
+        app.noFill();
         app.stroke(52, 170, 187);
         app.strokeWeight(3);
-        jtsRender.drawGeometry(publicSpacePoly);
+        jtsRender.drawGeometry(publicSpace.getPublicSpaceShape());
+        for (Polygon p : publicSpace.getAtriumCurrShapes()) {
+            jtsRender.drawGeometry(p);
+        }
     }
 
     public void displayGridLocal(PApplet app) {

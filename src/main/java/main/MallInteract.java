@@ -1,10 +1,10 @@
 package main;
 
 import basicGeometry.ZFactory;
-import basicGeometry.ZPoint;
 import mallElementNew.AtriumRaw;
 import mallElementNew.AtriumRawManager;
 import mallElementNew.Shop;
+import math.ZGeoMath;
 import org.locationtech.jts.geom.*;
 import processing.core.PApplet;
 import render.JtsRender;
@@ -34,20 +34,24 @@ public class MallInteract {
     private List<WB_Point> traffic_entryControllers;    // 动线端头控制点
 
     private AtriumRawManager atriumRawManager;
-    private AtriumRaw selectedAtrium;                   // 选择的原始中庭
-    private int selectedAtriumType = -1;                // 选择的中庭类型代号
-    private WB_Point[] atrium_controllers;              // 选择的原始中庭的控制点
-    private int atriumDragFlag = -1;                    // 拖拽中心 or 边界控制点
-    private int atriumNodeID = -1;                      // 被拖拽的边界控制点序号
-    private Polygon mainTraffic_buffer;               // 主路径区域（用于判断）
+    private AtriumRaw selectedAtriumRaw;                   // 选择的原始中庭
+    private int selectedAtriumRawType = -1;                // 选择的中庭类型代号
+    private WB_Point[] atriumRaw_controllers;              // 选择的原始中庭的控制点
+    private int atriumRawDragFlag = -1;                    // 拖拽中心 or 边界控制点
+    private int atriumRawNodeID = -1;                      // 被拖拽的边界控制点序号
+    private Polygon mainTraffic_buffer;                 // 主路径区域（用于判断）
 
     // 空中走廊
     private List<WB_Point> corridorNode_interact;       // 走廊控制点
     private WB_Point[] selectedCorridorNode;            // 选择的走廊控制点
-    private int selectedCorridorID = -1;
+    private int selectedCorridorID = -1;                // 选择的走廊控制点序号
 
     // 交通空间轮廓
-    private List<ZPoint> publicSpaceNode_interact;
+    private List<WB_Point> publicSpaceNode_interact;    // 交通空间轮廓控制点
+    private WB_Point selectedPublicSpaceNode;           // 选择的交通空间轮廓控制点
+    private Polygon[] atrium_interact;                  // 倒角后的中庭
+    private Polygon selectedAtrium;                     // 选择的中庭
+    private int selectedAtriumID = -1;                  // 选择的中庭序号
 
     // 柱网
     private Polygon[] rect_interact;                    // 柱网矩形
@@ -58,7 +62,7 @@ public class MallInteract {
 
     // 商铺
     private List<Polygon> shopCell_interact;            // 商铺划格（不同层）
-    private List<Polygon> shopCell_selected;            // 选择的商铺
+    private List<Polygon> selectedShopCell;            // 选择的商铺
     private double shopArea = -1;
 
 
@@ -72,10 +76,6 @@ public class MallInteract {
     }
 
     /* ------------- utils ------------- */
-
-    private double distance(double x1, double y1, double x2, double y2) {
-        return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
-    }
 
     public String getRentArea() {
         if (shopCell_interact != null && shopCell_interact.size() > 0) {
@@ -109,6 +109,46 @@ public class MallInteract {
         }
     }
 
+    /**
+     * clear active edit contents
+     *
+     * @param status status ID
+     * @return void
+     */
+    public void clearActiveEdit(int status) {
+        switch (status) {
+            case -1:
+                break;
+            case 0:
+                break;
+            case 1:
+                this.selectedAtriumRaw = null;
+                this.atriumRaw_controllers = null;
+                this.trafficOrAtrium = true;
+                break;
+            case 2:
+                this.selectedCorridorID = -1;
+                this.selectedCorridorNode = null;
+                break;
+            case 3:
+                this.selectedPublicSpaceNode = null;
+                this.selectedAtrium = null;
+                this.selectedAtriumID = -1;
+                break;
+            case 4:
+                this.selectedRectID = -1;
+                this.selectedRect = null;
+                this.rectCentralLine = null;
+                this.rectNode_interact = null;
+                break;
+            case 5:
+                this.selectedShopCell = null;
+                break;
+            case 6:
+                break;
+        }
+    }
+
     /* ------------- site boundary interact ------------- */
 
     /**
@@ -131,7 +171,7 @@ public class MallInteract {
     public void dragUpdateBoundary(double x, double y) {
         for (int i = 0; i < boundary_controllers.length - 1; i++) {
             Coordinate c = boundary_controllers[i];
-            if (distance(c.getX(), c.getY(), x, y) <= MallConst.BOUNDARY_NODE_R) {
+            if (ZGeoMath.distance2D(c.getX(), c.getY(), x, y) <= MallConst.BOUNDARY_NODE_R) {
                 boundary_controllers[i] = new Coordinate(x, y);
                 if (i == 0) {
                     boundary_controllers[boundary_controllers.length - 1] = new Coordinate(x, y);
@@ -148,11 +188,11 @@ public class MallInteract {
      *
      * @return void
      */
-    public void reverseTrafficOrAtrium() {
+    public void reverseTrafficOrAtriumRaw() {
         this.trafficOrAtrium = !trafficOrAtrium;
         if (trafficOrAtrium) {
-            this.selectedAtrium = null;
-            this.atrium_controllers = null;
+            this.selectedAtriumRaw = null;
+            this.atriumRaw_controllers = null;
         }
     }
 
@@ -174,12 +214,12 @@ public class MallInteract {
      * @param boundary boundary polygon
      * @return void
      */
-    public void dragUpdateTrafficAtrium(double x, double y, Polygon boundary) {
+    public void dragUpdateTrafficAtriumRaw(double x, double y, Polygon boundary) {
         if (trafficOrAtrium) {
             // 主路径控制点显示
             WB_Polygon boundTemp = ZTransform.PolygonToWB_Polygon(boundary);
             for (WB_Point p : traffic_innerControllers) {
-                if (distance(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
+                if (ZGeoMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
                     WB_Point point = new WB_Point(x, y);
                     if (WB_GeometryOp.contains2D(point, boundTemp) && WB_GeometryOp.getDistance2D(point, boundTemp) > MallConst.TRAFFIC_NODE_R) {
                         p.set(x, y);
@@ -188,7 +228,7 @@ public class MallInteract {
                 }
             }
             for (WB_Point p : traffic_entryControllers) {
-                if (distance(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
+                if (ZGeoMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
                     WB_Point point = new WB_Point(x, y);
                     p.set(WB_GeometryOp2D.getClosestPoint2D(point, ZTransform.WB_PolygonToWB_PolyLine(boundTemp).get(0)));
                     return;
@@ -196,21 +236,21 @@ public class MallInteract {
             }
         } else {
             // 主路径控制点关闭
-            if (selectedAtrium != null) {
-                WB_Point center = atrium_controllers[0];
-                if (distance(center.xd(), center.yd(), x, y) <= MallConst.ATRIUM_POS_R) {
+            if (selectedAtriumRaw != null) {
+                WB_Point center = atriumRaw_controllers[0];
+                if (ZGeoMath.distance2D(center.xd(), center.yd(), x, y) <= MallConst.ATRIUM_POS_R) {
                     WB_Point point = new WB_Point(x, y);
                     if (mainTraffic_buffer.contains(ZFactory.jtsgf.createPoint(new Coordinate(x, y)))) {
                         center.set(x, y);
                     }
-                    atriumDragFlag = 0;
+                    atriumRawDragFlag = 0;
                 } else {
-                    for (int i = 1; i < atrium_controllers.length; i++) {
-                        WB_Point p = atrium_controllers[i];
-                        if (distance(p.xd(), p.yd(), x, y) <= MallConst.ATRIUM_CTRL_R) {
+                    for (int i = 1; i < atriumRaw_controllers.length; i++) {
+                        WB_Point p = atriumRaw_controllers[i];
+                        if (ZGeoMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.ATRIUM_CTRL_R) {
                             p.set(x, y);
-                            atriumDragFlag = 1;
-                            atriumNodeID = i;
+                            atriumRawDragFlag = 1;
+                            atriumRawNodeID = i;
                             break;
                         }
                     }
@@ -224,29 +264,29 @@ public class MallInteract {
      *
      * @return void
      */
-    public void releaseUpdateAtrium() {
-        if (atriumDragFlag == 0) {
+    public void releaseUpdateAtriumRaw() {
+        if (atriumRawDragFlag == 0) {
             // move by center
-            selectedAtrium.moveByCenter(atrium_controllers[0]);
-            atriumRawManager.removeAtriumRaw(selectedAtrium);
-            atriumRawManager.addAtriumRaw(selectedAtrium);
-            for (int i = 0; i < selectedAtrium.getShapePtsNum(); i++) {
-                atrium_controllers[i + 1] = selectedAtrium.getShapePoints()[i].copy();
+            selectedAtriumRaw.moveByCenter(atriumRaw_controllers[0]);
+            atriumRawManager.removeAtriumRaw(selectedAtriumRaw);
+            atriumRawManager.addAtriumRaw(selectedAtriumRaw);
+            for (int i = 0; i < selectedAtriumRaw.getShapePtsNum(); i++) {
+                atriumRaw_controllers[i + 1] = selectedAtriumRaw.getShapePoints()[i].copy();
             }
             atriumRawManager.validateAtriumRaw();
 
-            atriumDragFlag = -1;
-        } else if (atriumDragFlag == 1) {
+            atriumRawDragFlag = -1;
+        } else if (atriumRawDragFlag == 1) {
             // update shape
-            selectedAtrium.updateShapeByArea(atrium_controllers[atriumNodeID], atriumNodeID - 1);
-            atrium_controllers[0] = selectedAtrium.getCenter().copy();
-            for (int i = 0; i < selectedAtrium.getShapePtsNum(); i++) {
-                atrium_controllers[i + 1] = selectedAtrium.getShapePoints()[i].copy();
+            selectedAtriumRaw.updateShapeByArea(atriumRaw_controllers[atriumRawNodeID], atriumRawNodeID - 1);
+            atriumRaw_controllers[0] = selectedAtriumRaw.getCenter().copy();
+            for (int i = 0; i < selectedAtriumRaw.getShapePtsNum(); i++) {
+                atriumRaw_controllers[i + 1] = selectedAtriumRaw.getShapePoints()[i].copy();
             }
             atriumRawManager.validateAtriumRaw();
 
-            atriumDragFlag = -1;
-            atriumNodeID = -1;
+            atriumRawDragFlag = -1;
+            atriumRawNodeID = -1;
         }
     }
 
@@ -257,13 +297,13 @@ public class MallInteract {
      * @param y pointer y
      * @return void
      */
-    public void clickUpdateAtrium(double x, double y) {
+    public void clickUpdateAtriumRaw(double x, double y) {
         if (!trafficOrAtrium) {
             WB_Point p = new WB_Point(x, y);
-            if (selectedAtriumType > -1) {
+            if (selectedAtriumRawType > -1) {
                 // add atrium
                 if (mainTraffic_buffer.contains(ZFactory.jtsgf.createPoint(new Coordinate(x, y)))) {
-                    switch (selectedAtriumType) {
+                    switch (selectedAtriumRawType) {
                         case 0:
                             atriumRawManager.createAtrium3(p, MallConst.ATRIUM_AREA_INIT, false);
                             break;
@@ -289,28 +329,28 @@ public class MallInteract {
                             atriumRawManager.createAtrium8(p, MallConst.ATRIUM_AREA_INIT, false);
                             break;
                     }
-                    selectedAtriumType = -1;
+                    selectedAtriumRawType = -1;
                 }
             } else {
                 // select / unselect atrium
-                if (selectedAtrium == null) {
+                if (selectedAtriumRaw == null) {
                     for (AtriumRaw a : atriumRawManager.getAtriumRaws()) {
                         WB_Polygon shape = ZTransform.PolygonToWB_Polygon(a.getShape());
                         if (WB_GeometryOp.contains2D(p, shape)) {
-                            this.selectedAtrium = a;
-                            this.atrium_controllers = new WB_Point[a.getShapePtsNum() + 1];
-                            atrium_controllers[0] = a.getCenter().copy();
+                            this.selectedAtriumRaw = a;
+                            this.atriumRaw_controllers = new WB_Point[a.getShapePtsNum() + 1];
+                            atriumRaw_controllers[0] = a.getCenter().copy();
                             for (int i = 0; i < a.getShapePtsNum(); i++) {
-                                atrium_controllers[i + 1] = a.getShapePoints()[i].copy();
+                                atriumRaw_controllers[i + 1] = a.getShapePoints()[i].copy();
                             }
                             break;
                         }
                     }
                 } else {
-                    WB_Polygon shape = ZTransform.PolygonToWB_Polygon(selectedAtrium.getShape());
+                    WB_Polygon shape = ZTransform.PolygonToWB_Polygon(selectedAtriumRaw.getShape());
                     if (!WB_GeometryOp.contains2D(p, shape)) {
-                        this.selectedAtrium = null;
-                        this.atrium_controllers = null;
+                        this.selectedAtriumRaw = null;
+                        this.atriumRaw_controllers = null;
                     }
                 }
             }
@@ -322,10 +362,10 @@ public class MallInteract {
      *
      * @return void
      */
-    public void removeAtrium() {
-        if (selectedAtrium != null) {
-            atriumRawManager.removeAtriumRaw(selectedAtrium);
-            selectedAtrium = null;
+    public void removeAtriumRaw() {
+        if (selectedAtriumRaw != null) {
+            atriumRawManager.removeAtriumRaw(selectedAtriumRaw);
+            selectedAtriumRaw = null;
         }
     }
 
@@ -334,12 +374,13 @@ public class MallInteract {
      *
      * @return void
      */
-    public void changeAtriumCurve() {
-        if (selectedAtrium != null) {
-            selectedAtrium.reverseCurve();
-            for (int i = 0; i < selectedAtrium.getShapePtsNum(); i++) {
-                atrium_controllers[i + 1] = selectedAtrium.getShapePoints()[i].copy();
+    public void changeAtriumRawCurve() {
+        if (selectedAtriumRaw != null) {
+            selectedAtriumRaw.reverseCurve();
+            for (int i = 0; i < selectedAtriumRaw.getShapePtsNum(); i++) {
+                atriumRaw_controllers[i + 1] = selectedAtriumRaw.getShapePoints()[i].copy();
             }
+            atriumRawManager.validateAtriumRaw();
         }
     }
 
@@ -349,12 +390,13 @@ public class MallInteract {
      * @param angle angle to rotate
      * @return void
      */
-    public void rotateAtrium(double angle) {
-        if (selectedAtrium != null) {
-            selectedAtrium.rotateByAngle(angle);
-            for (int i = 0; i < selectedAtrium.getShapePtsNum(); i++) {
-                atrium_controllers[i + 1] = selectedAtrium.getShapePoints()[i].copy();
+    public void rotateAtriumRaw(double angle) {
+        if (selectedAtriumRaw != null) {
+            selectedAtriumRaw.rotateByAngle(angle);
+            for (int i = 0; i < selectedAtriumRaw.getShapePtsNum(); i++) {
+                atriumRaw_controllers[i + 1] = selectedAtriumRaw.getShapePoints()[i].copy();
             }
+            atriumRawManager.validateAtriumRaw();
         }
     }
 
@@ -364,12 +406,13 @@ public class MallInteract {
      * @param area input area
      * @return void
      */
-    public void changeAtriumArea(double area) {
-        if (selectedAtrium != null) {
-            selectedAtrium.scaleShapeByArea(area);
-            for (int i = 0; i < selectedAtrium.getShapePtsNum(); i++) {
-                atrium_controllers[i + 1] = selectedAtrium.getShapePoints()[i].copy();
+    public void changeAtriumRawArea(double area) {
+        if (selectedAtriumRaw != null) {
+            selectedAtriumRaw.scaleShapeByArea(area);
+            for (int i = 0; i < selectedAtriumRaw.getShapePtsNum(); i++) {
+                atriumRaw_controllers[i + 1] = selectedAtriumRaw.getShapePoints()[i].copy();
             }
+            atriumRawManager.validateAtriumRaw();
         }
     }
 
@@ -389,7 +432,7 @@ public class MallInteract {
                 WB_Point p0, p1;
 
                 WB_Point curr = corridorNode_interact.get(i);
-                if (distance(curr.xd(), curr.yd(), x, y) <= MallConst.CORRIDOR_NODE_R) {
+                if (ZGeoMath.distance2D(curr.xd(), curr.yd(), x, y) <= MallConst.CORRIDOR_NODE_R) {
                     if (i % 2 == 0) {
                         p0 = curr;
                         p1 = corridorNode_interact.get(i + 1);
@@ -405,9 +448,9 @@ public class MallInteract {
         } else {
             WB_Point p0 = selectedCorridorNode[0];
             WB_Point p1 = selectedCorridorNode[1];
-            if (distance(p0.xd(), p0.yd(), x, y) > MallConst.CORRIDOR_NODE_R
+            if (ZGeoMath.distance2D(p0.xd(), p0.yd(), x, y) > MallConst.CORRIDOR_NODE_R
                     &&
-                    distance(p1.xd(), p1.yd(), x, y) > MallConst.CORRIDOR_NODE_R
+                    ZGeoMath.distance2D(p1.xd(), p1.yd(), x, y) > MallConst.CORRIDOR_NODE_R
             ) {
                 selectedCorridorNode = null;
                 selectedCorridorID = -1;
@@ -425,7 +468,7 @@ public class MallInteract {
     public void dragUpdateCorridor(double x, double y) {
         if (selectedCorridorNode != null && selectedCorridorID > -1) {
             for (WB_Point p : selectedCorridorNode) {
-                if (distance(p.xd(), p.yd(), x, y) <= MallConst.CORRIDOR_NODE_R) {
+                if (ZGeoMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.CORRIDOR_NODE_R) {
                     WB_Point point = new WB_Point(x, y);
                     p.set(x, y);
                     break;
@@ -434,27 +477,82 @@ public class MallInteract {
         }
     }
 
+    /* ------------- public space interact ------------- */
+
     /**
-     * remove the corridor node (divide line)
+     * select public space node
      *
+     * @param x pointer x
+     * @param y pointer y
      * @return void
      */
-    public void removeCorridorNode() {
-        if (selectedCorridorNode != null) {
-            corridorNode_interact.remove(selectedCorridorNode[0]);
-            corridorNode_interact.remove(selectedCorridorNode[1]);
-            selectedCorridorNode = null;
-            selectedCorridorID = -1;
+    public void selectPublicSpaceNodeOrAtrium(double x, double y) {
+        if (selectedPublicSpaceNode == null) {
+            for (int i = 0; i < publicSpaceNode_interact.size(); i++) {
+                WB_Point curr = publicSpaceNode_interact.get(i);
+                if (ZGeoMath.distance2D(curr.xd(), curr.yd(), x, y) <= MallConst.PUBLIC_SPACE_NODE_R) {
+                    this.selectedPublicSpaceNode = curr;
+                    break;
+                }
+            }
+        } else {
+            if (ZGeoMath.distance2D(selectedPublicSpaceNode.xd(), selectedPublicSpaceNode.yd(), x, y) > MallConst.PUBLIC_SPACE_NODE_R) {
+                selectedPublicSpaceNode = null;
+            }
+        }
+
+        Point mouse = ZFactory.jtsgf.createPoint(new Coordinate(x, y));
+        if (selectedAtrium == null) {
+            for (int i = 0; i < atrium_interact.length; i++) {
+                Polygon p = atrium_interact[i];
+                if (p.contains(mouse)) {
+                    selectedAtrium = p;
+                    selectedAtriumID = i;
+                    break;
+                }
+            }
+        } else {
+            if (!selectedAtrium.contains(mouse)) {
+                selectedAtrium = null;
+                selectedAtriumID = -1;
+            }
         }
     }
 
-    /* ------------- public space interact ------------- */
+    /**
+     * remove public space node
+     *
+     * @return void
+     */
+    public void removePublicSpaceNode() {
+        if (selectedPublicSpaceNode != null) {
+            publicSpaceNode_interact.remove(selectedPublicSpaceNode);
+            selectedPublicSpaceNode = null;
+        }
+    }
 
-    public void dragUpdatePublicSpace(double x, double y) {
-        for (ZPoint p : publicSpaceNode_interact) {
-            if (distance(p.xd(), p.yd(), x, y) <= MallConst.ATRIUM_CTRL_R) {
-                p.set(x, y);
-                return;
+    /**
+     * select atrium polygon
+     *
+     * @param x pointer x
+     * @param y pointer y
+     * @return void
+     */
+    public void selectAtrium(double x, double y) {
+        Point mouse = ZFactory.jtsgf.createPoint(new Coordinate(x, y));
+        if (selectedAtrium == null) {
+            for (int i = 0; i < atrium_interact.length; i++) {
+                Polygon p = atrium_interact[i];
+                if (p.contains(mouse)) {
+                    selectedAtrium = p;
+                    selectedAtriumID = i;
+                    break;
+                }
+            }
+        } else {
+            if (!selectedAtrium.contains(mouse)) {
+                selectedAtrium = null;
+                selectedAtriumID = -1;
             }
         }
     }
@@ -522,7 +620,7 @@ public class MallInteract {
         if (selectedRect != null) {
             for (int i = 0; i < rectNode_interact.length; i++) {
                 WB_Point p = rectNode_interact[i];
-                if (distance(p.xd(), p.yd(), x, y) <= MallConst.STRUCTURE_CTRL_R) {
+                if (ZGeoMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.STRUCTURE_CTRL_R) {
                     Coordinate[] coords = selectedRect.getCoordinates();
                     double[] d1 = new double[]{coords[i].x - p.xd(), coords[i].y - p.yd()};
                     double[] d2 = new double[]{coords[i + 1].x - p.xd(), coords[i + 1].y - p.yd()};
@@ -570,10 +668,10 @@ public class MallInteract {
         for (int i = 0; i < size; i++) {
             Polygon cell = shopCell_interact.get(i);
             if (cell.contains(pointer)) {
-                if (this.shopCell_selected.contains(cell)) {
-                    shopCell_selected.remove(cell);
+                if (this.selectedShopCell.contains(cell)) {
+                    selectedShopCell.remove(cell);
                 } else {
-                    shopCell_selected.add(cell);
+                    selectedShopCell.add(cell);
                 }
                 break;
             }
@@ -586,12 +684,12 @@ public class MallInteract {
      * @return void
      */
     public void unionShopCell() {
-        if (shopCell_selected.size() > 1) {
-            shopCell_interact.removeAll(shopCell_selected);
+        if (selectedShopCell.size() > 1) {
+            shopCell_interact.removeAll(selectedShopCell);
 
-            Polygon[] polygons = new Polygon[shopCell_selected.size()];
-            for (int i = 0; i < shopCell_selected.size(); i++) {
-                polygons[i] = shopCell_selected.get(i);
+            Polygon[] polygons = new Polygon[selectedShopCell.size()];
+            for (int i = 0; i < selectedShopCell.size(); i++) {
+                polygons[i] = selectedShopCell.get(i);
             }
             GeometryCollection collection = ZFactory.jtsgf.createGeometryCollection(polygons);
             Geometry union = collection.buffer(0);
@@ -606,7 +704,7 @@ public class MallInteract {
                 System.out.println(union.getGeometryType());
             }
         }
-        shopCell_selected.clear();
+        selectedShopCell.clear();
     }
 
     /* ------------- buffer curve shape interact ------------- */
@@ -688,8 +786,8 @@ public class MallInteract {
         this.mainTraffic_buffer = mainTraffic_buffer;
     }
 
-    public void setSelectedAtriumType(int selectedAtriumType) {
-        this.selectedAtriumType = selectedAtriumType;
+    public void setSelectedAtriumRawType(int selectedAtriumRawType) {
+        this.selectedAtriumRawType = selectedAtriumRawType;
     }
 
     public Polygon[] getAtriumRawShapes() {
@@ -717,13 +815,28 @@ public class MallInteract {
         return selectedCorridorNode;
     }
 
-
-    public void setPublicSpaceNode_interact(List<ZPoint> publicSpaceNode_interact) {
-        this.publicSpaceNode_interact = publicSpaceNode_interact;
+    public void setPublicSpaceNode_interact(Coordinate[] publicSpaceCurveCtrls) {
+        this.publicSpaceNode_interact = new ArrayList<>();
+        for (Coordinate c : publicSpaceCurveCtrls) {
+            publicSpaceNode_interact.add(ZTransform.CoordinateToWB_Point(c));
+        }
     }
 
-    public List<ZPoint> getPublicSpaceNode_interact() {
+    public List<WB_Point> getPublicSpaceNode_interact() {
         return publicSpaceNode_interact;
+    }
+
+    public void setAtrium_interact(Polygon[] atrium_interact) {
+        this.atrium_interact = atrium_interact;
+    }
+
+    public int getSelectedAtriumID() {
+        return selectedAtriumID;
+    }
+
+    public void setChangedAtrium(Polygon newAtriumShape, int index) {
+        selectedAtrium = newAtriumShape;
+        atrium_interact[index] = newAtriumShape;
     }
 
     public void setRect_interact(Polygon[] rect_interact) {
@@ -743,14 +856,12 @@ public class MallInteract {
         for (Shop shop : currentShops) {
             shopCell_interact.add(shop.getShape());
         }
-        this.shopCell_selected = new ArrayList<>();
+        this.selectedShopCell = new ArrayList<>();
     }
 
     public List<Polygon> getShopCell_interact() {
         return shopCell_interact;
     }
-
-
 
     /* ------------- draw ------------- */
 
@@ -767,8 +878,8 @@ public class MallInteract {
                     displayTraffic(app, render);
                 }
                 displayRawAtrium(app, jtsRender, render);
-                if (selectedAtrium != null) {
-                    displaySelectedAtrium(app, jtsRender);
+                if (selectedAtriumRaw != null) {
+                    displaySelectedAtriumRaw(app, jtsRender);
                 }
                 break;
             case 2:
@@ -779,6 +890,12 @@ public class MallInteract {
                 break;
             case 3:
                 displayPublicSpaceNodes(app);
+                if (selectedPublicSpaceNode != null) {
+                    displaySelectedPublicNodes(app);
+                }
+                if (selectedAtrium != null) {
+                    displaySelectedAtrium(app, jtsRender);
+                }
                 break;
             case 4:
                 if (selectedRect != null) {
@@ -786,7 +903,7 @@ public class MallInteract {
                 }
                 break;
             case 5:
-                if (shopCell_selected != null) {
+                if (selectedShopCell != null) {
                     displaySelectedCell(app, jtsRender);
                 }
                 break;
@@ -849,36 +966,35 @@ public class MallInteract {
         }
     }
 
-    private void displaySelectedAtrium(PApplet app, JtsRender render) {
+    private void displaySelectedAtriumRaw(PApplet app, JtsRender render) {
         // draw center
         app.noStroke();
         app.fill(255, 97, 136);
-        app.ellipse(atrium_controllers[0].xf(), atrium_controllers[0].yf(), MallConst.ATRIUM_POS_R, MallConst.ATRIUM_POS_R);
+        app.ellipse(atriumRaw_controllers[0].xf(), atriumRaw_controllers[0].yf(), MallConst.ATRIUM_POS_R, MallConst.ATRIUM_POS_R);
 
-        // draw control points
+        // draw control points and lines
         app.fill(169, 210, 118);
-        for (int i = 1; i < atrium_controllers.length; i++) {
-            app.ellipse(atrium_controllers[i].xf(), atrium_controllers[i].yf(), MallConst.ATRIUM_CTRL_R, MallConst.ATRIUM_CTRL_R);
+        for (int i = 1; i < atriumRaw_controllers.length; i++) {
+            app.ellipse(atriumRaw_controllers[i].xf(), atriumRaw_controllers[i].yf(), MallConst.ATRIUM_CTRL_R, MallConst.ATRIUM_CTRL_R);
         }
+        app.stroke(128);
+        app.strokeWeight(0.5f);
+        for (int i = 1; i < atriumRaw_controllers.length - 1; i++) {
+            app.line(
+                    atriumRaw_controllers[i].xf(), atriumRaw_controllers[i].yf(),
+                    atriumRaw_controllers[i + 1].xf(), atriumRaw_controllers[i + 1].yf()
+            );
+        }
+        app.line(
+                atriumRaw_controllers[1].xf(), atriumRaw_controllers[1].yf(),
+                atriumRaw_controllers[atriumRaw_controllers.length - 1].xf(), atriumRaw_controllers[atriumRaw_controllers.length - 1].yf()
+        );
 
         // draw shape
         app.stroke(0, 255, 0);
         app.strokeWeight(4);
         app.noFill();
-        render.drawGeometry(selectedAtrium.getShape());
-
-        app.stroke(128);
-        app.strokeWeight(0.5f);
-        for (int i = 1; i < atrium_controllers.length - 1; i++) {
-            app.line(
-                    atrium_controllers[i].xf(), atrium_controllers[i].yf(),
-                    atrium_controllers[i + 1].xf(), atrium_controllers[i + 1].yf()
-            );
-        }
-        app.line(
-                atrium_controllers[1].xf(), atrium_controllers[1].yf(),
-                atrium_controllers[atrium_controllers.length - 1].xf(), atrium_controllers[atrium_controllers.length - 1].yf()
-        );
+        render.drawGeometry(selectedAtriumRaw.getShape());
     }
 
     private void displayCorridorNode(PApplet app) {
@@ -891,23 +1007,43 @@ public class MallInteract {
         app.noStroke();
         app.fill(80);
         for (WB_Point p : corridorNode_interact) {
-            app.ellipse(p.xf(), p.yf(), MallConst.CORRIDOR_NODE_R, MallConst.CORRIDOR_NODE_R);
+            app.ellipse(p.xf(), p.yf(), (float) MallConst.CORRIDOR_NODE_R, (float) MallConst.CORRIDOR_NODE_R);
         }
     }
 
     private void displaySelectedCorridorNode(PApplet app) {
         app.fill(255, 97, 136);
         for (WB_Point p : selectedCorridorNode) {
-            app.ellipse(p.xf(), p.yf(), MallConst.CORRIDOR_NODE_R, MallConst.CORRIDOR_NODE_R);
+            app.ellipse(p.xf(), p.yf(), (float) MallConst.CORRIDOR_NODE_R, (float) MallConst.CORRIDOR_NODE_R);
         }
     }
 
     private void displayPublicSpaceNodes(PApplet app) {
         app.noStroke();
         app.fill(169, 210, 118);
-        for (ZPoint p : publicSpaceNode_interact) {
+        for (WB_Point p : publicSpaceNode_interact) {
             app.ellipse(p.xf(), p.yf(), MallConst.ATRIUM_CTRL_R, MallConst.ATRIUM_CTRL_R);
         }
+        app.stroke(128);
+        app.strokeWeight(0.5f);
+        for (int i = 0; i < publicSpaceNode_interact.size(); i++) {
+            app.line(
+                    publicSpaceNode_interact.get(i).xf(), publicSpaceNode_interact.get(i).yf(),
+                    publicSpaceNode_interact.get((i + 1) % publicSpaceNode_interact.size()).xf(), publicSpaceNode_interact.get((i + 1) % publicSpaceNode_interact.size()).yf()
+            );
+        }
+    }
+
+    private void displaySelectedPublicNodes(PApplet app) {
+        app.fill(255, 97, 136);
+        app.ellipse(selectedPublicSpaceNode.xf(), selectedPublicSpaceNode.yf(), MallConst.ATRIUM_CTRL_R, MallConst.ATRIUM_CTRL_R);
+    }
+
+    private void displaySelectedAtrium(PApplet app, JtsRender jtsRender) {
+        app.noFill();
+        app.stroke(0, 255, 0);
+        app.strokeWeight(4);
+        jtsRender.drawGeometry(selectedAtrium);
     }
 
     private void displaySelectedGrid(PApplet app, JtsRender jtsRender) {
@@ -929,7 +1065,7 @@ public class MallInteract {
         app.noFill();
         app.stroke(0, 255, 0);
         app.strokeWeight(5);
-        for (Polygon p : shopCell_selected) {
+        for (Polygon p : selectedShopCell) {
             jtsRender.drawGeometry(p);
         }
     }

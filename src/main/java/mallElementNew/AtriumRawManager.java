@@ -133,6 +133,7 @@ public class AtriumRawManager {
             a.moveByCenter(newCenter);
             a.rotateByAngle(Math.PI * (angle / 180));
         }
+        validateAtriumRaw();
     }
 
     /**

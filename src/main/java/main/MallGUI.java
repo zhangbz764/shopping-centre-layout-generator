@@ -95,8 +95,8 @@ public class MallGUI {
 
         addStatus0GUI(cp5, 0, mallParam);
         addStatus1GUI(cp5, cp5H, mallParam);
-        addStatus2GUI(cp5, cp5H * 2);
-        addStatus3GUI(cp5, cp5H * 3);
+        addStatus2GUI(cp5, cp5H * 2, mallParam);
+        addStatus3GUI(cp5, cp5H * 3, mallParam);
         addStatus4GUI(cp5, cp5H * 4);
         addStatus5GUI(cp5, cp5H * 5);
 //        addStatus6GUI(cp5, cp5H * 6);
@@ -331,40 +331,21 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus2GUI(ControlP5 cp5, int startH) {
-        // update public corridor
-        cp5.addButton("updateMainCorridor")
-                .setPosition(MallConst.STATUS_W, startH)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_UPDATE_CORRIDOR)
-                .setFont(font)
-                .setLabel("更新中庭&走廊划分")
-                .setVisible(false)
-        ;
-        // delete
-        cp5.addButton("deleteCorridor")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
-                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_DELETE_CORRIDOR)
-                .setFont(font)
-                .setLabel("删除")
-                .setVisible(false)
-        ;
+    public void addStatus2GUI(ControlP5 cp5, int startH, MallParam mallParam) {
         // public corridor width
         cp5.addSlider("corridorWidth")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
+                .setPosition(MallConst.STATUS_W, startH)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_CORRIDOR_WIDTH)
                 .setRange(MallConst.CORRIDOR_WIDTH_MIN, MallConst.CORRIDOR_WIDTH_MAX)
-                .setValue(MallConst.CORRIDOR_WIDTH_INIT)
+                .setValue(mallParam.corridorWidth)
                 .setFont(font)
                 .setLabel("公区走道宽度")
                 .setVisible(false)
+                .plugTo(mallParam)
         ;
 
         this.controllerNames[2] = new String[]{
-                "updateMainCorridor",
-                "deleteCorridor",
                 "corridorWidth"
         };
     }
@@ -376,22 +357,68 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus3GUI(ControlP5 cp5, int startH) {
-//        // buffer distance slider
-//        cp5.addSlider("偏移距离")
-//                .setPosition(MallConst.STATUS_W, startH)
-//                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-//                .setId(MallConst.SLIDER_BUFFER_DIST)
-//                .setRange(0, 3)
-//                .setValue(0)
-//                .setFont(font)
-//        ;
-//        this.activeControllers = new String[]{
-//                "偏移距离"
-//        };
+    public void addStatus3GUI(ControlP5 cp5, int startH, MallParam mallParam) {
+        // delete public space node
+        cp5.addButton("deletePublicSpaceNode")
+                .setPosition(MallConst.STATUS_W, startH)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.BUTTON_DELETE_PUBLIC_NODE)
+                .setFont(font)
+                .setLabel("删除控制点")
+                .setVisible(false)
+        ;
+        // public space buffer distance slider
+        cp5.addSlider("publicSpaceBufferDist")
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.SLIDER_BUFFER_DIST)
+                .setRange(MallConst.PUBLIC_BUFFER_DIST_MIN, MallConst.PUBLIC_BUFFER_DIST_MAX)
+                .setValue(mallParam.publicSpaceBufferDist)
+                .setFont(font)
+                .setLabel("交通空间偏移距离")
+                .setVisible(false)
+                .plugTo(mallParam)
+        ;
+        // switch round or smooth
+        cp5.addButton("atriumRoundType")
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.BUTTON_ATRIUM_ROUND)
+                .setFont(font)
+                .setLabel("中庭圆角/倒角")
+                .setVisible(false)
+        ;
+        // the radius of rounding atrium
+        cp5.addSlider("atriumRoundRadius")
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 3)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.SLIDER_ROUND_RADIUS)
+                .setRange(MallConst.ATRIUM_ROUND_RADIUS_MIN, MallConst.ATRIUM_ROUND_RADIUS_MAX)
+                .setValue(mallParam.atriumRoundRadius)
+                .setFont(font)
+                .setLabel("中庭圆角半径")
+                .setVisible(false)
+                .plugTo(mallParam)
+        ;
+        // smooth times of atrium
+        cp5.addSlider("atriumSmoothTimes")
+                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 4)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.SLIDER_SMOOTH_TIMES)
+                .setRange(0, 5)
+                .setValue(mallParam.atriumSmoothTimes)
+                .setFont(font)
+                .setLabel("中庭倒角次数")
+                .setVisible(false)
+                .plugTo(mallParam)
+        ;
 
         this.controllerNames[3] = new String[]{
-
+                "deletePublicSpaceNode",
+                "publicSpaceBufferDist",
+                "atriumRoundType",
+                "atriumRoundRadius",
+                "atriumSmoothTimes"
         };
     }
 
@@ -403,15 +430,6 @@ public class MallGUI {
      * @return void
      */
     public void addStatus4GUI(ControlP5 cp5, int startH) {
-//        // angle of the grid
-//        cp5.addSlider("旋转角度")
-//                .setPosition(MallConst.STATUS_W, startH)
-//                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-//                .setId(MallConst.SLIDER_GRID_ANGLE)
-//                .setRange(0, 360)
-//                .setValue(0)
-//                .setFont(font)
-//        ;
         // grid model
         cp5.addButton("gridModel")
                 .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
