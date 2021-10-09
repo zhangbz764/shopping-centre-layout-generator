@@ -69,6 +69,7 @@ public class MallNew extends PApplet {
         this.mallInteract = new MallInteract();
         this.mallGenerator = new MallGenerator();
         this.mallGUI = new MallGUI(font);
+
         this.mallParam = new MallParam();
 
         // GUI
@@ -92,7 +93,7 @@ public class MallNew extends PApplet {
         pushStyle();
         showGUI();
         displayStats();
-        mallGUI.displayInfo(this, EDIT_STATUS);
+//        mallGUI.displayInfo(this, EDIT_STATUS);
         popStyle();
     }
 

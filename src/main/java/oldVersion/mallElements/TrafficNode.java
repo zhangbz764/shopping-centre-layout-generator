@@ -1,8 +1,7 @@
-package mallElementNew;
+package oldVersion.mallElements;
 
 import basicGeometry.ZNode;
 import basicGeometry.ZPoint;
-import oldVersion.mallElements.AtriumOld;
 import processing.core.PApplet;
 import wblut.geom.WB_Point;
 import wblut.processing.WB_Render;

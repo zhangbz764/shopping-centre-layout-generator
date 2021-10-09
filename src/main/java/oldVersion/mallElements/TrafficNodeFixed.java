@@ -1,8 +1,7 @@
-package mallElementNew;
+package oldVersion.mallElements;
 
 import basicGeometry.ZPoint;
 import math.ZGeoMath;
-import oldVersion.mallElements.AtriumOld;
 import processing.core.PApplet;
 import transform.ZTransform;
 import wblut.geom.WB_GeometryOp2D;

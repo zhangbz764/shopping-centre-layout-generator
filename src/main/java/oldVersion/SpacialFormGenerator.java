@@ -1,10 +1,10 @@
 package oldVersion;
 
 import main.ImportData;
-import mallElementNew.TrafficGraph;
-import mallElementNew.TrafficNode;
-import mallElementNew.TrafficNodeFixed;
-import mallElementNew.TrafficNodeTree;
+import oldVersion.mallElements.TrafficGraph;
+import oldVersion.mallElements.TrafficNode;
+import oldVersion.mallElements.TrafficNodeFixed;
+import oldVersion.mallElements.TrafficNodeTree;
 import processing.core.PApplet;
 import render.JtsRender;
 import wblut.geom.WB_Point;

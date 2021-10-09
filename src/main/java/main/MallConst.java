@@ -45,12 +45,10 @@ public class MallConst {
     public static final double STRUCTURE_MODEL_2 = 9;     // 柱距预设值9m
     public static final int STRUCTURE_GRID_NUM = 2;       // 柱网体系预设数量
     public static final int STRUCTURE_GRID_MAX = 4;       // 柱网体系最大数量
-    public static final float STRUCTURE_CTRL_R = 5;       // 柱网控制点判定范围
-
-    public static final double ATRIUM_AREA_MAIN = 550;    // 主中庭默认面积
-    public static final double ATRIUM_AREA_SUB = 350;     // 次中庭默认面积
-    public static final double ATRIUM_ROUND_R = 1.5;      // 中庭倒角半径
-
+    public static final float STRUCTURE_CTRL_R = 5;       // 柱网控制点判定范围// 中庭倒角半径
+    // 5
+    public static final double ESCALATOR_LENGTH = 10;     // 扶梯长度
+    public static final double ESCALATOR_WIDTH = 1.5;     // 扶梯宽度
     public static final double ESCALATOR_DIST_MAX = 50;   // 扶梯服务半径上限
     public static final double ESCALATOR_DIST_MIN = 30;   // 扶梯服务半径上限
 

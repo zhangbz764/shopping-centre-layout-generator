@@ -8,10 +8,13 @@ import org.locationtech.jts.geom.*;
 import processing.core.PApplet;
 import render.JtsRender;
 import transform.ZTransform;
-import wblut.geom.*;
+import wblut.geom.WB_Coord;
+import wblut.geom.WB_Point;
+import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * main generator
@@ -35,9 +38,6 @@ public class MallGenerator {
     // main corridor
     private Polygon[] rawAtrium_receive;       // 中庭多边形（共用）
     private PublicSpace publicSpace;
-
-    // public space
-    private Polygon publicSpacePoly;                 // 收敛后的中央交通空间轮廓
 
     // structure grid
     private StructureGrid[] grids;                  // 结构轴网（共用）
@@ -321,26 +321,33 @@ public class MallGenerator {
     /* ------------- generating shop cells ------------- */
 
     /**
-     * description
+     * initialize shop cells
      *
-     * @param floorNum
+     * @param floorNum number of floor
      * @return void
      */
     public void initShopCells(int floorNum) {
         if (floorNum == 1) {
-            List<LineString> publicSpaceLS = new ArrayList<>(ZTransform.PolygonToLineString(publicSpacePoly));
+            List<LineString> publicSpaceLS = new ArrayList<>(ZTransform.PolygonToLineString(publicSpace.getPublicSpaceShape()));
             floors[floorNum - 1] = new MallFloor(floorNum, siteBaseL.getBoundary());
             floors[floorNum - 1].setStatus(0);
             this.floors[floorNum - 1].updateSubdivision(publicSpaceLS, grids);
         } else {
-            List<LineString> publicSpaceLS = new ArrayList<>(ZTransform.PolygonToLineString(publicSpacePoly));
+            // mainly here
+            List<LineString> publicSpaceLS = new ArrayList<>(
+                    ZTransform.PolygonToLineString(publicSpace.getPublicSpaceShape())
+            );
             floors[floorNum - 1] = new MallFloor(floorNum, siteBaseL.getBoundary());
             floors[floorNum - 1].setStatus(0);
-            Point verify = publicSpacePoly.getInteriorPoint();
+            Point verify = publicSpace.getPublicSpaceShape().getInteriorPoint();
             floors[floorNum - 1].setVerify(verify);
             this.floors[floorNum - 1].updateSubdivision(publicSpaceLS, grids);
         }
     }
+
+    /* ------------- generating escalators ------------- */
+
+
 
     /* ------------- setter & getter ------------- */
 
@@ -444,17 +451,17 @@ public class MallGenerator {
                 displaySiteBoundaryLocal(app, jtsRender);
                 displayPublicSpaceLocal(app, jtsRender);
                 break;
-//            case 4:
-//                displaySiteBoundaryLocal(app, jtsRender);
-//                displayPublicSpaceLocal(app, jtsRender);
-//                displayGridLocal(app);
-//                break;
-//            case 5:
-//                displaySiteBoundaryLocal(app, jtsRender);
-//                displayPublicSpaceLocal(app, jtsRender);
-//                displayGridLocal(app);
-//                displayShopCellsLocal(floorNum, app, jtsRender);
-//                break;
+            case 4:
+                displaySiteBoundaryLocal(app, jtsRender);
+                displayPublicSpaceLocal(app, jtsRender);
+                displayGridLocal(app);
+                break;
+            case 5:
+                displaySiteBoundaryLocal(app, jtsRender);
+                displayPublicSpaceLocal(app, jtsRender);
+                displayGridLocal(app);
+                displayShopCellsLocal(floorNum, app, jtsRender);
+                break;
 //            case 6:
 //                displaySiteBoundaryLocal(app, jtsRender);
 //                displayPublicSpaceLocal(app, jtsRender);
@@ -519,6 +526,17 @@ public class MallGenerator {
         jtsRender.drawGeometry(publicSpace.getPublicSpaceShape());
         for (Polygon p : publicSpace.getAtriumCurrShapes()) {
             jtsRender.drawGeometry(p);
+        }
+
+        app.fill(255);
+        app.textSize(2);
+        for (int i = 0; i < publicSpace.getAtriumTrimShapes().length; i++) {
+            Polygon p = publicSpace.getAtriumTrimShapes()[i];
+            app.pushMatrix();
+            app.scale(1, -1);
+            app.translate(0, (float) (-2 * p.getCentroid().getY()));
+            app.text(String.format("%.2f", publicSpace.getAtriumCurrAreas()[i]), (float) p.getCentroid().getX(), (float) p.getCentroid().getY());
+            app.popMatrix();
         }
     }
 

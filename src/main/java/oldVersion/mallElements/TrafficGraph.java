@@ -1,4 +1,4 @@
-package mallElementNew;
+package oldVersion.mallElements;
 
 import basicGeometry.ZEdge;
 import basicGeometry.ZFactory;
@@ -581,7 +581,7 @@ public class TrafficGraph {
      *
      * @param curr  one node
      * @param other other nodes
-     * @return mallElementNew.TrafficNode
+     * @return oldVersion.mallElements.TrafficNode
      */
     private TrafficNode getNearestNode(TrafficNode curr, List<TrafficNode> other) {
         double[] dist = new double[other.size()];

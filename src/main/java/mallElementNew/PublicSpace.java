@@ -11,15 +11,17 @@ import org.locationtech.jts.geom.*;
 import org.locationtech.jts.operation.buffer.BufferOp;
 import org.locationtech.jts.operation.buffer.BufferParameters;
 import transform.ZTransform;
+import wblut.geom.WB_Circle;
 import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Point;
+import wblut.geom.WB_Polygon;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * description
+ * main public space of shopping mall (atriums, corridors, escalators)
  *
  * @author zhangbz ZHANG Baizhou
  * @project shopping_mall
@@ -34,14 +36,15 @@ public class PublicSpace {
     private Coordinate[] publicSpaceShapeBufferCtrls;
     private Polygon publicSpaceShape;
 
+    private List<Escalator> escalators;
+
     /* ------------- constructor ------------- */
 
     public PublicSpace(Polygon[] atriumShapes, LineString mainTraffic) {
-
         initCorridorLines(atriumShapes, mainTraffic);
     }
 
-    /* ------------- member function ------------- */
+    /* ------------- member function: corridors ------------- */
 
     /**
      * initialize main traffic corridors
@@ -205,7 +208,7 @@ public class PublicSpace {
                 coords[min == 0 ? coords.length - 2 : min - 1],
                 coords[min]
         );
-        ZPoint newPt1 = ZGeoMath.simpleLineElementsIntersect2D(
+        ZPoint newPt1 = ZGeoMath.simpleLineElementsIntersection2D(
                 former, "line", c.offset[offsetID], "line"
         );
         coords[min] = newPt1.toJtsCoordinate();
@@ -216,7 +219,7 @@ public class PublicSpace {
                 coords[min + 1],
                 coords[(min + 2) % (coords.length - 1)]
         );
-        ZPoint newPt2 = ZGeoMath.simpleLineElementsIntersect2D(
+        ZPoint newPt2 = ZGeoMath.simpleLineElementsIntersection2D(
                 next, "line", c.offset[offsetID], "line"
         );
         coords[min + 1] = newPt2.toJtsCoordinate();
@@ -226,6 +229,8 @@ public class PublicSpace {
 
         return min;
     }
+
+    /* ------------- member function: atrium & public shape ------------- */
 
     /**
      * initialize public space shape boundary
@@ -266,6 +271,8 @@ public class PublicSpace {
         BufferParameters parameters = new BufferParameters(0, 1, 2, 5.0D);
         Geometry buffer = BufferOp.bufferOp(publicSpaceShapeInit, dist, parameters);
         if (buffer instanceof Polygon) {
+//            Geometry sim = DouglasPeuckerSimplifier.simplify(buffer, 3);
+
             // remove last Coordinate
             this.publicSpaceShapeBufferCtrls = new Coordinate[buffer.getNumPoints() - 1];
             for (int i = 0; i < publicSpaceShapeBufferCtrls.length; i++) {
@@ -293,7 +300,7 @@ public class PublicSpace {
 
         // the first atrium
         Atrium as = atriums.get(0);
-        Coordinate[] shapeCoordsS = as.currShape.getCoordinates();
+        Coordinate[] shapeCoordsS = as.trimShape.getCoordinates();
         int min1S = as.intersectionMin[1];
         int countS = (as.intersectionMin[1] + 1) % (shapeCoordsS.length - 1);
         while (countS != min1S) {
@@ -305,7 +312,7 @@ public class PublicSpace {
         // loop forward
         for (int i = 1; i < atriums.size() - 1; i++) {
             Atrium a = atriums.get(i);
-            Coordinate[] shapeCoords = a.currShape.getCoordinates();
+            Coordinate[] shapeCoords = a.trimShape.getCoordinates();
             int min0 = a.intersectionMin[0];
             int min1 = a.intersectionMin[1];
             int count = (min0 + 1) % (shapeCoords.length - 1);
@@ -318,7 +325,7 @@ public class PublicSpace {
 
         // the last atrium
         Atrium ae = atriums.get(atriums.size() - 1);
-        Coordinate[] shapeCoordsE = ae.currShape.getCoordinates();
+        Coordinate[] shapeCoordsE = ae.trimShape.getCoordinates();
         int min0E = ae.intersectionMin[0];
         int countE = (ae.intersectionMin[0] + 1) % (shapeCoordsE.length - 1);
         while (countE != min0E) {
@@ -330,7 +337,7 @@ public class PublicSpace {
         // loop backward
         for (int i = atriums.size() - 2; i > 0; i--) {
             Atrium a = atriums.get(i);
-            Coordinate[] shapeCoords = a.currShape.getCoordinates();
+            Coordinate[] shapeCoords = a.trimShape.getCoordinates();
             int min0 = a.intersectionMin[0];
             int min1 = a.intersectionMin[1];
             int count = (min1 + 1) % (shapeCoords.length - 1);
@@ -388,6 +395,114 @@ public class PublicSpace {
         Atrium a = atriums.get(atriumID);
         if (!a.roundOrSmooth) {
             a.setCurrShape(ZGeoMath.smoothPolygon(a.trimShape, 4, times));
+        }
+    }
+
+    /* ------------- member function: escalator ------------- */
+
+    /**
+     * initialize the escalators
+     *
+     * @param serviceRadius minimal service radius of an escalator
+     * @return void
+     */
+    public void initEscalators(double serviceRadius) {
+        this.escalators = new ArrayList<>();
+        Atrium a = atriums.get(0);
+
+
+        generateEscalator(a);
+    }
+
+    public void updateEscalatorPos(int atriumID) {
+        Atrium a = atriums.get(atriumID);
+        a.escalatorBaseID++;
+//        while () {
+//            generateEscalator(a);
+//        }
+    }
+
+    /**
+     * generate escalator on an atrium
+     *
+     * @param atrium
+     * @return void
+     */
+    private void generateEscalator(Atrium atrium) {
+        // split atrium
+        WB_Polygon shape = ZTransform.PolygonToWB_Polygon(atrium.currShape);
+        double shapeLength = ZGeoMath.getPolyLength(shape);
+        List<ZPoint> split = ZGeoMath.splitPolygonEdge(atrium.currShape, 64);
+        atrium.possibleEscalatorBases = split;
+        for (int i = 0; i < split.size(); i++) {
+            ZPoint p0 = split.get(i);
+            WB_Point splitP = p0.toWB_Point();
+            int splitEdgeIndex = ZGeoMath.pointOnWhichEdgeIndices(p0, shape)[0];
+
+            // generate circle to find possible intersections
+            WB_Circle circle = new WB_Circle(splitP, MallConst.ESCALATOR_LENGTH);
+            List<WB_Point> intersection = ZGeoMath.polylineCircleIntersection(shape, circle);
+
+            // must have intersection
+            if (intersection.size() > 0) {
+                double[] dists = new double[intersection.size()];
+                for (int j = 0; j < intersection.size(); j++) {
+                    WB_Point inter = intersection.get(j);
+                    int[] onWhich = ZGeoMath.pointOnWhichEdgeIndices(new ZPoint(inter), shape);
+                    int interIndex = onWhich[0];
+
+                    if (interIndex == splitEdgeIndex) {
+                        // on same edge
+                        if (inter.getSqDistance2D(shape.getPoint(interIndex)) >= splitP.getSqDistance2D(shape.getPoint(interIndex))) {
+                            dists[j] = inter.getDistance2D(splitP);
+                        } else {
+                            dists[j] = shapeLength - inter.getDistance2D(splitP);
+                        }
+                    } else {
+                        // on different edge
+                        int currIndex = splitEdgeIndex;
+                        double distAlong = 0;
+
+                        currIndex++;
+                        if (currIndex == shape.getNumberOfPoints() - 2) {
+                            currIndex = 0;
+                        }
+                        distAlong += splitP.getDistance2D(shape.getPoint(currIndex));
+                        while (currIndex != interIndex) {
+                            distAlong += shape.getPoint(currIndex).getDistance2D(shape.getPoint(currIndex + 1));
+                            currIndex++;
+                            if (currIndex == shape.getNumberOfPoints() - 2) {
+                                currIndex = 0;
+                            }
+                        }
+                        distAlong += shape.getPoint(currIndex).getDistance2D(inter);
+
+                        dists[j] = distAlong;
+                    }
+                }
+
+                // get the closest intersection as p2
+                int minIndex = ZMath.getMinIndex(dists);
+                ZPoint p1 = new ZPoint(intersection.get(minIndex));
+
+                // create escalator bound
+                ZPoint sideVec = p1.sub(p0);
+                ZPoint perp = sideVec.rotate2D(Math.PI * 0.5).normalize();
+                Coordinate[] boundRectCoords = new Coordinate[5];
+                boundRectCoords[0] = p0.toJtsCoordinate();
+                boundRectCoords[1] = p1.toJtsCoordinate();
+                boundRectCoords[2] = p1.add(perp.scaleTo(MallConst.ESCALATOR_WIDTH)).toJtsCoordinate();
+                boundRectCoords[3] = p0.add(perp.scaleTo(MallConst.ESCALATOR_WIDTH)).toJtsCoordinate();
+                boundRectCoords[4] = boundRectCoords[0];
+                Polygon validRect = ZFactory.jtsgf.createPolygon(boundRectCoords);
+
+                // validate that the escalator rectangle is within the atrium
+                if (atrium.currShape.contains(validRect)) {
+                    escalators.add(new Escalator(p0, validRect));
+                    atrium.escalatorBaseID = i;
+                    break;
+                }
+            }
         }
     }
 
@@ -488,7 +603,7 @@ public class PublicSpace {
                     new ZPoint(neighbor[0].currShape.getCentroid()),
                     l0.getCenter()
             ).toLinePD();
-            if (ZGeoMath.checkLineSegmentIntersection(l1.toLinePD(), test)) {
+            if (ZGeoMath.checkLineSegmentIntersect(l1.toLinePD(), test)) {
                 offset = new ZLine[]{l1, l0};
             }
         }
@@ -497,13 +612,17 @@ public class PublicSpace {
     /* ------------- inner class: Atrium ------------- */
 
     private static class Atrium {
-        private Polygon initShape;
+        private final Polygon initShape;
         private Polygon trimShape;
         private Polygon currShape;
         private double area;
         private Corridor[] neighbor;
         private int intersectionMin[] = new int[]{-1, -1};
         private boolean roundOrSmooth = true;
+
+        private List<ZPoint> possibleEscalatorBases;
+        private int escalatorBaseID;
+        private Escalator escalator;
 
         private Atrium(Polygon _initShape) {
             this.initShape = _initShape;
@@ -520,6 +639,18 @@ public class PublicSpace {
         public void setCurrShape(Polygon currShape) {
             this.currShape = currShape;
             this.area = currShape.getArea();
+        }
+    }
+
+    /* ------------- inner class: Escalator ------------- */
+
+    private static class Escalator {
+        private ZPoint base;
+        private Polygon bound;
+
+        private Escalator(ZPoint _base, Polygon _bound) {
+            this.base = _base;
+            this.bound = _bound;
         }
     }
 }

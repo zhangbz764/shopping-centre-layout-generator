@@ -85,10 +85,10 @@ public class SiteBase_L {
         ZLine seg12 = new ZLine(validRedLine.getCoordinates()[(base + 1) % 4], validRedLine.getCoordinates()[(base + 2) % 4]);
         ZLine seg23 = new ZLine(validRedLine.getCoordinates()[(base + 2) % 4], validRedLine.getCoordinates()[(base + 3) % 4]);
         boundaryPts[3] = seg01_move.getPt0().toJtsCoordinate();
-        boundaryPts[2] = ZGeoMath.simpleLineElementsIntersect2D(
+        boundaryPts[2] = ZGeoMath.simpleLineElementsIntersection2D(
                 seg01_move, "segment", seg12, "segment"
         ).toJtsCoordinate();
-        boundaryPts[4] = ZGeoMath.simpleLineElementsIntersect2D(
+        boundaryPts[4] = ZGeoMath.simpleLineElementsIntersection2D(
                 seg30_move, "segment", seg23, "segment"
         ).toJtsCoordinate();
         return ZFactory.jtsgf.createPolygon(boundaryPts);

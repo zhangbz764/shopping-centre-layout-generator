@@ -1,6 +1,6 @@
 package oldVersion;
 
-import mallElementNew.TrafficGraph;
+import oldVersion.mallElements.TrafficGraph;
 import wblut.geom.WB_Polygon;
 
 /**

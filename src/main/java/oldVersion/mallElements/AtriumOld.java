@@ -3,7 +3,6 @@ package oldVersion.mallElements;
 import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
-import mallElementNew.TrafficNode;
 import math.ZGeoMath;
 import oldVersion.MallConstant;
 import processing.core.PApplet;

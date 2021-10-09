@@ -1,12 +1,10 @@
 package mallElementNew;
 
-import advancedGeometry.ZBSpline;
 import basicGeometry.ZFactory;
 import basicGeometry.ZPoint;
 import math.ZGeoMath;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryCollection;
-import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
 import wblut.geom.WB_GeometryOp2D;
 import wblut.geom.WB_Point;

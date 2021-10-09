@@ -964,6 +964,17 @@ public class MallInteract {
         for (AtriumRaw ar : atriumRawManager.getAtriumRaws()) {
             jtsRender.drawGeometry(ar.getShape());
         }
+
+        app.fill(255);
+        app.textSize(2);
+        for (int i = 0; i < atriumRawManager.getNumAtriumRaw(); i++) {
+            Polygon p = atriumRawManager.getAtriumRaws().get(i).getShape();
+            app.pushMatrix();
+            app.scale(1, -1);
+            app.translate(0, (float) (-2 * p.getCentroid().getY()));
+            app.text(String.format("%.2f", p.getArea()), (float) p.getCentroid().getX(), (float) p.getCentroid().getY());
+            app.popMatrix();
+        }
     }
 
     private void displaySelectedAtriumRaw(PApplet app, JtsRender render) {
