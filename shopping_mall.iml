@@ -13,7 +13,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="Ztools" />
     <orderEntry type="library" name="Maven: org.processing:core:3.3.7" level="project" />
     <orderEntry type="library" name="Maven: org.jogamp.gluegen:gluegen-rt-main:2.3.2" level="project" />
     <orderEntry type="library" name="Maven: org.jogamp.gluegen:gluegen-rt:2.3.2" level="project" />

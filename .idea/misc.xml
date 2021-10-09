@@ -10,8 +10,8 @@
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/../../../AAA_Study/0_JavaTools/Ztools/pom.xml" />
         <option value="$PROJECT_DIR$/../Ztools/pom.xml" />
+        <option value="$PROJECT_DIR$/../../../AAA_Study/0_JavaTools/Ztools/pom.xml" />
       </list>
     </option>
   </component>
