@@ -16,9 +16,7 @@ import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * main public space of shopping mall (atriums, corridors, escalators)
@@ -35,8 +33,6 @@ public class PublicSpace {
     private Polygon publicSpaceShapeInit;
     private Coordinate[] publicSpaceShapeBufferCtrls;
     private Polygon publicSpaceShape;
-
-    private List<Escalator> escalators;
 
     /* ------------- constructor ------------- */
 
@@ -403,81 +399,106 @@ public class PublicSpace {
     /**
      * initialize the escalators
      *
-     * @param serviceRadius minimal service radius of an escalator
+     * @param mainTraffic main traffic curve
      * @return void
      */
-    public void initEscalators(double serviceRadius) {
-        this.escalators = new ArrayList<>();
-        Atrium a = atriums.get(0);
+    public void initEscalators(LineString mainTraffic) {
+        // initialize possible positions
+        for (Atrium a : atriums) {
+            a.possibleEscalatorBases = ZGeoMath.splitPolygonEdge(a.currShape, 64);
+        }
 
+        // find atriums to generate escalator
+        Set<Atrium> generator = new HashSet<>();
+        Atrium aS = atriums.get(0);
+        Atrium aE = atriums.get(atriums.size() - 1);
+        generator.add(aS);
+        generator.add(aE);
+        Point aSCenter = aS.currShape.getCentroid();
+        Point aECenter = aE.currShape.getCentroid();
+        WB_Point closestS = WB_GeometryOp.getClosestPoint2D(ZTransform.PointToWB_Point(aSCenter), ZTransform.LineStringToWB_PolyLine(mainTraffic));
+        WB_Point closestE = WB_GeometryOp.getClosestPoint2D(ZTransform.PointToWB_Point(aECenter), ZTransform.LineStringToWB_PolyLine(mainTraffic));
+        LineString cutLS = ZFactory.cutLineString2Points(mainTraffic, new ZPoint(closestS), new ZPoint(closestE));
+        List<ZPoint> splitByRadius = ZGeoMath.splitPolyLineByThreshold(cutLS, 2 * MallConst.ESCALATOR_DIST_MAX, 2 * MallConst.ESCALATOR_DIST_MIN, 0);
+        for (int i = 1; i < splitByRadius.size() - 1; i++) {
+            double[] dists = new double[atriums.size() - 2];
+            for (int j = 1; j < atriums.size() - 1; j++) {
+                dists[j - 1] = WB_GeometryOp.getDistance2D(
+                        splitByRadius.get(i).toWB_Point(), ZTransform.PolygonToWB_PolyLine(atriums.get(j).trimShape).get(0)
+                );
+            }
+            int min = ZMath.getMinIndex(dists);
+            generator.add(atriums.get(min + 1));
+        }
 
-        generateEscalator(a);
+        // generate escalator for each atrium
+        for (Atrium a : generator) {
+            generateEscalator(a);
+        }
     }
 
+    /**
+     * update escalator to the next position
+     *
+     * @param atriumID index of atrium
+     * @return void
+     */
     public void updateEscalatorPos(int atriumID) {
         Atrium a = atriums.get(atriumID);
-        a.escalatorBaseID++;
-//        while () {
-//            generateEscalator(a);
-//        }
+
+        generateEscalator(a);
     }
 
     /**
      * generate escalator on an atrium
      *
-     * @param atrium
+     * @param atrium the atrium to generate
      * @return void
      */
     private void generateEscalator(Atrium atrium) {
         // split atrium
         WB_Polygon shape = ZTransform.PolygonToWB_Polygon(atrium.currShape);
         double shapeLength = ZGeoMath.getPolyLength(shape);
-        List<ZPoint> split = ZGeoMath.splitPolygonEdge(atrium.currShape, 64);
-        atrium.possibleEscalatorBases = split;
-        for (int i = 0; i < split.size(); i++) {
-            ZPoint p0 = split.get(i);
+
+        List<ZPoint> split = atrium.possibleEscalatorBases;
+        int startSplitID = atrium.escalatorBaseID;
+
+        int currSplitID = (startSplitID + 1) % split.size();
+        while (currSplitID != startSplitID) {
+            ZPoint p0 = split.get(currSplitID);
             WB_Point splitP = p0.toWB_Point();
             int splitEdgeIndex = ZGeoMath.pointOnWhichEdgeIndices(p0, shape)[0];
-
             // generate circle to find possible intersections
             WB_Circle circle = new WB_Circle(splitP, MallConst.ESCALATOR_LENGTH);
             List<WB_Point> intersection = ZGeoMath.polylineCircleIntersection(shape, circle);
-
             // must have intersection
             if (intersection.size() > 0) {
                 double[] dists = new double[intersection.size()];
-                for (int j = 0; j < intersection.size(); j++) {
-                    WB_Point inter = intersection.get(j);
+                for (int i = 0; i < intersection.size(); i++) {
+                    WB_Point inter = intersection.get(i);
                     int[] onWhich = ZGeoMath.pointOnWhichEdgeIndices(new ZPoint(inter), shape);
                     int interIndex = onWhich[0];
-
                     if (interIndex == splitEdgeIndex) {
                         // on same edge
                         if (inter.getSqDistance2D(shape.getPoint(interIndex)) >= splitP.getSqDistance2D(shape.getPoint(interIndex))) {
-                            dists[j] = inter.getDistance2D(splitP);
+                            dists[i] = inter.getDistance2D(splitP);
                         } else {
-                            dists[j] = shapeLength - inter.getDistance2D(splitP);
+                            dists[i] = shapeLength - inter.getDistance2D(splitP);
                         }
                     } else {
                         // on different edge
                         int currIndex = splitEdgeIndex;
                         double distAlong = 0;
 
-                        currIndex++;
-                        if (currIndex == shape.getNumberOfPoints() - 2) {
-                            currIndex = 0;
-                        }
+                        currIndex = (currIndex + 1) % shape.getNumberOfPoints();
                         distAlong += splitP.getDistance2D(shape.getPoint(currIndex));
                         while (currIndex != interIndex) {
-                            distAlong += shape.getPoint(currIndex).getDistance2D(shape.getPoint(currIndex + 1));
-                            currIndex++;
-                            if (currIndex == shape.getNumberOfPoints() - 2) {
-                                currIndex = 0;
-                            }
+                            distAlong += shape.getPoint(currIndex).getDistance2D(shape.getPoint((currIndex + 1) % shape.getNumberOfPoints()));
+                            currIndex = (currIndex + 1) % shape.getNumberOfPoints();
                         }
                         distAlong += shape.getPoint(currIndex).getDistance2D(inter);
 
-                        dists[j] = distAlong;
+                        dists[i] = distAlong;
                     }
                 }
 
@@ -498,11 +519,12 @@ public class PublicSpace {
 
                 // validate that the escalator rectangle is within the atrium
                 if (atrium.currShape.contains(validRect)) {
-                    escalators.add(new Escalator(p0, validRect));
-                    atrium.escalatorBaseID = i;
+                    atrium.escalator = new Escalator(p0, validRect);
+                    atrium.escalatorBaseID = currSplitID;
                     break;
                 }
             }
+            currSplitID = (currSplitID + 1) % split.size();
         }
     }
 
@@ -564,6 +586,40 @@ public class PublicSpace {
         return publicSpaceShape;
     }
 
+    public List<Polygon> getEscalatorBounds() {
+        List<Polygon> result = new ArrayList<>();
+        for (Atrium a : atriums) {
+            if (a.escalator != null) {
+                result.add(a.escalator.bound);
+            }
+        }
+        return result;
+    }
+
+    public List<Integer> getEscalatorAtriumIDs() {
+        List<Integer> result = new ArrayList<>();
+        for (int i = 0; i < atriums.size(); i++) {
+            if (atriums.get(i).escalator != null) {
+                result.add(i);
+            }
+        }
+        return result;
+    }
+
+    public List<ZLine> getEscalatorShapes() {
+        List<ZLine> result = new ArrayList<>();
+        for (Atrium a : atriums) {
+            if (a.escalator != null) {
+                result.addAll(a.escalator.shapes);
+            }
+        }
+        return result;
+    }
+
+    public Polygon getEscalatorBoundN(int escalatorAtriumID) {
+        return atriums.get(escalatorAtriumID).escalator.bound;
+    }
+
     /* ------------- inner class: Corridor ------------- */
 
     private static class Corridor {
@@ -621,7 +677,7 @@ public class PublicSpace {
         private boolean roundOrSmooth = true;
 
         private List<ZPoint> possibleEscalatorBases;
-        private int escalatorBaseID;
+        private int escalatorBaseID = 0;
         private Escalator escalator;
 
         private Atrium(Polygon _initShape) {
@@ -647,10 +703,71 @@ public class PublicSpace {
     private static class Escalator {
         private ZPoint base;
         private Polygon bound;
+        private List<ZLine> shapes;
 
         private Escalator(ZPoint _base, Polygon _bound) {
             this.base = _base;
             this.bound = _bound;
+
+            // create shapes
+            this.shapes = new ArrayList<>();
+            ZPoint v01 = new ZPoint(
+                    bound.getCoordinates()[1].getX() - bound.getCoordinates()[0].getX(),
+                    bound.getCoordinates()[1].getY() - bound.getCoordinates()[0].getY()
+            );
+            ZPoint v03 = new ZPoint(
+                    bound.getCoordinates()[3].getX() - bound.getCoordinates()[0].getX(),
+                    bound.getCoordinates()[3].getY() - bound.getCoordinates()[0].getY()
+            );
+            ZPoint v01Nor = v01.normalize();
+            ZPoint v03Nor = v03.normalize();
+            ZLine central = new ZLine(
+                    0.5 * (bound.getCoordinates()[0].getX() + bound.getCoordinates()[3].getX()),
+                    0.5 * (bound.getCoordinates()[0].getY() + bound.getCoordinates()[3].getY()),
+                    0.5 * (bound.getCoordinates()[1].getX() + bound.getCoordinates()[2].getX()),
+                    0.5 * (bound.getCoordinates()[1].getY() + bound.getCoordinates()[2].getY())
+            );
+            shapes.add(central);
+            ZLine sideW1 = new ZLine(
+                    new ZPoint(bound.getCoordinates()[0]).add(v01Nor.scaleTo(1)),
+                    new ZPoint(bound.getCoordinates()[3]).add(v01Nor.scaleTo(1))
+            );
+            ZLine sideW2 = new ZLine(
+                    new ZPoint(bound.getCoordinates()[1]).add(v01Nor.scaleTo(-1)),
+                    new ZPoint(bound.getCoordinates()[2]).add(v01Nor.scaleTo(-1))
+            );
+            shapes.add(sideW1);
+            shapes.add(sideW2);
+            ZLine sideL1 = new ZLine(
+                    sideW1.getPt0().add(v03Nor.scaleTo(0.2)),
+                    sideW2.getPt0().add(v03Nor.scaleTo(0.2))
+            );
+            ZLine sideL2 = new ZLine(
+                    sideW1.getPt0().add(v03Nor.scaleTo(0.5 * MallConst.ESCALATOR_WIDTH - 0.2)),
+                    sideW2.getPt0().add(v03Nor.scaleTo(0.5 * MallConst.ESCALATOR_WIDTH - 0.2))
+            );
+            ZLine sideL3 = new ZLine(
+                    sideW1.getPt1().add(v03Nor.scaleTo(-0.2)),
+                    sideW2.getPt1().add(v03Nor.scaleTo(-0.2))
+            );
+            ZLine sideL4 = new ZLine(
+                    sideW1.getPt0().add(v03Nor.scaleTo(0.5 * MallConst.ESCALATOR_WIDTH + 0.2)),
+                    sideW2.getPt0().add(v03Nor.scaleTo(0.5 * MallConst.ESCALATOR_WIDTH + 0.2))
+            );
+            shapes.add(sideL1);
+            shapes.add(sideL2);
+            shapes.add(sideL3);
+            shapes.add(sideL4);
+            List<ZPoint> sideL1Split = sideL1.divide(25);
+            List<ZPoint> sideL2Split = sideL2.divide(25);
+            for (int i = 1; i < sideL1Split.size(); i++) {
+                shapes.add(new ZLine(sideL1Split.get(i), sideL2Split.get(i)));
+            }
+            List<ZPoint> sideL3Split = sideL3.divide(25);
+            List<ZPoint> sideL4Split = sideL4.divide(25);
+            for (int i = 1; i < sideL3Split.size(); i++) {
+                shapes.add(new ZLine(sideL3Split.get(i), sideL4Split.get(i)));
+            }
         }
     }
 }

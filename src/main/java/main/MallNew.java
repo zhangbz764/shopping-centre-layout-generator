@@ -44,7 +44,7 @@ public class MallNew extends PApplet {
     /* ------------- settings ------------- */
 
     public void settings() {
-        size(1600, 900, P3D);
+        size(1920, 1080, P3D);
     }
 
     /* ------------- setup ------------- */
@@ -93,7 +93,7 @@ public class MallNew extends PApplet {
         pushStyle();
         showGUI();
         displayStats();
-//        mallGUI.displayInfo(this, EDIT_STATUS);
+        mallGUI.displayInfo(this, EDIT_STATUS);
         popStyle();
     }
 
@@ -128,8 +128,9 @@ public class MallNew extends PApplet {
         String stats = "本层面积" + "\n" + mallGenerator.getBoundaryAreaAsString() + "\n"
                 + "\n" + "可租赁面积" + "\n" + mallInteract.getRentArea() + "\n"
                 + "\n" + "动线长度" + "\n" + mallGenerator.getTrafficLength() + "\n" + mallGenerator.getInnerTrafficLength() + "\n"
-                + "\n" + "得铺率" + "\n" + mallInteract.getShopRatio() + "\n"
-                + "\n" + "小铺率" + "\n" + mallInteract.getSmallShopRatio() + "\n";
+//                + "\n" + "得铺率" + "\n" + mallInteract.getShopRatio() + "\n"
+//                + "\n" + "小铺率" + "\n" + mallInteract.getSmallShopRatio() + "\n"
+                ;
         text(stats, 20, height * 0.5f + 50);
     }
 
@@ -305,6 +306,9 @@ public class MallNew extends PApplet {
                     case MallConst.E_SHOP_EDIT:
                         mallInteract.selectShopCell(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
                         break;
+                    case MallConst.E_ESCALATOR:
+                        mallInteract.selectEscalator(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
+                        break;
                 }
             }
         }
@@ -418,12 +422,22 @@ public class MallNew extends PApplet {
                 break;
             case (MallConst.E_ESCALATOR):
                 if (EDIT_STATUS >= MallConst.E_ESCALATOR - 1) {
+                    mallGenerator.initEscalators();
+                    mallInteract.setEscalatorBounds_interact(mallGenerator.getEscalatorBounds());
+                    mallInteract.setEscalatorAtriumIDs(mallGenerator.getEscalatorAtriumIDs());
 
+                    this.EDIT_STATUS = MallConst.E_ESCALATOR;
+                    mallGUI.updateGUI(EDIT_STATUS, cp5);
+                    println("edit escalators");
                 }
                 break;
             case (MallConst.E_EVACUATION):
                 if (EDIT_STATUS >= MallConst.E_EVACUATION - 1) {
+                    mallGenerator.initEvacuation2();
 
+                    this.EDIT_STATUS = MallConst.E_EVACUATION;
+                    mallGUI.updateGUI(EDIT_STATUS, cp5);
+                    println("edit evacuations");
                 }
                 break;
         }
@@ -552,8 +566,15 @@ public class MallNew extends PApplet {
                         break;
                 }
                 break;
-
             case (MallConst.E_ESCALATOR):
+                switch (id) {
+                    // 6
+                    case (MallConst.BUTTON_CHANGE_ESCALATOR):
+                        mallGenerator.updateEscalatorPos(mallInteract.getSelectedEscalatorAtriumID());
+                        mallInteract.setEscalatorBound_interact(
+                                mallGenerator.getEscalatorBoundN(mallInteract.getSelectedEscalatorAtriumID())
+                        );
+                }
                 break;
             case (MallConst.E_EVACUATION):
                 break;

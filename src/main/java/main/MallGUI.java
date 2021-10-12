@@ -80,13 +80,13 @@ public class MallGUI {
                 .setFont(font)
         ;
 
-        cp5.addButton("自动扶梯（无效）")
+        cp5.addButton("自动扶梯位置")
                 .setPosition(0, cp5H * 6)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_ESCALATOR)
                 .setFont(font)
         ;
-        cp5.addButton("疏散楼梯（无效）")
+        cp5.addButton("疏散楼梯位置")
                 .setPosition(0, cp5H * 7)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_EVACUATION)
@@ -99,7 +99,7 @@ public class MallGUI {
         addStatus3GUI(cp5, cp5H * 3, mallParam);
         addStatus4GUI(cp5, cp5H * 4);
         addStatus5GUI(cp5, cp5H * 5);
-//        addStatus6GUI(cp5, cp5H * 6);
+        addStatus6GUI(cp5, cp5H * 6);
 //        addStatus7GUI(cp5, cp5H * 7);
     }
 
@@ -131,8 +131,8 @@ public class MallGUI {
             case (MallConst.E_SHOP_EDIT):
                 setVisible(cp5, MallConst.E_SHOP_EDIT);
                 break;
-
             case (MallConst.E_ESCALATOR):
+                setVisible(cp5, MallConst.E_ESCALATOR);
                 break;
             case (MallConst.E_EVACUATION):
                 break;
@@ -492,7 +492,19 @@ public class MallGUI {
      * @return void
      */
     public void addStatus6GUI(ControlP5 cp5, int startH) {
+        // change escalator position
+        cp5.addButton("changeEscalatorPosition")
+                .setPosition(MallConst.STATUS_W, startH)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.BUTTON_CHANGE_ESCALATOR)
+                .setFont(font)
+                .setLabel("更改扶梯位置")
+                .setVisible(false)
+        ;
 
+        this.controllerNames[6] = new String[]{
+                "changeEscalatorPosition"
+        };
     }
 
     /**
@@ -515,18 +527,22 @@ public class MallGUI {
         String info = "";
         switch (status) {
             case 0:
-            case 1:
                 info = base + "左键拖拽控制点";
                 break;
-            case 2:
-                info = base + "在列表中选择形状后单击空白位置放置"
+            case 1:
+                info = base + "左键拖拽控制点"
+                        + "\n" + "在列表中选择形状后单击空白位置放置"
                         + "\n" + "左键单击以选择形状"
                         + "\n" + "拖拽以改变形状"
-                        + "\n" + "再次单击空白处以取消选择"
+                        + "\n" + "再次单击空白处以取消选择";
+                break;
+            case 2:
+                info = base + "左键单击以选择走廊"
+                        + "\n" + "拖拽以改变走廊位置"
                 ;
                 break;
             case 3:
-                info = base;
+                info = base + "左键单击以选择中庭或轮廓点";
                 break;
             case 4:
                 info = base + "左键单击以选择柱网"
@@ -537,9 +553,7 @@ public class MallGUI {
                 info = base + "左键单击以选择多个商铺";
                 break;
             case 6:
-                info = base + "左键单击选中后拖拽控制点"
-                        + "\n" + "单击更新按钮以更新中庭划分"
-                ;
+                info = base + "左键单击以选择扶梯";
                 break;
         }
 

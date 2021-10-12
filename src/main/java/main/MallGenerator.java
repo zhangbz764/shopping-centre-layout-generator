@@ -3,12 +3,17 @@ package main;
 import advancedGeometry.rectCover.ZRectCover;
 import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
+import basicGeometry.ZPoint;
 import mallElementNew.*;
+import math.ZGeoMath;
 import org.locationtech.jts.geom.*;
+import org.locationtech.jts.operation.buffer.BufferOp;
+import org.locationtech.jts.operation.buffer.BufferParameters;
 import processing.core.PApplet;
 import render.JtsRender;
 import transform.ZTransform;
 import wblut.geom.WB_Coord;
+import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
@@ -45,13 +50,16 @@ public class MallGenerator {
     private boolean gridModelSwitch = true;         // 8.4m 或 9m 切换
 
     // shop cells
+    // core generate result: floors
+    private MallFloor[] floors;
+
+    // evacuation
 
 
     private List<List<LineString>> bufferCurve_receive;   // 动线边界曲线（不同层）
 //    private List<List<WB_Polygon>> cellPolys_receive;     // 商铺剖分多边形（不同层）
 
-    // core generate result: floors
-    private MallFloor[] floors;
+
 
     /* ------------- constructor ------------- */
 
@@ -347,7 +355,164 @@ public class MallGenerator {
 
     /* ------------- generating escalators ------------- */
 
+    public void initEscalators() {
+        publicSpace.initEscalators(mainTraffic.getMainTrafficCurve());
+    }
 
+    public void updateEscalatorPos(int atriumID) {
+        publicSpace.updateEscalatorPos(atriumID);
+    }
+
+    /* ------------- generating evacuations ------------- */
+
+    private List<Polygon> evacRectTemp;
+    private List<Polygon> evacPoly;
+    private Polygon newBound;
+
+    public void initEvacuation2() {
+        Polygon bound = siteBaseL.getBoundary();
+        BufferParameters parameters = new BufferParameters(0, 1, 2, 5.0D);
+        Geometry buffer = BufferOp.bufferOp(bound, MallConst.SHOP_SPAN_THRESHOLD[0] * -0.5, parameters);
+//        WB_Polygon bufferBoundary = ZFactory.wbgf.createBufferedPolygons2D(siteBaseL.getBoundary(), MallConst.SHOP_SPAN_THRESHOLD[0] * -0.5).get(0);
+        WB_Polygon validBuffer = ZTransform.validateWB_Polygon(ZTransform.PolygonToWB_Polygon((Polygon) buffer));
+        List<ZPoint> dividePoints = ZGeoMath.splitPolyLineByThreshold(validBuffer, MallConst.EVACUATION_DIST, MallConst.EVACUATION_DIST - 10);
+
+        this.evacRectTemp = new ArrayList<>();
+        this.evacPoly = new ArrayList<>();
+
+        for (ZPoint p : dividePoints) {
+            for (StructureGrid g : grids) {
+                Polygon rect = g.getRect();
+                if (rect.contains(p.toJtsPoint())) {
+                    double distTo10 = WB_GeometryOp.getDistance2D(p.toWB_Point(), g.getLat12().get(0).toWB_Segment());
+                    double distTo12 = WB_GeometryOp.getDistance2D(p.toWB_Point(), g.getLon10().get(0).toWB_Segment());
+
+                    if (distTo10 < g.getLengthUnit12()) {
+                        // 靠近10边
+                        int n = (int) (distTo12 / g.getLengthUnit10());
+                        Coordinate[] coords = new Coordinate[5];
+                        if (n < 1) {
+                            coords[0] = g.getGridNodes()[0][0].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[0][1].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[2][1].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[2][0].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        } else if (n > g.getLon10().size() - 2) {
+                            coords[0] = g.getGridNodes()[n][0].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[n][1].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[n + 2][1].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[n + 2][0].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        } else {
+                            coords[0] = g.getGridNodes()[n - 1][0].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[n - 1][1].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[n + 1][1].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[n + 1][0].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        }
+                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
+                    } else if (distTo10 <= g.getLength12() && distTo10 > g.getLength12() - g.getLengthUnit12()) {
+                        // 靠近23边
+                        int size12 = g.getLat12().size();
+                        int n = (int) (distTo12 / g.getLengthUnit10());
+                        Coordinate[] coords = new Coordinate[5];
+                        if (n < 1) {
+                            coords[0] = g.getGridNodes()[0][size12 - 2].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[0][size12 - 1].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[2][size12 - 1].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[2][size12 - 2].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        } else if (n > g.getLon10().size() - 2) {
+                            coords[0] = g.getGridNodes()[n][size12 - 2].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[n][size12 - 1].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[n + 2][size12 - 1].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[n + 2][size12 - 2].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        } else {
+                            coords[0] = g.getGridNodes()[n - 1][size12 - 2].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[n - 1][size12 - 1].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[n + 1][size12 - 1].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[n + 1][size12 - 2].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        }
+                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
+                    } else if (distTo12 < g.getLengthUnit10()) {
+                        // 靠近12边
+                        int n = (int) (distTo10 / g.getLengthUnit12());
+                        Coordinate[] coords = new Coordinate[5];
+                        if (n < 1) {
+                            coords[0] = g.getGridNodes()[1][0].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[0][0].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[0][2].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[1][2].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        } else if (n > g.getLat12().size() - 2) {
+                            coords[0] = g.getGridNodes()[1][n - 1].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[0][n - 1].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[0][n + 1].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[1][n + 1].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        } else {
+                            coords[0] = g.getGridNodes()[1][n].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[0][n].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[0][n + 2].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[1][n + 2].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        }
+                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
+                    } else if (distTo12 <= g.getLength10() && distTo12 > g.getLength10() - g.getLengthUnit10()) {
+                        // 靠近30边
+                        int size10 = g.getLon10().size();
+                        int n = (int) (distTo10 / g.getLengthUnit12());
+                        Coordinate[] coords = new Coordinate[5];
+                        if (n < 1) {
+                            coords[0] = g.getGridNodes()[size10 - 1][0].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[size10 - 2][0].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[size10 - 2][2].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[size10 - 1][2].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        } else if (n > g.getLat12().size() - 2) {
+                            coords[0] = g.getGridNodes()[size10 - 1][n - 1].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[size10 - 2][n - 1].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[size10 - 2][n + 1].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[size10 - 1][n + 1].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        } else {
+                            coords[0] = g.getGridNodes()[size10 - 1][n].toJtsCoordinate();
+                            coords[1] = g.getGridNodes()[size10 - 2][n].toJtsCoordinate();
+                            coords[2] = g.getGridNodes()[size10 - 2][n + 2].toJtsCoordinate();
+                            coords[3] = g.getGridNodes()[size10 - 1][n + 2].toJtsCoordinate();
+                            coords[4] = coords[0];
+                        }
+                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
+                    }
+                    break;
+                }
+            }
+        }
+
+        // 布尔运算
+        for (Polygon rect : evacRectTemp) {
+            Geometry intersect = bound.intersection(rect);
+            if (intersect instanceof Polygon) {
+                evacPoly.add((Polygon) intersect);
+            }
+        }
+        Geometry difference = bound;
+        for (Polygon rect : evacRectTemp) {
+            difference = difference.difference(rect);
+        }
+        if (difference.getGeometryType().equals("MultiPolygon")) {
+            double area = 0;
+            for (int i = 0; i < difference.getNumGeometries(); i++) {
+                Geometry g = difference.getGeometryN(i);
+                if (g instanceof Polygon && g.getArea() > area) {
+                    this.newBound = (Polygon) g;
+                }
+            }
+        }
+        System.out.println("diff: " + difference.getGeometryType());
+    }
 
     /* ------------- setter & getter ------------- */
 
@@ -399,6 +564,15 @@ public class MallGenerator {
         return publicSpace.getAtriumCurrShapeN(index);
     }
 
+    public List<WB_Point> getCorridorNode() {
+        List<WB_Point> corridorNode = new ArrayList<>();
+        for (ZLine l : publicSpace.getCorridorsLines()) {
+            corridorNode.add(l.getPt0().toWB_Point());
+            corridorNode.add(l.getPt1().toWB_Point());
+        }
+        return corridorNode;
+    }
+
     public Polygon[] getGridRects() {
         Polygon[] rects = new Polygon[grids.length];
         for (int i = 0; i < grids.length; i++) {
@@ -419,13 +593,16 @@ public class MallGenerator {
         this.floors[floorNum - 1].setAllShops(newShops);
     }
 
-    public List<WB_Point> getCorridorNode() {
-        List<WB_Point> corridorNode = new ArrayList<>();
-        for (ZLine l : publicSpace.getCorridorsLines()) {
-            corridorNode.add(l.getPt0().toWB_Point());
-            corridorNode.add(l.getPt1().toWB_Point());
-        }
-        return corridorNode;
+    public List<Polygon> getEscalatorBounds() {
+        return publicSpace.getEscalatorBounds();
+    }
+
+    public List<Integer> getEscalatorAtriumIDs() {
+        return publicSpace.getEscalatorAtriumIDs();
+    }
+
+    public Polygon getEscalatorBoundN(int escalatorAtriumID) {
+        return publicSpace.getEscalatorBoundN(escalatorAtriumID);
     }
 
     /* ------------- draw ------------- */
@@ -462,12 +639,20 @@ public class MallGenerator {
                 displayGridLocal(app);
                 displayShopCellsLocal(floorNum, app, jtsRender);
                 break;
-//            case 6:
-//                displaySiteBoundaryLocal(app, jtsRender);
-//                displayPublicSpaceLocal(app, jtsRender);
-//                displayGridLocal(app);
-//                displayShopCellsLocal(floorNum, app, jtsRender);
-//                break;
+            case 6:
+                displaySiteBoundaryLocal(app, jtsRender);
+                displayPublicSpaceLocal(app, jtsRender);
+                displayShopCellsLocal(floorNum, app, jtsRender);
+                displayEscalatorLocal(app, jtsRender);
+                displayEscalatorRadiusLocal(app);
+                break;
+            case 7:
+                displaySiteBoundaryLocal(app, jtsRender);
+                displayPublicSpaceLocal(app, jtsRender);
+                displayShopCellsLocal(floorNum, app, jtsRender);
+                displayEscalatorLocal(app, jtsRender);
+                displayEvacuationLocal(app, jtsRender);
+                break;
         }
         app.popStyle();
     }
@@ -579,6 +764,89 @@ public class MallGenerator {
                 app.popMatrix();
             }
         }
+    }
+
+    public void displayEscalatorLocal(PApplet app, JtsRender jtsRender) {
+        app.noFill();
+        app.stroke(255);
+        app.strokeWeight(1);
+        for (Polygon p : publicSpace.getEscalatorBounds()) {
+            jtsRender.drawGeometry(p);
+        }
+        for (ZLine l : publicSpace.getEscalatorShapes()) {
+            l.display(app);
+        }
+    }
+
+    public void displayEscalatorRadiusLocal(PApplet app) {
+        for (Polygon p : publicSpace.getEscalatorBounds()) {
+            Point centroid = p.getCentroid();
+            app.noFill();
+            app.ellipse((float) centroid.getX(), (float) centroid.getY(), 2 * MallConst.ESCALATOR_DIST_MIN, 2 * MallConst.ESCALATOR_DIST_MIN);
+            app.line(
+                    (float) centroid.getX(),
+                    (float) centroid.getY(),
+                    (float) centroid.getX() + MallConst.ESCALATOR_DIST_MIN,
+                    (float) centroid.getY()
+            );
+            app.fill(255);
+            app.textSize(2);
+            app.pushMatrix();
+            app.scale(1, -1);
+            app.translate(0, (float) (-2 * centroid.getY()));
+            app.text("30m",
+                    (float) centroid.getX() + 0.5f * MallConst.ESCALATOR_DIST_MIN,
+                    (float) centroid.getY() + 1
+            );
+            app.popMatrix();
+        }
+    }
+
+    public void displayEvacuationLocal(PApplet app, JtsRender jtsRender) {
+        app.pushStyle();
+
+        if (evacPoly != null) {
+            app.stroke(255);
+            app.fill(80);
+            for (Polygon p : evacPoly) {
+                jtsRender.drawGeometry(p);
+                // display shape
+                ZPoint v01 = new ZPoint(
+                        p.getCoordinates()[1].getX() - p.getCoordinates()[0].getX(),
+                        p.getCoordinates()[1].getY() - p.getCoordinates()[0].getY()
+                );
+                ZPoint v03 = new ZPoint(
+                        p.getCoordinates()[3].getX() - p.getCoordinates()[0].getX(),
+                        p.getCoordinates()[3].getY() - p.getCoordinates()[0].getY()
+                );
+                ZPoint v01Nor = v01.normalize();
+                ZPoint v03Nor = v03.normalize();
+
+                app.line(
+                        new ZPoint(p.getCoordinates()[0]).add(v01Nor.scaleTo(2.4)).xf(),
+                        new ZPoint(p.getCoordinates()[0]).add(v01Nor.scaleTo(2.4)).yf(),
+                        new ZPoint(p.getCoordinates()[3]).add(v01Nor.scaleTo(2.4)).xf(),
+                        new ZPoint(p.getCoordinates()[3]).add(v01Nor.scaleTo(2.4)).yf()
+                );
+                app.line(
+                        new ZPoint(p.getCoordinates()[1]).add(v01Nor.scaleTo(2.4)).xf(),
+                        new ZPoint(p.getCoordinates()[1]).add(v01Nor.scaleTo(2.4)).yf(),
+                        new ZPoint(p.getCoordinates()[2]).add(v01Nor.scaleTo(2.4)).xf(),
+                        new ZPoint(p.getCoordinates()[2]).add(v01Nor.scaleTo(2.4)).yf()
+                );
+
+            }
+        }
+
+//        if (newBound != null) {
+//            app.stroke(255);
+//            app.pushMatrix();
+//            app.translate(500, 0);
+//            jtsRender.drawGeometry(newBound);
+//            app.popMatrix();
+//        }
+
+        app.popStyle();
     }
 
     /* ------------- deprecated ------------- */
@@ -703,153 +971,7 @@ public class MallGenerator {
 //        this.floors[floorNum - 1].setStatus(3);
 //    }
 //
-//    private List<Polygon> evacRectTemp;
-//    private List<Polygon> evacPoly;
 //
-//    private Polygon newBound;
-//
-//    public void generateEvacuation2() {
-//        WB_Polygon bufferBoundary = ZFactory.wbgf.createBufferedPolygons2D(boundary_receive, MallConst.SHOP_SPAN_THRESHOLD[0] * -0.5).get(0);
-//        WB_Polygon validBuffer = ZTransform.validateWB_Polygon(bufferBoundary);
-//        List<ZPoint> dividePoints = ZGeoMath.splitPolyLineByThreshold(validBuffer, MallConst.EVACUATION_DIST, MallConst.EVACUATION_DIST - 10);
-//
-//        this.evacRectTemp = new ArrayList<>();
-//        this.evacPoly = new ArrayList<>();
-//
-//        for (ZPoint p : dividePoints) {
-//            for (StructureGrid g : grids) {
-//                Polygon rect = g.getRect();
-//                if (rect.contains(p.toJtsPoint())) {
-//                    double distTo10 = WB_GeometryOp.getDistance2D(p.toWB_Point(), g.getLat12().get(0).toWB_Segment());
-//                    double distTo12 = WB_GeometryOp.getDistance2D(p.toWB_Point(), g.getLon10().get(0).toWB_Segment());
-//
-//                    if (distTo10 < g.getLengthUnit12()) {
-//                        // 靠近10边
-//                        int n = (int) (distTo12 / g.getLengthUnit10());
-//                        Coordinate[] coords = new Coordinate[5];
-//                        if (n < 1) {
-//                            coords[0] = g.getGridNodes()[0][0].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[0][1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[2][1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[2][0].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else if (n > g.getLon10().size() - 2) {
-//                            coords[0] = g.getGridNodes()[n][0].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[n][1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[n + 2][1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[n + 2][0].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else {
-//                            coords[0] = g.getGridNodes()[n - 1][0].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[n - 1][1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[n + 1][1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[n + 1][0].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        }
-//                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
-//                    } else if (distTo10 <= g.getLength12() && distTo10 > g.getLength12() - g.getLengthUnit12()) {
-//                        // 靠近23边
-//                        int size12 = g.getLat12().size();
-//                        int n = (int) (distTo12 / g.getLengthUnit10());
-//                        Coordinate[] coords = new Coordinate[5];
-//                        if (n < 1) {
-//                            coords[0] = g.getGridNodes()[0][size12 - 2].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[0][size12 - 1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[2][size12 - 1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[2][size12 - 2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else if (n > g.getLon10().size() - 2) {
-//                            coords[0] = g.getGridNodes()[n][size12 - 2].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[n][size12 - 1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[n + 2][size12 - 1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[n + 2][size12 - 2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else {
-//                            coords[0] = g.getGridNodes()[n - 1][size12 - 2].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[n - 1][size12 - 1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[n + 1][size12 - 1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[n + 1][size12 - 2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        }
-//                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
-//                    } else if (distTo12 < g.getLengthUnit10()) {
-//                        // 靠近12边
-//                        int n = (int) (distTo10 / g.getLengthUnit12());
-//                        Coordinate[] coords = new Coordinate[5];
-//                        if (n < 1) {
-//                            coords[0] = g.getGridNodes()[1][0].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[0][0].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[0][2].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[1][2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else if (n > g.getLat12().size() - 2) {
-//                            coords[0] = g.getGridNodes()[1][n - 1].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[0][n - 1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[0][n + 1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[1][n + 1].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else {
-//                            coords[0] = g.getGridNodes()[1][n].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[0][n].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[0][n + 2].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[1][n + 2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        }
-//                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
-//                    } else if (distTo12 <= g.getLength10() && distTo12 > g.getLength10() - g.getLengthUnit10()) {
-//                        // 靠近30边
-//                        int size10 = g.getLon10().size();
-//                        int n = (int) (distTo10 / g.getLengthUnit12());
-//                        Coordinate[] coords = new Coordinate[5];
-//                        if (n < 1) {
-//                            coords[0] = g.getGridNodes()[size10 - 1][0].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[size10 - 2][0].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[size10 - 2][2].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[size10 - 1][2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else if (n > g.getLat12().size() - 2) {
-//                            coords[0] = g.getGridNodes()[size10 - 1][n - 1].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[size10 - 2][n - 1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[size10 - 2][n + 1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[size10 - 1][n + 1].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else {
-//                            coords[0] = g.getGridNodes()[size10 - 1][n].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[size10 - 2][n].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[size10 - 2][n + 2].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[size10 - 1][n + 2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        }
-//                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
-//                    }
-//                    break;
-//                }
-//            }
-//        }
-//
-//        // 布尔运算
-//        Polygon bound = ZTransform.WB_PolygonToPolygon(boundary_receive);
-//        for (Polygon rect : evacRectTemp) {
-//            Geometry intersect = bound.intersection(rect);
-//            if (intersect instanceof Polygon) {
-//                evacPoly.add((Polygon) intersect);
-//            }
-//        }
-//        Geometry difference = bound;
-//        for (Polygon rect : evacRectTemp) {
-//            difference = difference.difference(rect);
-//        }
-//        if (difference.getGeometryType().equals("MultiPolygon")) {
-//            double area = 0;
-//            for (int i = 0; i < difference.getNumGeometries(); i++) {
-//                Geometry g = difference.getGeometryN(i);
-//                if (g instanceof Polygon && g.getArea() > area) {
-//                    this.newBound = (Polygon) g;
-//                }
-//            }
-//        }
-//        System.out.println("diff: " + difference.getGeometryType());
-//    }
 
 //    public void displayGraphLocal(int floorNum, PApplet app, WB_Render render) {
 //        app.pushStyle();
@@ -896,28 +1018,6 @@ public class MallGenerator {
         }
         app.popStyle();
     }
-
-//    public void displayEvacuationLocal(PApplet app, JtsRender jtsRender) {
-//        app.pushStyle();
-//
-//        if (evacPoly != null) {
-//            app.stroke(255);
-//            app.fill(80);
-//            for (Polygon p : evacPoly) {
-//                jtsRender.drawGeometry(p);
-//            }
-//        }
-//
-//        if (newBound != null) {
-//            app.stroke(255);
-//            app.pushMatrix();
-//            app.translate(500, 0);
-//            jtsRender.drawGeometry(newBound);
-//            app.popMatrix();
-//        }
-//
-//        app.popStyle();
-//    }
 
 //    /* ------------- JSON converting ------------- */
 //

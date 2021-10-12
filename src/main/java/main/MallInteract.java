@@ -65,6 +65,12 @@ public class MallInteract {
     private List<Polygon> selectedShopCell;            // 选择的商铺
     private double shopArea = -1;
 
+    // 扶梯
+    private List<Polygon> escalatorBounds_interact;     // 扶梯边框
+    private List<Integer> escalatorAtriumIDs;           // 扶梯所属的中庭序号
+    private Polygon selectedEscalatorBound;             // 选择的扶梯边框
+    private int selectedEscalatorID = -1;               // 选择的扶梯边框序号
+    private int selectedEscalatorAtriumID = -1;         // 选择的扶梯所在的中庭序号
 
     private List<LineString> bufferCurve_interact;   // 动线边界曲线（不同层）
     private List<WB_Point> bufferCurveControl_interact;
@@ -531,32 +537,6 @@ public class MallInteract {
         }
     }
 
-    /**
-     * select atrium polygon
-     *
-     * @param x pointer x
-     * @param y pointer y
-     * @return void
-     */
-    public void selectAtrium(double x, double y) {
-        Point mouse = ZFactory.jtsgf.createPoint(new Coordinate(x, y));
-        if (selectedAtrium == null) {
-            for (int i = 0; i < atrium_interact.length; i++) {
-                Polygon p = atrium_interact[i];
-                if (p.contains(mouse)) {
-                    selectedAtrium = p;
-                    selectedAtriumID = i;
-                    break;
-                }
-            }
-        } else {
-            if (!selectedAtrium.contains(mouse)) {
-                selectedAtrium = null;
-                selectedAtriumID = -1;
-            }
-        }
-    }
-
     /* ------------- structure grid interact ------------- */
 
     /**
@@ -705,6 +685,36 @@ public class MallInteract {
             }
         }
         selectedShopCell.clear();
+    }
+
+    /* ------------- shop cell interact ------------- */
+
+    /**
+     * select escalator bound
+     *
+     * @param x pointer x
+     * @param y pointer y
+     * @return void
+     */
+    public void selectEscalator(double x, double y) {
+        Point mouse = ZFactory.jtsgf.createPoint(new Coordinate(x, y));
+        if (selectedEscalatorBound == null) {
+            for (int i = 0; i < escalatorBounds_interact.size(); i++) {
+                Polygon bound = escalatorBounds_interact.get(i);
+                if (bound.contains(mouse)) {
+                    this.selectedEscalatorBound = bound;
+                    this.selectedEscalatorID = i;
+                    this.selectedEscalatorAtriumID = escalatorAtriumIDs.get(i);
+                    break;
+                }
+            }
+        } else {
+            if (!selectedEscalatorBound.contains(mouse)) {
+                this.selectedEscalatorBound = null;
+                this.selectedEscalatorID = -1;
+                this.selectedEscalatorAtriumID = -1;
+            }
+        }
     }
 
     /* ------------- buffer curve shape interact ------------- */
@@ -863,6 +873,23 @@ public class MallInteract {
         return shopCell_interact;
     }
 
+    public void setEscalatorBounds_interact(List<Polygon> escalatorBounds_interact) {
+        this.escalatorBounds_interact = escalatorBounds_interact;
+    }
+
+    public void setEscalatorAtriumIDs(List<Integer> escalatorAtriumIDs) {
+        this.escalatorAtriumIDs = escalatorAtriumIDs;
+    }
+
+    public int getSelectedEscalatorAtriumID() {
+        return selectedEscalatorAtriumID;
+    }
+
+    public void setEscalatorBound_interact(Polygon bound) {
+        this.selectedEscalatorBound = bound;
+        this.escalatorBounds_interact.set(selectedEscalatorID, bound);
+    }
+
     /* ------------- draw ------------- */
 
     public void displayLocal(PApplet app, WB_Render render, JtsRender jtsRender, int status) {
@@ -908,6 +935,9 @@ public class MallInteract {
                 }
                 break;
             case 6:
+                if (selectedEscalatorBound != null) {
+                    displaySelectedEscalator(app, jtsRender);
+                }
                 break;
         }
         app.popStyle();
@@ -1079,5 +1109,12 @@ public class MallInteract {
         for (Polygon p : selectedShopCell) {
             jtsRender.drawGeometry(p);
         }
+    }
+
+    private void displaySelectedEscalator(PApplet app, JtsRender jtsRender) {
+        app.noFill();
+        app.stroke(0, 255, 0);
+        app.strokeWeight(5);
+        jtsRender.drawGeometry(selectedEscalatorBound);
     }
 }

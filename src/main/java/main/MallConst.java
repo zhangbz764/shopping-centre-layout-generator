@@ -47,18 +47,18 @@ public class MallConst {
     public static final int STRUCTURE_GRID_MAX = 4;       // 柱网体系最大数量
     public static final float STRUCTURE_CTRL_R = 5;       // 柱网控制点判定范围// 中庭倒角半径
     // 5
-    public static final double ESCALATOR_LENGTH = 10;     // 扶梯长度
-    public static final double ESCALATOR_WIDTH = 1.5;     // 扶梯宽度
-    public static final double ESCALATOR_DIST_MAX = 50;   // 扶梯服务半径上限
-    public static final double ESCALATOR_DIST_MIN = 30;   // 扶梯服务半径上限
+    public static final double ESCALATOR_LENGTH = 13;     // 扶梯长度
+    public static final double ESCALATOR_WIDTH = 3.2;     // 扶梯宽度
+    public static final float ESCALATOR_DIST_MAX = 50;   // 扶梯服务半径上限
+    public static final float ESCALATOR_DIST_MIN = 30;   // 扶梯服务半径上限
 
 
     public static double ATRIUM_R = 10;
 
     public static double[] SHOP_SPAN_THRESHOLD = {7, 9};
 
-//    public static double EVACUATION_WIDTH = 2.4;
-//    public static double EVACUATION_DIST = 70;
+    public static double EVACUATION_WIDTH = 2.4;
+    public static double EVACUATION_DIST = 60;
 
     /* cp5 constants */
 
@@ -119,4 +119,6 @@ public class MallConst {
     public static final int LIST_GRID_NUM = 30;
     // 5
     public static final int BUTTON_UNION_CELLS = 33;
+    // 6
+    public static final int BUTTON_CHANGE_ESCALATOR = 95;
 }
