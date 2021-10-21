@@ -11,6 +11,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8">
+      <module name="commercial_street" target="8" />
       <module name="shopping_mall" target="1.8" />
       <module name="Ztools" target="8" />
     </bytecodeTargetLevel>
