@@ -202,10 +202,11 @@
     </build>
 
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/quil/processing-core -->
         <dependency>
-            <groupId>org.processing</groupId>
-            <artifactId>core</artifactId>
-            <version>3.3.7</version>
+            <groupId>quil</groupId>
+            <artifactId>processing-core</artifactId>
+            <version>3.5.4</version>
         </dependency>
         <dependency>
             <groupId>org.jogamp.gluegen</groupId>
@@ -276,6 +277,10 @@
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
+        </repository>
+        <repository>
+            <id>clojars.org</id>
+            <url>https://clojars.org/repo/</url>
         </repository>
     </repositories>
 
