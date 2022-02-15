@@ -1,7 +1,16 @@
 package webMain;
 
+import archijson.ArchiJSON;
+import archijson.ArchiServer;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import converter.WB_Converter;
+import geometry.Segments;
 import io.socket.client.Socket;
-import main.MallGenerator;
+import main.MallConst;
+import wblut.geom.WB_Polygon;
+
+import java.util.Arrays;
 
 /**
  * description
@@ -11,14 +20,67 @@ import main.MallGenerator;
  * @date 2021/3/10
  * @time 17:49
  */
-public class MallServer {
-    private static final int PORT = 41477;
-    private Socket socket;
-    public MallGenerator generator;
+public class MallServer implements ArchiServer {
+//    private static final int PORT = 41477;
+//    private Socket socket;
+//    public MallGenerator generator;
 
     /* ------------- constructor ------------- */
 
-    public MallServer(String... args) {
+    public MallServer() {
+        String URL = "https://web.archialgo.com";
+//        String URL = "http://localhost:8080/";
+        String TOKEN = "bc5726c6-96ff-40e5-8459-353453a05caf";
+        String IDENTITY = "mall-java-backend";
+
+        ArchiServer.super.setup(URL, TOKEN, IDENTITY);
+
+        System.out.println("initialized");
+    }
+
+    @Override
+    public void onConnect(Socket socket) {
+        System.out.println("connected");
+        this.send(socket, "client", "hello");
+    }
+
+    @Override
+    public void onReceive(Socket socket, String id, JsonObject body) {
+        ArchiServer.super.onReceive(socket, id, body);
+
+        Gson gson = new Gson();
+
+        ArchiJSON archijson = gson.fromJson(body, ArchiJSON.class);
+        archijson.parseGeometryElements(gson);
+
+        // do something with `archijson.getGeometries()`
+        // or `archijson.getProperties()`
+
+        int status = archijson.getProperties().get("status_id").getAsInt();
+        int function = archijson.getProperties().get("function_id").getAsInt();
+        System.out.println(status + "  " + function);
+        switch (status) {
+            case MallConst.E_SITE_BOUNDARY:
+                switch (function) {
+                    case 0:
+                        break;
+                    case 1:
+                        Segments poly = (Segments) archijson.getGeometries().get(0);
+                        WB_Polygon polygon = WB_Converter.toWB_Polygon(poly);
+                        System.out.println(Arrays.toString(polygon.getPoints().toArray()));
+                        break;
+                }
+                break;
+            case 1:
+                break;
+        }
+
+//        ArchiJSON ret = new ArchiJSON();
+//        ArchiServer.super.send(socket, "client", id, gson.toJson(ret));
+    }
+
+//    @Deprecated
+//    public MallServer(String... args) {
 //        try {
 //            if (args.length > 0) {
 //                socket = IO.socket(args[0]);
@@ -34,8 +96,8 @@ public class MallServer {
 //        } catch (URISyntaxException e) {
 //            e.printStackTrace();
 //        }
-    }
-
+//    }
+//
 //    /* ------------- member function ------------- */
 //
 //    /**
