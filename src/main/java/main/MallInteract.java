@@ -5,6 +5,7 @@ import mallElementNew.AtriumRaw;
 import mallElementNew.AtriumRawManager;
 import mallElementNew.Shop;
 import math.ZGeoMath;
+import math.ZMath;
 import org.locationtech.jts.geom.*;
 import processing.core.PApplet;
 import render.JtsRender;
@@ -177,7 +178,7 @@ public class MallInteract {
     public void dragUpdateBoundary(double x, double y) {
         for (int i = 0; i < boundary_controllers.length - 1; i++) {
             Coordinate c = boundary_controllers[i];
-            if (ZGeoMath.distance2D(c.getX(), c.getY(), x, y) <= MallConst.BOUNDARY_NODE_R) {
+            if (ZMath.distance2D(c.getX(), c.getY(), x, y) <= MallConst.BOUNDARY_NODE_R) {
                 boundary_controllers[i] = new Coordinate(x, y);
                 if (i == 0) {
                     boundary_controllers[boundary_controllers.length - 1] = new Coordinate(x, y);
@@ -225,7 +226,7 @@ public class MallInteract {
             // 主路径控制点显示
             WB_Polygon boundTemp = ZTransform.PolygonToWB_Polygon(boundary);
             for (WB_Point p : traffic_innerControllers) {
-                if (ZGeoMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
+                if (ZMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
                     WB_Point point = new WB_Point(x, y);
                     if (WB_GeometryOp.contains2D(point, boundTemp) && WB_GeometryOp.getDistance2D(point, boundTemp) > MallConst.TRAFFIC_NODE_R) {
                         p.set(x, y);
@@ -234,7 +235,7 @@ public class MallInteract {
                 }
             }
             for (WB_Point p : traffic_entryControllers) {
-                if (ZGeoMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
+                if (ZMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.TRAFFIC_NODE_R) {
                     WB_Point point = new WB_Point(x, y);
                     p.set(WB_GeometryOp2D.getClosestPoint2D(point, ZTransform.WB_PolygonToWB_PolyLine(boundTemp).get(0)));
                     return;
@@ -244,7 +245,7 @@ public class MallInteract {
             // 主路径控制点关闭
             if (selectedAtriumRaw != null) {
                 WB_Point center = atriumRaw_controllers[0];
-                if (ZGeoMath.distance2D(center.xd(), center.yd(), x, y) <= MallConst.ATRIUM_POS_R) {
+                if (ZMath.distance2D(center.xd(), center.yd(), x, y) <= MallConst.ATRIUM_POS_R) {
                     WB_Point point = new WB_Point(x, y);
                     if (mainTraffic_buffer.contains(ZFactory.jtsgf.createPoint(new Coordinate(x, y)))) {
                         center.set(x, y);
@@ -253,7 +254,7 @@ public class MallInteract {
                 } else {
                     for (int i = 1; i < atriumRaw_controllers.length; i++) {
                         WB_Point p = atriumRaw_controllers[i];
-                        if (ZGeoMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.ATRIUM_CTRL_R) {
+                        if (ZMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.ATRIUM_CTRL_R) {
                             p.set(x, y);
                             atriumRawDragFlag = 1;
                             atriumRawNodeID = i;
@@ -438,7 +439,7 @@ public class MallInteract {
                 WB_Point p0, p1;
 
                 WB_Point curr = corridorNode_interact.get(i);
-                if (ZGeoMath.distance2D(curr.xd(), curr.yd(), x, y) <= MallConst.CORRIDOR_NODE_R) {
+                if (ZMath.distance2D(curr.xd(), curr.yd(), x, y) <= MallConst.CORRIDOR_NODE_R) {
                     if (i % 2 == 0) {
                         p0 = curr;
                         p1 = corridorNode_interact.get(i + 1);
@@ -454,9 +455,9 @@ public class MallInteract {
         } else {
             WB_Point p0 = selectedCorridorNode[0];
             WB_Point p1 = selectedCorridorNode[1];
-            if (ZGeoMath.distance2D(p0.xd(), p0.yd(), x, y) > MallConst.CORRIDOR_NODE_R
+            if (ZMath.distance2D(p0.xd(), p0.yd(), x, y) > MallConst.CORRIDOR_NODE_R
                     &&
-                    ZGeoMath.distance2D(p1.xd(), p1.yd(), x, y) > MallConst.CORRIDOR_NODE_R
+                    ZMath.distance2D(p1.xd(), p1.yd(), x, y) > MallConst.CORRIDOR_NODE_R
             ) {
                 selectedCorridorNode = null;
                 selectedCorridorID = -1;
@@ -474,7 +475,7 @@ public class MallInteract {
     public void dragUpdateCorridor(double x, double y) {
         if (selectedCorridorNode != null && selectedCorridorID > -1) {
             for (WB_Point p : selectedCorridorNode) {
-                if (ZGeoMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.CORRIDOR_NODE_R) {
+                if (ZMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.CORRIDOR_NODE_R) {
                     WB_Point point = new WB_Point(x, y);
                     p.set(x, y);
                     break;
@@ -496,13 +497,13 @@ public class MallInteract {
         if (selectedPublicSpaceNode == null) {
             for (int i = 0; i < publicSpaceNode_interact.size(); i++) {
                 WB_Point curr = publicSpaceNode_interact.get(i);
-                if (ZGeoMath.distance2D(curr.xd(), curr.yd(), x, y) <= MallConst.PUBLIC_SPACE_NODE_R) {
+                if (ZMath.distance2D(curr.xd(), curr.yd(), x, y) <= MallConst.PUBLIC_SPACE_NODE_R) {
                     this.selectedPublicSpaceNode = curr;
                     break;
                 }
             }
         } else {
-            if (ZGeoMath.distance2D(selectedPublicSpaceNode.xd(), selectedPublicSpaceNode.yd(), x, y) > MallConst.PUBLIC_SPACE_NODE_R) {
+            if (ZMath.distance2D(selectedPublicSpaceNode.xd(), selectedPublicSpaceNode.yd(), x, y) > MallConst.PUBLIC_SPACE_NODE_R) {
                 selectedPublicSpaceNode = null;
             }
         }
@@ -600,7 +601,7 @@ public class MallInteract {
         if (selectedRect != null) {
             for (int i = 0; i < rectNode_interact.length; i++) {
                 WB_Point p = rectNode_interact[i];
-                if (ZGeoMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.STRUCTURE_CTRL_R) {
+                if (ZMath.distance2D(p.xd(), p.yd(), x, y) <= MallConst.STRUCTURE_CTRL_R) {
                     Coordinate[] coords = selectedRect.getCoordinates();
                     double[] d1 = new double[]{coords[i].x - p.xd(), coords[i].y - p.yd()};
                     double[] d2 = new double[]{coords[i + 1].x - p.xd(), coords[i + 1].y - p.yd()};
@@ -1060,19 +1061,19 @@ public class MallInteract {
     }
 
     private void displayPublicSpaceNodes(PApplet app) {
-        app.noStroke();
-        app.fill(169, 210, 118);
-        for (WB_Point p : publicSpaceNode_interact) {
-            app.ellipse(p.xf(), p.yf(), MallConst.ATRIUM_CTRL_R, MallConst.ATRIUM_CTRL_R);
-        }
-        app.stroke(128);
-        app.strokeWeight(0.5f);
-        for (int i = 0; i < publicSpaceNode_interact.size(); i++) {
-            app.line(
-                    publicSpaceNode_interact.get(i).xf(), publicSpaceNode_interact.get(i).yf(),
-                    publicSpaceNode_interact.get((i + 1) % publicSpaceNode_interact.size()).xf(), publicSpaceNode_interact.get((i + 1) % publicSpaceNode_interact.size()).yf()
-            );
-        }
+//        app.noStroke();
+//        app.fill(169, 210, 118);
+//        for (WB_Point p : publicSpaceNode_interact) {
+//            app.ellipse(p.xf(), p.yf(), MallConst.ATRIUM_CTRL_R, MallConst.ATRIUM_CTRL_R);
+//        }
+//        app.stroke(128);
+//        app.strokeWeight(0.5f);
+//        for (int i = 0; i < publicSpaceNode_interact.size(); i++) {
+//            app.line(
+//                    publicSpaceNode_interact.get(i).xf(), publicSpaceNode_interact.get(i).yf(),
+//                    publicSpaceNode_interact.get((i + 1) % publicSpaceNode_interact.size()).xf(), publicSpaceNode_interact.get((i + 1) % publicSpaceNode_interact.size()).yf()
+//            );
+//        }
     }
 
     private void displaySelectedPublicNodes(PApplet app) {

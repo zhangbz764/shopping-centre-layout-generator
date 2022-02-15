@@ -36,6 +36,10 @@ public class PublicSpace {
 
     /* ------------- constructor ------------- */
 
+    public PublicSpace(){
+
+    }
+
     public PublicSpace(Polygon[] atriumShapes, LineString mainTraffic) {
         initCorridorLines(atriumShapes, mainTraffic);
     }
@@ -584,6 +588,10 @@ public class PublicSpace {
 
     public Polygon getPublicSpaceShape() {
         return publicSpaceShape;
+    }
+
+    public void setPublicSpaceShapeTemp(Polygon publicSpaceShape) {
+        this.publicSpaceShape = publicSpaceShape;
     }
 
     public List<Polygon> getEscalatorBounds() {

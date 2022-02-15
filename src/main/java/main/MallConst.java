@@ -49,9 +49,8 @@ public class MallConst {
     // 5
     public static final double ESCALATOR_LENGTH = 13;     // 扶梯长度
     public static final double ESCALATOR_WIDTH = 3.2;     // 扶梯宽度
-    public static final float ESCALATOR_DIST_MAX = 50;   // 扶梯服务半径上限
-    public static final float ESCALATOR_DIST_MIN = 30;   // 扶梯服务半径上限
-
+    public static final float ESCALATOR_DIST_MAX = 50;    // 扶梯服务半径上限
+    public static final float ESCALATOR_DIST_MIN = 30;    // 扶梯服务半径上限
 
     public static double ATRIUM_R = 10;
 
@@ -59,6 +58,11 @@ public class MallConst {
 
     public static double EVACUATION_WIDTH = 2.4;
     public static double EVACUATION_DIST = 60;
+    public static double STAIRWAY1_LENGTH = 33.6;
+    public static double STAIRWAY1_WIDTH = 4;
+    public static double STAIRWAY2_LENGTH = 16.8;
+    public static double STAIRWAY2_WIDTH = 8.4;
+    public static double STAIRWAY_RADIUS = 2;
 
     /* cp5 constants */
 
@@ -111,7 +115,6 @@ public class MallConst {
     public static final int BUTTON_ATRIUM_ROUND = 99;
     public static final int SLIDER_ROUND_RADIUS = 98;
     public static final int SLIDER_SMOOTH_TIMES = 97;
-
 
     // 4
     public static final int BUTTON_GRID_MODEL = 31;

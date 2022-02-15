@@ -30,6 +30,8 @@ public class StructureGrid {
 
     private List<ZLine> lon10; // lines start from 10 edge
     private List<ZLine> lat12; // lines start from 12 edge
+    private int size10;
+    private int size12;
 
     private ZPoint[][] gridNodes; // all grid nodes
     private ZPoint unit10; // unit along 10 direction
@@ -84,9 +86,11 @@ public class StructureGrid {
         for (ZPoint pt : dividePoint10) {
             lon10.add(new ZLine(pt, pt.add(dir12)));
         }
+        this.size10 = lon10.size();;
         for (ZPoint pt : dividePoint12) {
             lat12.add(new ZLine(pt, pt.add(dir10)));
         }
+        this.size12 = lat12.size();
 
         // nodes
         ZPoint start = dividePoint10.get(0);
@@ -215,6 +219,14 @@ public class StructureGrid {
 
     public List<ZLine> getLat12() {
         return lat12;
+    }
+
+    public int getSize10() {
+        return size10;
+    }
+
+    public int getSize12() {
+        return size12;
     }
 
     public ZPoint[][] getGridNodes() {

@@ -27,6 +27,7 @@ public class ImportData {
     private List<WB_Point> inputEntries;
     private List<WB_Point> inputInnerNodes;
 
+    private WB_Polygon inputAtriumTemp;
     // statistics
     private double siteArea;
 
@@ -67,9 +68,15 @@ public class ImportData {
             this.inputSite = (WB_Polygon) ZTransform.ICurveToWB(site[0]);
         }
         // load boundary polygon
-        ICurve[] boundary = IG.layer("boundary").curves();
+        ICurve[] boundary = IG.layer("tempBoundary").curves();
         if (boundary.length > 0) {
             this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0]);
+        }
+
+        // temp: load public space polygon
+        ICurve[] publicSpace = IG.layer("tempAtrium").curves();
+        if (publicSpace.length > 0) {
+            this.inputAtriumTemp = (WB_Polygon) ZTransform.ICurveToWB(publicSpace[0]);
         }
 
         // print
@@ -133,6 +140,10 @@ public class ImportData {
 
     public List<WB_Point> getInputInnerNodes() {
         return this.inputInnerNodes;
+    }
+
+    public WB_Polygon getInputAtriumTemp() {
+        return inputAtriumTemp;
     }
 
     /*-------- print & draw --------*/

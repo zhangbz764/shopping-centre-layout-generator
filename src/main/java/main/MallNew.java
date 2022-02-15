@@ -2,6 +2,7 @@ package main;
 
 import controlP5.ControlEvent;
 import controlP5.ControlP5;
+import geometry.Segments;
 import guo_cam.CameraController;
 import processing.core.PApplet;
 import processing.core.PFont;
@@ -142,77 +143,47 @@ public class MallNew extends PApplet {
      * @return void
      */
     public void keyPressed() {
-//        // initialize
-//        if (key == '`') {
-//            mallGenerator.setBufferCurve_receive(FLOOR_NUM, mallInteract.getBufferCurve_interact());
-//            mallGenerator.generateEvacuation2();
-//            mallGenerator.generateSubdivision(FLOOR_NUM);
-//
-//            this.currFloorStats = mallGenerator.getFloorStats(FLOOR_NUM);
-//        }
-//        if (key == '.') {
-//            mallInteract.clickUpdateShop();
-//            mallGenerator.setShopCells_receive(FLOOR_NUM, mallInteract.getCellPolys_interact());
-//        }
+        if (key == '1') {
+            // if initializing
+            mallGenerator.initSiteBoundary(
+                    input.getInputSite(),
+                    input.getInputBoundary(),
+                    0,
+                    mallParam.siteRedLineDist,
+                    mallParam.siteBufferDist
+            );
+            mallGenerator.setPublicSpaceShapeTemp(ZTransform.WB_PolygonToPolygon(input.getInputAtriumTemp()));
 
-        // floor switches
-        if (key == '=') {
-            FLOOR_NUM = (FLOOR_NUM % MallConst.FLOOR_TOTAL) + 1;
-//            generatorGraphBuffer();
-            println("current floor: " + FLOOR_NUM);
+
+            this.EDIT_STATUS = MallConst.E_PUBLIC_SPACE;
         }
-        if (key == '-') {
-            if (FLOOR_NUM == 1) {
-                FLOOR_NUM = MallConst.FLOOR_TOTAL;
-            } else {
-                FLOOR_NUM--;
-            }
-//            generatorGraphBuffer();
-            println("current floor: " + FLOOR_NUM);
+        if (key == '2') {
+            mallGenerator.initGrid(MallConst.STRUCTURE_GRID_NUM, MallConst.STRUCTURE_MODEL);
+            mallInteract.setRect_interact(mallGenerator.getGridRects());
+
+            this.EDIT_STATUS = MallConst.E_STRUCTURE_GRID;
+            mallGUI.updateGUI(EDIT_STATUS, cp5);
+            println("edit structure grid");
         }
-
-        // add & remove control points
-//        if (key == 'q' || key == 'Q') {
-//            pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
-//            mallInteract.addInnerNode(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
-//        }
-//        if (key == 'w' || key == 'W') {
-//            pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
-//            mallInteract.removeInnerNode(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
-//        }
-//        if (key == 'e' || key == 'E') {
-//            pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
-//            mallInteract.addEntryNode(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
-//        }
-//        if (key == 'r' || key == 'R') {
-//            pointer = gcam.getCoordinateFromScreenDouble(mouseX, mouseY, 0);
-//            mallInteract.removeEntryNode(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
-//        }
-
-
         if (key == '3') {
-            println("edit curve shape");
+            mallGenerator.initShopCells(FLOOR_NUM);
+            mallInteract.setShopCell_interact(mallGenerator.getShopCells(FLOOR_NUM));
+
+            this.EDIT_STATUS = MallConst.E_SHOP_EDIT;
+            mallGUI.updateGUI(EDIT_STATUS, cp5);
+            println("edit shop cells");
         }
-//        if (key == '4') {
-//            mallInteract.setCellPolys_interact(mallGenerator.getShopCells(FLOOR_NUM));
-//            println("edit shop cells");
-//        }
+        if (key == '4') {
+            mallGenerator.initEvacuation2();
 
+            this.EDIT_STATUS = MallConst.E_EVACUATION;
+            mallGUI.updateGUI(EDIT_STATUS, cp5);
+            println("edit evacuations");
+        }
 
-//        if (key == 's') {
-//            sl.saveEdit(EDIT_STATUS, mallInteract, mallGenerator);
-//        }
-//        if (key == 'l') {
-//            List data = sl.loadEdit();
-//            if (data.size() == 3) {
-//                EDIT_STATUS = (int) data.get(0);
-//                mallInteract = (MallInteract) data.get(1);
-//                mallGenerator = (MallGenerator) data.get(2);
-//                mallGUI.updateGUI(EDIT_STATUS, cp5, cp5H);
-//            } else {
-//                System.out.println("?");
-//            }
-//        }
+        if (key == 't') {
+            mallGenerator.test = !mallGenerator.test;
+        }
     }
 
     /**
@@ -574,6 +545,7 @@ public class MallNew extends PApplet {
                         mallInteract.setEscalatorBound_interact(
                                 mallGenerator.getEscalatorBoundN(mallInteract.getSelectedEscalatorAtriumID())
                         );
+                        break;
                 }
                 break;
             case (MallConst.E_EVACUATION):
