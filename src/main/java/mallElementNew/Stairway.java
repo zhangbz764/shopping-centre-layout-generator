@@ -3,11 +3,10 @@ package mallElementNew;
 import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
-import main.MallConst;
+import mallParameters.MallConst;
 import math.ZGeoMath;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Polygon;
-import wblut.geom.WB_GeometryOp;
 import wblut.geom.WB_Polygon;
 
 import java.util.ArrayList;

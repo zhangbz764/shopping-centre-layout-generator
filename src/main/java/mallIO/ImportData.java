@@ -1,4 +1,4 @@
-package main;
+package mallIO;
 
 import igeo.ICurve;
 import igeo.IG;

@@ -1,4 +1,4 @@
-package main;
+package mallIO;
 
 import igeo.IG;
 import oldVersion.Floor;

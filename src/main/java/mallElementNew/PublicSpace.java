@@ -4,7 +4,7 @@ import advancedGeometry.ZBSpline;
 import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
-import main.MallConst;
+import mallParameters.MallConst;
 import math.ZGeoMath;
 import math.ZMath;
 import org.locationtech.jts.geom.*;

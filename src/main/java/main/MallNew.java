@@ -2,8 +2,10 @@ package main;
 
 import controlP5.ControlEvent;
 import controlP5.ControlP5;
-import geometry.Segments;
 import guo_cam.CameraController;
+import mallIO.ImportData;
+import mallParameters.MallConst;
+import mallParameters.MallParam;
 import processing.core.PApplet;
 import processing.core.PFont;
 import render.JtsRender;
@@ -540,7 +542,7 @@ public class MallNew extends PApplet {
             case (MallConst.E_ESCALATOR):
                 switch (id) {
                     // 6
-                    case (MallConst.BUTTON_CHANGE_ESCALATOR):
+                    case (MallConst.BUTTON_UPDATE_ESCALATOR):
                         mallGenerator.updateEscalatorPos(mallInteract.getSelectedEscalatorAtriumID());
                         mallInteract.setEscalatorBound_interact(
                                 mallGenerator.getEscalatorBoundN(mallInteract.getSelectedEscalatorAtriumID())

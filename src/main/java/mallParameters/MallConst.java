@@ -1,4 +1,4 @@
-package main;
+package mallParameters;
 
 /**
  * constants for the local version of the shopping mall
@@ -85,43 +85,52 @@ public class MallConst {
     public static final int E_SHOP_EDIT = 5;
     public static final int E_ESCALATOR = 6;
     public static final int E_EVACUATION = 7;
+
+    public static final int INIT_FLAG = 0;
+
     // 0
-    public static final int BUTTON_SWITCH_BOUNDARY = 10;
-    public static final int SLIDER_REDLINE_DIST = 28;
-    public static final int SLIDER_SITE_BUFFER = 29;
+    public static final int BUTTON_SWITCH_BOUNDARY = 100;
+    public static final int SLIDER_SITE_BUFFER = 101;
+    public static final int SLIDER_REDLINE_DIST = 102;
     // 1
 //    public static final int BUTTON_DELETE_INNERNODE = 11;
 //    public static final int BUTTON_DELETE_ENTRYNODE = 12;
     public static final int BUTTON_TRAFFIC_CONTROLLERS = 12;
-    public static final int SLIDER_TRAFFIC_WIDTH = 13;
-    public static final int BUTTON_CURVE_ATRIUM = 14;
+    public static final int SLIDER_TRAFFIC_WIDTH = 103;
+    public static final int BUTTON_CURVE_ATRIUM = 104;
     public static final int BUTTON_DELETE_ATRIUM = 26;
     public static final int SLIDER_ATRIUM_ANGLE = 15;
     public static final int SLIDER_ATRIUM_AREA = 16;
     public static final int LIST_ATRIUM_FACTORY = 17;
-    public static final int ITEM_A_TRIANGLE = 18;
-    public static final int ITEM_A_SQUARE = 19;
-    public static final int ITEM_A_TRAPEZOID = 20;
-    public static final int ITEM_A_PENTAGON = 21;
-    public static final int ITEM_A_HEXAGON1 = 22;
-    public static final int ITEM_A_HEXAGON2 = 23;
-    public static final int ITEM_A_L_SHAPE = 24;
-    public static final int ITEM_A_OCTAGON = 25;
+    public static final int ITEM_A_TRIANGLE = 108;
+    public static final int ITEM_A_SQUARE = 109;
+    public static final int ITEM_A_TRAPEZOID = 110;
+    public static final int ITEM_A_PENTAGON = 111;
+    public static final int ITEM_A_HEXAGON1 = 112;
+    public static final int ITEM_A_HEXAGON2 = 113;
+    public static final int ITEM_A_LSHAPE = 114;
+    public static final int ITEM_A_OCTAGON = 115;
     // 2
-    public static final int SLIDER_CORRIDOR_WIDTH = 36;
+    public static final int SLIDER_CORRIDOR_WIDTH = 116;
     // 3
     public static final int BUTTON_DELETE_PUBLIC_NODE = 96;
-    public static final int SLIDER_BUFFER_DIST = 27;
+    public static final int SLIDER_BUFFER_DIST = 117;
     public static final int BUTTON_ATRIUM_ROUND = 99;
     public static final int SLIDER_ROUND_RADIUS = 98;
     public static final int SLIDER_SMOOTH_TIMES = 97;
 
     // 4
+    public static final int BUTTON_GRID_8 = 118;
+    public static final int BUTTON_GRID_9 = 119;
+    public static final int BUTTON_GRIDNUM_1 = 120;
+    public static final int BUTTON_GRIDNUM_2 = 121;
+    public static final int BUTTON_GRIDNUM_3 = 122;
+
     public static final int BUTTON_GRID_MODEL = 31;
     public static final int SLIDER_GRID_ANGLE = 32;
     public static final int LIST_GRID_NUM = 30;
     // 5
-    public static final int BUTTON_UNION_CELLS = 33;
+    public static final int BUTTON_UNION_CELLS = 123;
     // 6
-    public static final int BUTTON_CHANGE_ESCALATOR = 95;
+    public static final int BUTTON_UPDATE_ESCALATOR = 124;
 }

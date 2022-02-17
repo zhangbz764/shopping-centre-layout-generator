@@ -1,6 +1,6 @@
 package oldVersion;
 
-import main.ImportData;
+import mallIO.ImportData;
 import oldVersion.mallElements.TrafficGraph;
 import oldVersion.mallElements.TrafficNode;
 import oldVersion.mallElements.TrafficNodeFixed;

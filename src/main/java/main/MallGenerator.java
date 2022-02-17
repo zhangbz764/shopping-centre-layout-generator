@@ -1,18 +1,28 @@
 package main;
 
 import advancedGeometry.rectCover.ZRectCover;
+import archijson.ArchiJSON;
 import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import geometry.Segments;
 import mallElementNew.*;
+import mallParameters.MallConst;
 import math.ZGeoMath;
 import math.ZMath;
 import org.locationtech.jts.geom.*;
 import processing.core.PApplet;
 import render.JtsRender;
 import transform.ZTransform;
-import wblut.geom.*;
+import wblut.geom.WB_Circle;
+import wblut.geom.WB_Coord;
+import wblut.geom.WB_Point;
+import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
+import mallWeb.JTSConverter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -971,6 +981,24 @@ public class MallGenerator {
         app.popStyle();
     }
 
+    /* ------------- JSON converting ------------- */
+
+    public void jsonConverting(ArchiJSON json, Gson gson) {
+        Segments b = JTSConverter.toSegments(siteBaseL.getBoundary());
+        Segments s = JTSConverter.toSegments(siteBaseL.getSite());
+
+        List<JsonElement> elements = new ArrayList<>();
+        JsonObject properties = new JsonObject();
+        properties.addProperty("test", "123123");
+
+        elements.add(gson.toJsonTree(b));
+        elements.add(gson.toJsonTree(s));
+
+        json.setGeometryElements(elements);
+        json.setProperties(properties);
+    }
+
+
     /* ------------- deprecated ------------- */
 
     public void setBufferCurve_receive(int floorNum, List<LineString> bufferCurve_receive) {
@@ -1141,7 +1169,6 @@ public class MallGenerator {
         app.popStyle();
     }
 
-//    /* ------------- JSON converting ------------- */
 //
 //    /**
 //     * converting status 1 geometries to JsonElement

@@ -2,7 +2,7 @@ package oldVersion.mallElements;
 
 import advancedGeometry.ZCatmullRom;
 import basicGeometry.ZPoint;
-import main.MallConst;
+import mallParameters.MallConst;
 import math.ZGeoMath;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;

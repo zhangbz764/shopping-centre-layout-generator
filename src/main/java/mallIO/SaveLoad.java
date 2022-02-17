@@ -1,8 +1,11 @@
-package main;
+package mallIO;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import fileManager.ZFileOP;
+import main.InterfaceAdapter;
+import main.MallGenerator;
+import main.MallInteract;
 import org.locationtech.jts.geom.CoordinateSequence;
 
 import java.util.ArrayList;

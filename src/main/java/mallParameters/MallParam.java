@@ -1,4 +1,4 @@
-package main;
+package mallParameters;
 
 /**
  * shopping mall parameters

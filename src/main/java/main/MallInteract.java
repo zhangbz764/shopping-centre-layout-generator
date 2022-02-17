@@ -2,9 +2,10 @@ package main;
 
 import basicGeometry.ZFactory;
 import mallElementNew.AtriumRaw;
+import mallElementNew.AtriumRawFactory;
 import mallElementNew.AtriumRawManager;
 import mallElementNew.Shop;
-import math.ZGeoMath;
+import mallParameters.MallConst;
 import math.ZMath;
 import org.locationtech.jts.geom.*;
 import processing.core.PApplet;
@@ -312,28 +313,28 @@ public class MallInteract {
                 if (mainTraffic_buffer.contains(ZFactory.jtsgf.createPoint(new Coordinate(x, y)))) {
                     switch (selectedAtriumRawType) {
                         case 0:
-                            atriumRawManager.createAtrium3(p, MallConst.ATRIUM_AREA_INIT, false);
+                            atriumRawManager.addAtriumRaw(AtriumRawFactory.createAtriumTri(p, MallConst.ATRIUM_AREA_INIT, false));
                             break;
                         case 1:
-                            atriumRawManager.createAtrium4(p, MallConst.ATRIUM_AREA_INIT, false);
+                            atriumRawManager.addAtriumRaw(AtriumRawFactory.createAtriumSq(p, MallConst.ATRIUM_AREA_INIT, false));
                             break;
                         case 2:
-                            atriumRawManager.createAtrium4_(p, MallConst.ATRIUM_AREA_INIT, false);
+                            atriumRawManager.addAtriumRaw(AtriumRawFactory.createAtriumTra(p, MallConst.ATRIUM_AREA_INIT, false));
                             break;
                         case 3:
-                            atriumRawManager.createAtrium5(p, MallConst.ATRIUM_AREA_INIT, false);
+                            atriumRawManager.addAtriumRaw(AtriumRawFactory.createAtriumPen(p, MallConst.ATRIUM_AREA_INIT, false));
                             break;
                         case 4:
-                            atriumRawManager.createAtrium6(p, MallConst.ATRIUM_AREA_INIT, false);
+                            atriumRawManager.addAtriumRaw(AtriumRawFactory.createAtriumHex(p, MallConst.ATRIUM_AREA_INIT, false));
                             break;
                         case 5:
-                            atriumRawManager.createAtrium6_(p, MallConst.ATRIUM_AREA_INIT, false);
+                            atriumRawManager.addAtriumRaw(AtriumRawFactory.createAtriumHex2(p, MallConst.ATRIUM_AREA_INIT, false));
                             break;
                         case 6:
-                            atriumRawManager.createAtrium7(p, MallConst.ATRIUM_AREA_INIT, false);
+                            atriumRawManager.addAtriumRaw(AtriumRawFactory.createAtriumLS(p, MallConst.ATRIUM_AREA_INIT, false));
                             break;
                         case 7:
-                            atriumRawManager.createAtrium8(p, MallConst.ATRIUM_AREA_INIT, false);
+                            atriumRawManager.addAtriumRaw(AtriumRawFactory.createAtriumOct(p, MallConst.ATRIUM_AREA_INIT, false));
                             break;
                     }
                     selectedAtriumRawType = -1;

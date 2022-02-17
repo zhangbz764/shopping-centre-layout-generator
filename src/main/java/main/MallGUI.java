@@ -3,6 +3,8 @@ package main;
 import controlP5.ControlFont;
 import controlP5.ControlP5;
 import controlP5.DropdownList;
+import mallParameters.MallConst;
+import mallParameters.MallParam;
 import processing.core.PApplet;
 import processing.core.PConstants;
 import processing.core.PFont;
@@ -310,7 +312,7 @@ public class MallGUI {
         ddl.addItem("五边形", MallConst.ITEM_A_PENTAGON);
         ddl.addItem("六边形1", MallConst.ITEM_A_HEXAGON1);
         ddl.addItem("六边形2", MallConst.ITEM_A_HEXAGON2);
-        ddl.addItem("L形", MallConst.ITEM_A_L_SHAPE);
+        ddl.addItem("L形", MallConst.ITEM_A_LSHAPE);
         ddl.addItem("八边形", MallConst.ITEM_A_OCTAGON);
 
         this.controllerNames[1] = new String[]{
@@ -496,7 +498,7 @@ public class MallGUI {
         cp5.addButton("changeEscalatorPosition")
                 .setPosition(MallConst.STATUS_W, startH)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_CHANGE_ESCALATOR)
+                .setId(MallConst.BUTTON_UPDATE_ESCALATOR)
                 .setFont(font)
                 .setLabel("更改扶梯位置")
                 .setVisible(false)

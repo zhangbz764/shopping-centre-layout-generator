@@ -5,6 +5,7 @@ import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
 import mallElementNew.Shop;
 import mallElementNew.StructureGrid;
+import mallParameters.MallConst;
 import math.ZGeoMath;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.operation.polygonize.Polygonizer;
