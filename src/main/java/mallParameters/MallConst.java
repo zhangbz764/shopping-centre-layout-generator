@@ -90,7 +90,7 @@ public class MallConst {
 
     // 0
     public static final int BUTTON_SWITCH_BOUNDARY = 100;
-    public static final int SLIDER_SITE_BUFFER = 101;
+    public static final int SLIDER_OFFSET_DIST = 101;
     public static final int SLIDER_REDLINE_DIST = 102;
     // 1
 //    public static final int BUTTON_DELETE_INNERNODE = 11;

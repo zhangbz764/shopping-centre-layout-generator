@@ -43,6 +43,14 @@ public class SiteBase_L {
 
     /* ------------- member function ------------- */
 
+    /**
+    * description
+    *
+    * @param base
+    * @param redLineDist
+    * @param siteBufferDist
+    * @return void
+    */        
     public void update_L(int base, double redLineDist, double siteBufferDist) {
         this.base_L = base;
 

@@ -1,6 +1,4 @@
-package webMain;
-
-import processing.core.PApplet;
+package mallWeb;
 
 /**
  * description

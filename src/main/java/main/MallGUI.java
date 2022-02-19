@@ -192,7 +192,7 @@ public class MallGUI {
         cp5.addSlider("siteBufferDist")
                 .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.SLIDER_SITE_BUFFER)
+                .setId(MallConst.SLIDER_OFFSET_DIST)
                 .setRange(MallConst.SITE_BUFFER_MIN, MallConst.SITE_BUFFER_MAX)
                 .setValue(mallParam.siteBufferDist)
                 .setFont(font)

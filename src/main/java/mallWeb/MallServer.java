@@ -1,4 +1,4 @@
-package webMain;
+package mallWeb;
 
 import archijson.ArchiJSON;
 import archijson.ArchiServer;
@@ -7,7 +7,9 @@ import com.google.gson.JsonObject;
 import converter.WB_Converter;
 import geometry.Segments;
 import io.socket.client.Socket;
-import main.MallConst;
+import mallIO.ImportData;
+import mallParameters.MallConst;
+import main.MallGenerator;
 import wblut.geom.WB_Polygon;
 
 import java.util.Arrays;
@@ -21,27 +23,25 @@ import java.util.Arrays;
  * @time 17:49
  */
 public class MallServer implements ArchiServer {
-//    private static final int PORT = 41477;
-//    private Socket socket;
-//    public MallGenerator generator;
+    private MallJsonProcessor processor;
 
     /* ------------- constructor ------------- */
 
     public MallServer() {
         String URL = "https://web.archialgo.com";
-//        String URL = "http://localhost:8080/";
         String TOKEN = "bc5726c6-96ff-40e5-8459-353453a05caf";
         String IDENTITY = "mall-java-backend";
 
         ArchiServer.super.setup(URL, TOKEN, IDENTITY);
 
-        System.out.println("initialized");
+        this.processor = new MallJsonProcessor();
+
+        System.out.println(">>> server initialized");
     }
 
     @Override
     public void onConnect(Socket socket) {
         System.out.println("connected");
-        this.send(socket, "client", "hello");
     }
 
     @Override
@@ -50,33 +50,29 @@ public class MallServer implements ArchiServer {
 
         Gson gson = new Gson();
 
-        ArchiJSON archijson = gson.fromJson(body, ArchiJSON.class);
-        archijson.parseGeometryElements(gson);
+        // archijson received
+        ArchiJSON jsonR = gson.fromJson(body, ArchiJSON.class);
+        jsonR.parseGeometryElements(gson);
+        int statusID = jsonR.getProperties().get("statusID").getAsInt();
+        int functionID = jsonR.getProperties().get("functionID").getAsInt();
+        System.out.println("statusID: " + statusID + "  " + "functionID: " + functionID);
 
-        // do something with `archijson.getGeometries()`
-        // or `archijson.getProperties()`
+        // archijson to send
+        ArchiJSON jsonS = new ArchiJSON();
+        JsonObject properties = new JsonObject();
+        properties.addProperty("statusID", statusID);
+        properties.addProperty("functionID", functionID);
 
-        int status = archijson.getProperties().get("status_id").getAsInt();
-        int function = archijson.getProperties().get("function_id").getAsInt();
-        System.out.println(status + "  " + function);
-        switch (status) {
+        switch (statusID) {
             case MallConst.E_SITE_BOUNDARY:
-                switch (function) {
-                    case 0:
-                        break;
-                    case 1:
-                        Segments poly = (Segments) archijson.getGeometries().get(0);
-                        WB_Polygon polygon = WB_Converter.toWB_Polygon(poly);
-                        System.out.println(Arrays.toString(polygon.getPoints().toArray()));
-                        break;
-                }
+                processor.processStatus0(functionID, jsonR, jsonS, properties);
                 break;
-            case 1:
+            case MallConst.E_STRUCTURE_GRID:
+                processor.processStatus4(functionID, jsonR, jsonS, properties);
                 break;
         }
 
-//        ArchiJSON ret = new ArchiJSON();
-//        ArchiServer.super.send(socket, "client", id, gson.toJson(ret));
+        ArchiServer.super.send(socket, "client", id, gson.toJson(jsonS));
     }
 
 //    @Deprecated

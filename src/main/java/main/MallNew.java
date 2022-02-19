@@ -202,7 +202,7 @@ public class MallNew extends PApplet {
                     mallInteract.dragUpdateBoundary(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
                     break;
                 case MallConst.E_TRAFFIC_ATRIUM:
-                    mallInteract.dragUpdateTrafficAtriumRaw(pointer[0] + width * 0.5, pointer[1] + height * 0.5, mallGenerator.getBoundary());
+                    mallInteract.dragUpdateTrafficAtriumRaw(pointer[0] + width * 0.5, pointer[1] + height * 0.5, mallGenerator.getSiteBaseL().getBoundary());
                     break;
                 case MallConst.E_MAIN_CORRIDOR:
                     mallInteract.dragUpdateCorridor(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
@@ -430,7 +430,7 @@ public class MallNew extends PApplet {
                         mallInteract.setBoundary_controllers(mallGenerator.getBoundaryNodes());
                         break;
                     case (MallConst.SLIDER_REDLINE_DIST):
-                    case (MallConst.SLIDER_SITE_BUFFER):
+                    case (MallConst.SLIDER_OFFSET_DIST):
                         mallGenerator.updateSiteBoundary(
                                 mallInteract.getBoundaryBase(),
                                 mallParam.siteRedLineDist,

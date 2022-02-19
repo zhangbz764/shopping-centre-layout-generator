@@ -1,4 +1,4 @@
-package webMain;
+package mallWeb;
 
 import guo_cam.CameraController;
 import processing.core.PApplet;

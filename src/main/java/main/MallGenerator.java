@@ -124,6 +124,16 @@ public class MallGenerator {
 
     /* ------------- generating site & boundary ------------- */
 
+    /**
+    * description
+    *
+    * @param _site
+    * @param _boundary
+    * @param base
+    * @param redLineDist
+    * @param siteBufferDist
+    * @return void
+    */
     public void initSiteBoundary(WB_Polygon _site, WB_Polygon _boundary, int base, double redLineDist, double siteBufferDist) {
         this.siteBaseL = new SiteBase_L(
                 ZTransform.WB_PolygonToPolygon(_site),
@@ -133,9 +143,18 @@ public class MallGenerator {
         this.boundaryArea = siteBaseL.getBoundaryArea();
     }
 
+    /**
+    * description
+    *
+    * @param base
+    * @param redLineDist
+    * @param siteBufferDist
+    * @return void
+    */
     public void updateSiteBoundary(int base, double redLineDist, double siteBufferDist) {
         siteBaseL.update_L(base, redLineDist, siteBufferDist);
         this.boundaryArea = siteBaseL.getBoundaryArea();
+        System.out.println(boundaryArea);
     }
 
     /* ------------- generating main traffic ------------- */
@@ -334,6 +353,12 @@ public class MallGenerator {
             for (StructureGrid g : grids) {
                 g.updateModel(MallConst.STRUCTURE_MODEL_2);
             }
+        }
+    }
+
+    public void updateGridModulus(double gridModulus){
+        for (StructureGrid g : grids) {
+            g.updateModel(gridModulus);
         }
     }
 
@@ -602,12 +627,12 @@ public class MallGenerator {
 
     /* ------------- setter & getter ------------- */
 
-    public void setBoundary(Coordinate[] boundaryNodes_receive) {
-        this.siteBaseL.setBoundary(ZFactory.jtsgf.createPolygon(boundaryNodes_receive));
+    public SiteBase_L getSiteBaseL() {
+        return siteBaseL;
     }
 
-    public Polygon getBoundary() {
-        return siteBaseL.getBoundary();
+    public void setBoundary(Coordinate[] boundaryNodes_receive) {
+        this.siteBaseL.setBoundary(ZFactory.jtsgf.createPolygon(boundaryNodes_receive));
     }
 
     public Coordinate[] getBoundaryNodes() {
@@ -657,6 +682,10 @@ public class MallGenerator {
             corridorNode.add(l.getPt1().toWB_Point());
         }
         return corridorNode;
+    }
+
+    public StructureGrid[] getGrids() {
+        return grids;
     }
 
     public Polygon[] getGridRects() {
@@ -979,23 +1008,6 @@ public class MallGenerator {
             app.popMatrix();
         }
         app.popStyle();
-    }
-
-    /* ------------- JSON converting ------------- */
-
-    public void jsonConverting(ArchiJSON json, Gson gson) {
-        Segments b = JTSConverter.toSegments(siteBaseL.getBoundary());
-        Segments s = JTSConverter.toSegments(siteBaseL.getSite());
-
-        List<JsonElement> elements = new ArrayList<>();
-        JsonObject properties = new JsonObject();
-        properties.addProperty("test", "123123");
-
-        elements.add(gson.toJsonTree(b));
-        elements.add(gson.toJsonTree(s));
-
-        json.setGeometryElements(elements);
-        json.setProperties(properties);
     }
 
 
