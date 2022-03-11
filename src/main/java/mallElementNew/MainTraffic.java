@@ -2,10 +2,9 @@ package mallElementNew;
 
 import advancedGeometry.ZBSpline;
 import advancedGeometry.ZSkeleton;
-import basicGeometry.ZFactory;
-import basicGeometry.ZLine;
-import basicGeometry.ZPoint;
+import basicGeometry.*;
 import math.ZGeoMath;
+import math.ZGraphMath;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
 import transform.ZTransform;
@@ -54,13 +53,31 @@ public class MainTraffic {
         // find ridges of skeleton
         ZSkeleton boundarySkel = new ZSkeleton(boundary);
         List<ZLine> centralSegs = boundarySkel.getRidges();
-        centralSegs.addAll(boundarySkel.getExtendedRidges());
-        LineString centralLs = ZFactory.createLineString(centralSegs);
+//        centralSegs.addAll(boundarySkel.getExtendedRidges());
+
+        ZGraph ridgeGraph = ZFactory.createZGraphFromSegments(centralSegs);
+        ridgeGraph.checkPath();
+        ridgeGraph.checkLoop();
+
+        // check if the ridge graph has loops or is a path
+        LineString centralLs = null;
+        if (!ridgeGraph.isLoop()) {
+            if (ridgeGraph.isPath()) {
+                // single path
+                centralSegs.addAll(boundarySkel.getExtendedRidges());
+                centralLs = ZFactory.createLineString(centralSegs);
+            } else {
+                // has forks, find the longest chain
+                List<ZEdge> longestChain = ZGraphMath.longestChain(ridgeGraph);
+                centralLs = ZFactory.createLineString(longestChain);
+            }
+        }
 
         // divide and add entries
+        assert centralLs != null;
         List<ZPoint> dividePts = ZGeoMath.splitPolyLineEdge(centralLs, 6);
-        dividePts.remove(0);
-        dividePts.remove(dividePts.size() - 1);
+//        dividePts.remove(0);
+//        dividePts.remove(dividePts.size() - 1);
         this.allControlNodes = new WB_Point[dividePts.size() + 2];
         for (int i = 0; i < dividePts.size(); i++) {
             allControlNodes[i + 1] = dividePts.get(i).toWB_Point();

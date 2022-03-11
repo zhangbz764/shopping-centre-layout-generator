@@ -4,15 +4,8 @@ import archijson.ArchiJSON;
 import archijson.ArchiServer;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import converter.WB_Converter;
-import geometry.Segments;
 import io.socket.client.Socket;
-import mallIO.ImportData;
 import mallParameters.MallConst;
-import main.MallGenerator;
-import wblut.geom.WB_Polygon;
-
-import java.util.Arrays;
 
 /**
  * description

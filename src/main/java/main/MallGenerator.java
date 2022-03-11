@@ -1,14 +1,9 @@
 package main;
 
 import advancedGeometry.rectCover.ZRectCover;
-import archijson.ArchiJSON;
 import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
 import basicGeometry.ZPoint;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import geometry.Segments;
 import mallElementNew.*;
 import mallParameters.MallConst;
 import math.ZGeoMath;
@@ -22,7 +17,6 @@ import wblut.geom.WB_Coord;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
-import mallWeb.JTSConverter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +33,7 @@ import java.util.List;
  */
 public class MallGenerator {
     // site & boundary
-    private SiteBase_L siteBaseL;
+    private SiteBase siteBase;
     private double boundaryArea = 0;
 
     // main traffic & raw atriums
@@ -125,36 +119,53 @@ public class MallGenerator {
     /* ------------- generating site & boundary ------------- */
 
     /**
-    * description
-    *
-    * @param _site
-    * @param _boundary
-    * @param base
-    * @param redLineDist
-    * @param siteBufferDist
-    * @return void
-    */
-    public void initSiteBoundary(WB_Polygon _site, WB_Polygon _boundary, int base, double redLineDist, double siteBufferDist) {
-        this.siteBaseL = new SiteBase_L(
-                ZTransform.WB_PolygonToPolygon(_site),
-                _boundary == null ? null : ZTransform.WB_PolygonToPolygon(_boundary), // TODO: 2021/9/2 null
-                base, redLineDist, siteBufferDist
-        );
-        this.boundaryArea = siteBaseL.getBoundaryArea();
+     * initialize site and boundary
+     *
+     * @param _site     input site
+     * @param _boundary input boundary (null allowed)
+     * @param param1    input parameter 1 (int)
+     * @param param2    input parameter 2 (double)
+     * @param param3    input parameter 3 (double)
+     * @return void
+     */
+    public void initSiteBoundary(WB_Polygon _site, WB_Polygon _boundary, int param1, double param2, double param3) {
+        if (_boundary == null) {
+            // init SiteBase_L
+            this.siteBase = new SiteBase_L(
+                    ZTransform.WB_PolygonToPolygon(_site),
+                    param1, param2, param3
+            );
+        } else {
+            this.siteBase = new SiteBase_Input(
+                    ZTransform.WB_PolygonToPolygon(_site),
+                    ZTransform.WB_PolygonToPolygon(_boundary)
+            );
+        }
+        this.boundaryArea = siteBase.getBoundaryArea();
     }
 
     /**
-    * description
-    *
-    * @param base
-    * @param redLineDist
-    * @param siteBufferDist
-    * @return void
-    */
+     * description
+     *
+     * @param base
+     * @param redLineDist
+     * @param siteBufferDist
+     * @return void
+     */
     public void updateSiteBoundary(int base, double redLineDist, double siteBufferDist) {
-        siteBaseL.update_L(base, redLineDist, siteBufferDist);
-        this.boundaryArea = siteBaseL.getBoundaryArea();
+        siteBase.updateByParams(base, redLineDist, siteBufferDist);
+        this.boundaryArea = siteBase.getBoundaryArea();
         System.out.println(boundaryArea);
+    }
+
+    /**
+     * update boundary by nodes
+     *
+     * @param boundaryNodes_receive nodes received from MallInteract
+     * @return void
+     */
+    public void updateBoundaryByNodes(Coordinate[] boundaryNodes_receive) {
+        this.siteBase.updateByNodes(boundaryNodes_receive);
     }
 
     /* ------------- generating main traffic ------------- */
@@ -166,7 +177,7 @@ public class MallGenerator {
      * @return void
      */
     public void initTraffic(double bufferDist) {
-        this.mainTraffic = new MainTraffic(siteBaseL.getBoundary(), bufferDist);
+        this.mainTraffic = new MainTraffic(siteBase.getBoundary(), bufferDist);
     }
 
     /**
@@ -311,7 +322,7 @@ public class MallGenerator {
      * @return void
      */
     public void initGrid(int gridNum, double dist) {
-        ZRectCover zrc = new ZRectCover(siteBaseL.getBoundary(), gridNum);
+        ZRectCover zrc = new ZRectCover(siteBase.getBoundary(), gridNum);
         List<Polygon> rects = zrc.getBestRects();
         this.grids = new StructureGrid[gridNum];
         for (int i = 0; i < rects.size(); i++) {
@@ -334,7 +345,7 @@ public class MallGenerator {
                 union = union.union(grids[i].getRect());
             }
             union = union.buffer(1);
-            this.validGrids = union.contains(siteBaseL.getBoundary());
+            this.validGrids = union.contains(siteBase.getBoundary());
         }
     }
 
@@ -343,7 +354,7 @@ public class MallGenerator {
      *
      * @return void
      */
-    public void switchGridModel() {
+    public void switchGridModulus() {
         this.gridModelSwitch = !gridModelSwitch;
         if (gridModelSwitch) {
             for (StructureGrid g : grids) {
@@ -356,7 +367,13 @@ public class MallGenerator {
         }
     }
 
-    public void updateGridModulus(double gridModulus){
+    /**
+    * description
+    *
+    * @param gridModulus
+    * @return void
+    */
+    public void updateGridModulus(double gridModulus) {
         for (StructureGrid g : grids) {
             g.updateModel(gridModulus);
         }
@@ -373,7 +390,7 @@ public class MallGenerator {
     public void initShopCells(int floorNum) {
         if (floorNum == 1) {
             List<LineString> publicSpaceLS = new ArrayList<>(ZTransform.PolygonToLineString(publicSpace.getPublicSpaceShape()));
-            floors[floorNum - 1] = new MallFloor(floorNum, siteBaseL.getBoundary());
+            floors[floorNum - 1] = new MallFloor(floorNum, siteBase.getBoundary());
             floors[floorNum - 1].setStatus(0);
             this.floors[floorNum - 1].updateSubdivision(publicSpaceLS, grids);
         } else {
@@ -381,7 +398,7 @@ public class MallGenerator {
             List<LineString> publicSpaceLS = new ArrayList<>(
                     ZTransform.PolygonToLineString(publicSpace.getPublicSpaceShape())
             );
-            floors[floorNum - 1] = new MallFloor(floorNum, siteBaseL.getBoundary());
+            floors[floorNum - 1] = new MallFloor(floorNum, siteBase.getBoundary());
             floors[floorNum - 1].setStatus(0);
             Point verify = publicSpace.getPublicSpaceShape().getInteriorPoint();
             floors[floorNum - 1].setVerify(verify);
@@ -409,7 +426,7 @@ public class MallGenerator {
     public void initEvacuation2() {
         this.stairways = new ArrayList<>();
         // buffer
-        Polygon bound = siteBaseL.getBoundary();
+        Polygon bound = siteBase.getBoundary();
         WB_Polygon boundShape = ZTransform.PolygonToWB_Polygon(bound);
         WB_Polygon bufferBoundary = ZFactory.wbgf.createBufferedPolygons2D(boundShape, MallConst.STRUCTURE_MODEL * -0.5).get(0);
         WB_Polygon validBuffer = ZTransform.validateWB_Polygon(boundShape);
@@ -627,16 +644,12 @@ public class MallGenerator {
 
     /* ------------- setter & getter ------------- */
 
-    public SiteBase_L getSiteBaseL() {
-        return siteBaseL;
-    }
-
-    public void setBoundary(Coordinate[] boundaryNodes_receive) {
-        this.siteBaseL.setBoundary(ZFactory.jtsgf.createPolygon(boundaryNodes_receive));
+    public SiteBase getSiteBase() {
+        return siteBase;
     }
 
     public Coordinate[] getBoundaryNodes() {
-        return siteBaseL.getBoundary().getCoordinates();
+        return siteBase.getBoundary().getCoordinates();
     }
 
     public String getBoundaryAreaAsString() {
@@ -784,10 +797,10 @@ public class MallGenerator {
         app.noFill();
         app.stroke(255);
         app.strokeWeight(6);
-        render.drawGeometry(siteBaseL.getBoundary());
+        render.drawGeometry(siteBase.getBoundary());
         app.stroke(255, 0, 0);
         app.strokeWeight(3);
-        render.drawGeometry(siteBaseL.getSite());
+        render.drawGeometry(siteBase.getSite());
     }
 
     public void displayTrafficLocal(PApplet app, JtsRender jtsRender) {

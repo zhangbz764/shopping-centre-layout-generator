@@ -41,7 +41,7 @@ public class AtriumRaw {
 
     /* ------------- constructor ------------- */
 
-    public AtriumRaw(WB_Point _center, WB_Point[] _shapePoints, boolean _ifCurve) {
+    protected AtriumRaw(WB_Point _center, WB_Point[] _shapePoints, boolean _ifCurve) {
         this.center = _center;
         this.shapePoints = _shapePoints;
         this.shapePtsNum = shapePoints.length;

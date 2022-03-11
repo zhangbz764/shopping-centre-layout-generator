@@ -202,7 +202,7 @@ public class MallNew extends PApplet {
                     mallInteract.dragUpdateBoundary(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
                     break;
                 case MallConst.E_TRAFFIC_ATRIUM:
-                    mallInteract.dragUpdateTrafficAtriumRaw(pointer[0] + width * 0.5, pointer[1] + height * 0.5, mallGenerator.getSiteBaseL().getBoundary());
+                    mallInteract.dragUpdateTrafficAtriumRaw(pointer[0] + width * 0.5, pointer[1] + height * 0.5, mallGenerator.getSiteBase().getBoundary());
                     break;
                 case MallConst.E_MAIN_CORRIDOR:
                     mallInteract.dragUpdateCorridor(pointer[0] + width * 0.5, pointer[1] + height * 0.5);
@@ -224,7 +224,7 @@ public class MallNew extends PApplet {
             if (mouseX > MallConst.CONTROLLER_W + MallConst.STATUS_W) {  // 不碰到GUI
                 switch (EDIT_STATUS) {
                     case MallConst.E_SITE_BOUNDARY:
-                        mallGenerator.setBoundary(mallInteract.getBoundary_controllers());
+                        mallGenerator.updateBoundaryByNodes(mallInteract.getBoundary_controllers());
                         break;
                     case MallConst.E_TRAFFIC_ATRIUM:
                         if (mallInteract.getTrafficOrAtrium()) {
@@ -324,7 +324,7 @@ public class MallNew extends PApplet {
                 if (EDIT_STATUS >= MallConst.E_TRAFFIC_ATRIUM - 1) {
                     if (EDIT_STATUS <= MallConst.E_TRAFFIC_ATRIUM) {
                         // 外轮廓不可编辑，编辑主路径
-                        mallGenerator.setBoundary(mallInteract.getBoundary_controllers());
+                        mallGenerator.updateBoundaryByNodes(mallInteract.getBoundary_controllers());
                         mallGenerator.initTraffic(mallParam.trafficBufferDist);
 
                         mallInteract.setTraffic_innerControllers(mallGenerator.getTrafficInnerNodes());
@@ -520,7 +520,7 @@ public class MallNew extends PApplet {
                 switch (id) {
                     // 4
                     case (MallConst.BUTTON_GRID_MODEL):
-                        mallGenerator.switchGridModel();
+                        mallGenerator.switchGridModulus();
                         break;
                     case (MallConst.LIST_GRID_NUM):
                         int gridNum = (int) theEvent.getController().getValue() + 1;

@@ -5,15 +5,12 @@ import basicGeometry.ZLine;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import converter.JTS_Converter;
-import converter.WB_Converter;
 import geometry.Segments;
 import main.MallGenerator;
 import mallElementNew.StructureGrid;
 import mallIO.ImportData;
 import mallParameters.MallConst;
 import org.locationtech.jts.geom.LineString;
-import wblut.geom.WB_Segment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,8 +67,8 @@ public class MallJsonProcessor {
                         67.2
                 );
 
-                Segments b1 = JTSConverter.toSegments(mg.getSiteBaseL().getBoundary());
-                Segments s1 = JTSConverter.toSegments(mg.getSiteBaseL().getSite());
+                Segments b1 = JTSConverter.toSegments(mg.getSiteBase().getBoundary());
+                Segments s1 = JTSConverter.toSegments(mg.getSiteBase().getSite());
                 elements.add(gson.toJsonTree(b1));
                 elements.add(gson.toJsonTree(s1));
 
@@ -84,7 +81,7 @@ public class MallJsonProcessor {
                 double siteOffsetDist = jsonR.getProperties().get("siteOffsetDist").getAsDouble();
                 mg.updateSiteBoundary(boundaryBase, redLineDist, siteOffsetDist);
 
-                Segments b2 = JTSConverter.toSegments(mg.getSiteBaseL().getBoundary());
+                Segments b2 = JTSConverter.toSegments(mg.getSiteBase().getBoundary());
                 elements.add(gson.toJsonTree(b2));
 
                 break;

@@ -9,57 +9,43 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Polygon;
 
 /**
- * site and base boundary
+ * define an L-shape site & boundary by generating
  *
  * @author zhangbz ZHANG Baizhou
  * @project shopping_mall
  * @date 2021/9/1
  * @time 15:11
  */
-public class SiteBase_L {
-    private Polygon site;                            // 场地轮廓
+public class SiteBase_L extends SiteBase {
     private Polygon redLine;                         // 场地红线
-    private Polygon boundary;                        // 建筑轮廓
-
     private int base_L = 0;
-    private double boundaryArea = 0;
 
     /* ------------- constructor ------------- */
 
-    public SiteBase_L(Polygon _site, Polygon _boundary, int base, double redLineDist, double siteBufferDist) {
-        this.site = _site;
-        this.boundary = _boundary;
-        this.base_L = base;
-        if (boundary != null) {
-            // given any site and boundary (red line will be null)
-        } else {
-            // given quad site, generate L-shape boundary
-            Geometry redLineSite = site.buffer(-1 * redLineDist);
-            this.redLine = (Polygon) redLineSite.reverse();
-            this.boundary = generateBoundary_L(redLine, base_L, siteBufferDist);
-        }
-        this.boundaryArea = boundary.getArea();
+    public SiteBase_L(Polygon _site, int base, double redLineDist, double siteBufferDist) {
+        super(_site);
+        updateByParams(base, redLineDist, siteBufferDist);
     }
 
     /* ------------- member function ------------- */
 
     /**
-    * description
-    *
-    * @param base
-    * @param redLineDist
-    * @param siteBufferDist
-    * @return void
-    */        
-    public void update_L(int base, double redLineDist, double siteBufferDist) {
+     * update L-shape boundary by base index, red line distance and site buffer distance
+     *
+     * @param base           base index
+     * @param redLineDist    red line distance
+     * @param siteBufferDist site buffer distance
+     * @return void
+     */
+    @Override
+    public void updateByParams(int base, double redLineDist, double siteBufferDist) {
         this.base_L = base;
 
         // given quad site, generate L-shape boundary
-        Geometry redLineSite = site.buffer(-1 * redLineDist);
-        this.redLine = (Polygon) redLineSite.reverse();
-        this.boundary = generateBoundary_L(redLine, base_L, siteBufferDist);
-
-        this.boundaryArea = boundary.getArea();
+        Geometry redLineSite = super.getSite().buffer(-1 * redLineDist);
+        this.setRedLine((Polygon) redLineSite.reverse());
+        Polygon boundary = generateBoundary_L(getRedLine(), base_L, siteBufferDist);
+        super.setBoundary(boundary);
     }
 
     /**
@@ -104,25 +90,18 @@ public class SiteBase_L {
 
     /* ------------- setter & getter ------------- */
 
-    public Polygon getSite() {
-        return site;
+    public int getBase_L() {
+        return base_L;
     }
 
     public Polygon getRedLine() {
         return redLine;
     }
 
-    public Polygon getBoundary() {
-        return boundary;
+    public void setRedLine(Polygon redLine) {
+        this.redLine = redLine;
     }
 
-    public void setBoundary(Polygon boundary) {
-        this.boundary = boundary;
-    }
-
-    public double getBoundaryArea() {
-        return boundaryArea;
-    }
 
     /* ------------- draw ------------- */
 }
