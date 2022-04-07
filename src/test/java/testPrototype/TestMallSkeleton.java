@@ -28,8 +28,8 @@ public class TestMallSkeleton extends PApplet {
 
     public void settings() {
 //        size(1280, 720, SVG, ".\\src\\test\\resources\\skeleton.svg");
-//        size(1280, 720, SVG, ".\\src\\test\\resources\\traffic.svg");
-        size(1000, 1000, P3D);
+        size(1280, 720, SVG, ".\\src\\test\\resources\\traffic.svg");
+//        size(1000, 1000, P3D);e
     }
 
     /* ------------- setup ------------- */
@@ -151,7 +151,7 @@ public class TestMallSkeleton extends PApplet {
     }
 
     public void keyPressed() {
-
+        exit();
     }
 
 }

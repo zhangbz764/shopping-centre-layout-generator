@@ -12,10 +12,16 @@ import processing.core.PApplet;
  */
 public class MallProtoTest {
     public static void main(String[] args) {
-        PApplet.main("testPrototype.TestMallSkeleton");
+//        PApplet.main("testPrototype.TestMallSkeleton");
 
 //        PApplet.main("testPrototype.TestMallGrid");
 
 //        PApplet.main("testPrototype.TestMallAtrium");
+
+//        PApplet.main("testPrototype.TestMallAtriumRound");
+
+//        PApplet.main("testPrototype.TestMallShop");
+
+        PApplet.main("testPrototype.TestMallEvac");
     }
 }
