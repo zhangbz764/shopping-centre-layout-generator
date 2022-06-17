@@ -60,7 +60,7 @@ public class MallJsonProcessor {
         switch (functionID) {
             case MallConst.INIT_FLAG:
                 mg.initSiteBoundary(
-                        input.getInputSite(),
+                        input.getInputBlock(),
                         input.getInputBoundary(),
                         0,
                         10,
@@ -79,7 +79,7 @@ public class MallJsonProcessor {
                 int boundaryBase = jsonR.getProperties().get("boundaryBase").getAsInt();
                 double redLineDist = jsonR.getProperties().get("redLineDist").getAsDouble();
                 double siteOffsetDist = jsonR.getProperties().get("siteOffsetDist").getAsDouble();
-                mg.updateSiteBoundary(boundaryBase, redLineDist, siteOffsetDist);
+                mg.updateSiteBaseL(boundaryBase, redLineDist, siteOffsetDist);
 
                 Segments b2 = JTSConverter.toSegments(mg.getSiteBase().getBoundary());
                 elements.add(gson.toJsonTree(b2));

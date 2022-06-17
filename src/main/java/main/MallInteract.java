@@ -1,6 +1,7 @@
 package main;
 
 import basicGeometry.ZFactory;
+import basicGeometry.ZPoint;
 import mallElementNew.AtriumRaw;
 import mallElementNew.AtriumRawFactory;
 import mallElementNew.AtriumRawManager;
@@ -26,16 +27,15 @@ import java.util.List;
  * @time 11:20
  */
 public class MallInteract {
-    // 场地&建筑轮廓
-    private int boundaryBase = 0;                       // 生成建筑轮廓的场地基点序号
-    private Coordinate[] boundary_controllers;          // 建筑轮廓控制点
+    // site & building boundary
+    private int boundaryBase = 0;                       // the L-shape base point index
+    private Coordinate[] boundary_controllers;          // controller points of building boundary
 
-    // 主路径 & 原始中庭
-    private boolean trafficOrAtrium = true;             // 路径交互 or 中庭交互
-    private List<WB_Point> traffic_innerControllers;    // 动线中部控制点
-    private List<WB_Point> traffic_entryControllers;    // 动线端头控制点
-
-    private AtriumRawManager atriumRawManager;
+    // main traffic & raw atriums
+    private boolean trafficOrAtrium = true;             // switch toggle for traffic/atrium interact
+    private List<WB_Point> traffic_innerControllers;    // inner controller points of traffic curve
+    private List<WB_Point> traffic_entryControllers;    // entry controller points of traffic curve
+    private AtriumRawManager atriumRawManager;          // atrium manager for interact rules
     private AtriumRaw selectedAtriumRaw;                   // 选择的原始中庭
     private int selectedAtriumRawType = -1;                // 选择的中庭类型代号
     private WB_Point[] atriumRaw_controllers;              // 选择的原始中庭的控制点
@@ -55,6 +55,13 @@ public class MallInteract {
     private Polygon selectedAtrium;                     // 选择的中庭
     private int selectedAtriumID = -1;                  // 选择的中庭序号
 
+    // 扶梯
+    private List<Polygon> escalatorBounds_interact;     // 扶梯边框
+    private List<Integer> escalatorAtriumIDs;           // 扶梯所属的中庭序号
+    private Polygon selectedEscalatorBound;             // 选择的扶梯边框
+    private int selectedEscalatorID = -1;               // 选择的扶梯边框序号
+    private int selectedEscalatorAtriumID = -1;         // 选择的扶梯所在的中庭序号
+
     // 柱网
     private Polygon[] rect_interact;                    // 柱网矩形
     private Polygon selectedRect;                       // 选择的柱网
@@ -64,17 +71,23 @@ public class MallInteract {
 
     // 商铺
     private List<Polygon> shopCell_interact;            // 商铺划格（不同层）
-    private List<Polygon> selectedShopCell;            // 选择的商铺
+    private List<Polygon> selectedShopCell;             // 选择的商铺
+    private List<Integer> selectedShopCellID;           // 选择的商铺序号
     private double shopArea = -1;
 
-    // 扶梯
-    private List<Polygon> escalatorBounds_interact;     // 扶梯边框
-    private List<Integer> escalatorAtriumIDs;           // 扶梯所属的中庭序号
-    private Polygon selectedEscalatorBound;             // 选择的扶梯边框
-    private int selectedEscalatorID = -1;               // 选择的扶梯边框序号
-    private int selectedEscalatorAtriumID = -1;         // 选择的扶梯所在的中庭序号
+    // 疏散楼梯
+    private List<ZPoint> generatedEvacNodes;
+    private List<ZPoint> allEvacuationNodes;
+    private List<Integer> generatedEvacNodeIDs;
+    private ZPoint selectedEvacNode = null;
+    private int selectedEvacNodeIndex = -1;
+    private int newlysetEvacNodeID = -1;
 
-    private List<LineString> bufferCurve_interact;   // 动线边界曲线（不同层）
+    private List<Polygon> stairway_interact;
+    private Polygon selectedStairway = null;
+    private int selectedStairwayID = -1;
+
+    private List<LineString> bufferCurve_interact;      // 动线边界曲线（不同层）
     private List<WB_Point> bufferCurveControl_interact;
 
     /* ------------- constructor ------------- */
@@ -539,6 +552,36 @@ public class MallInteract {
         }
     }
 
+    /* ------------- escalator interact ------------- */
+
+    /**
+     * select escalator bound
+     *
+     * @param x pointer x
+     * @param y pointer y
+     * @return void
+     */
+    public void selectEscalator(double x, double y) {
+        Point mouse = ZFactory.jtsgf.createPoint(new Coordinate(x, y));
+        if (selectedEscalatorBound == null) {
+            for (int i = 0; i < escalatorBounds_interact.size(); i++) {
+                Polygon bound = escalatorBounds_interact.get(i);
+                if (bound.contains(mouse)) {
+                    this.selectedEscalatorBound = bound;
+                    this.selectedEscalatorID = i;
+                    this.selectedEscalatorAtriumID = escalatorAtriumIDs.get(i);
+                    break;
+                }
+            }
+        } else {
+            if (!selectedEscalatorBound.contains(mouse)) {
+                this.selectedEscalatorBound = null;
+                this.selectedEscalatorID = -1;
+                this.selectedEscalatorAtriumID = -1;
+            }
+        }
+    }
+
     /* ------------- structure grid interact ------------- */
 
     /**
@@ -650,10 +693,12 @@ public class MallInteract {
         for (int i = 0; i < size; i++) {
             Polygon cell = shopCell_interact.get(i);
             if (cell.contains(pointer)) {
-                if (this.selectedShopCell.contains(cell)) {
+                if (this.selectedShopCellID.contains(i)) {
                     selectedShopCell.remove(cell);
+                    selectedShopCellID.remove((Integer) i);
                 } else {
                     selectedShopCell.add(cell);
+                    selectedShopCellID.add(i);
                 }
                 break;
             }
@@ -687,36 +732,97 @@ public class MallInteract {
             }
         }
         selectedShopCell.clear();
+        selectedShopCellID.clear();
     }
 
-    /* ------------- shop cell interact ------------- */
+    /* ------------- evacuation stairway interact ------------- */
 
     /**
-     * select escalator bound
+     * drag update the evacuation generator position
      *
-     * @param x pointer x
-     * @param y pointer y
+     * @param x
+     * @param y
+     * @param boundary
      * @return void
      */
-    public void selectEscalator(double x, double y) {
-        Point mouse = ZFactory.jtsgf.createPoint(new Coordinate(x, y));
-        if (selectedEscalatorBound == null) {
-            for (int i = 0; i < escalatorBounds_interact.size(); i++) {
-                Polygon bound = escalatorBounds_interact.get(i);
-                if (bound.contains(mouse)) {
-                    this.selectedEscalatorBound = bound;
-                    this.selectedEscalatorID = i;
-                    this.selectedEscalatorAtriumID = escalatorAtriumIDs.get(i);
-                    break;
-                }
-            }
-        } else {
-            if (!selectedEscalatorBound.contains(mouse)) {
-                this.selectedEscalatorBound = null;
-                this.selectedEscalatorID = -1;
-                this.selectedEscalatorAtriumID = -1;
+    public void dragUpdateEvacNode(double x, double y, Polygon boundary) {
+//        for (ZPoint evacNode : generatedEvacNodes) {
+//            if (ZMath.distance2D(evacNode.xd(), evacNode.yd(), x, y) <= MallConst.EVACATION_NODE_R) {
+//                evacNode.set(x, y);
+//                break;
+//            }
+//        }
+        WB_Polygon boundTemp = ZTransform.PolygonToWB_Polygon(boundary);
+        for (int i = 0; i < generatedEvacNodes.size(); i++) {
+            ZPoint evacNode = generatedEvacNodes.get(i);
+            if (ZMath.distance2D(evacNode.xd(), evacNode.yd(), x, y) <= MallConst.EVACATION_NODE_R) {
+                this.selectedEvacNode = evacNode;
+                this.selectedEvacNodeIndex = i;
+                WB_Point point = new WB_Point(x, y);
+                selectedEvacNode.set(WB_GeometryOp2D.getClosestPoint2D(point, ZTransform.WB_PolygonToWB_PolyLine(boundTemp).get(0)));
+                break;
             }
         }
+
+//        for (int i = 0; i < generatedEvacNodes.size(); i++) {
+//            ZPoint evacNode = generatedEvacNodes.get(i);
+//            if (ZMath.distance2D(evacNode.xd(), evacNode.yd(), x, y) <= MallConst.EVACATION_NODE_R) {
+//                this.selectedEvacNodeID = generatedEvacNodeIDs.get(i);
+//                double[] dist = new double[allEvacuationNodes.size()];
+//                for (int j = 0; j < dist.length; j++) {
+//                    dist[j] = allEvacuationNodes.get(j).distanceSq(evacNode);
+//                }
+//                this.newlysetEvacNodeID = ZMath.getMinIndex(dist);
+//                ZPoint newEvacNode = allEvacuationNodes.get(newlysetEvacNodeID);
+//                generatedEvacNodes.set(i, newEvacNode);
+//                break;
+//            }
+//        }
+    }
+
+    public void releaseUpdateEvacNode() {
+        if (selectedEvacNode != null) {
+            double[] dist = new double[allEvacuationNodes.size()];
+            for (int j = 0; j < dist.length; j++) {
+                dist[j] = allEvacuationNodes.get(j).distanceSq(selectedEvacNode);
+            }
+            this.newlysetEvacNodeID = ZMath.getMinIndex(dist);
+
+            generatedEvacNodes.set(selectedEvacNodeIndex, allEvacuationNodes.get(newlysetEvacNodeID));
+            generatedEvacNodeIDs.set(selectedEvacNodeIndex, newlysetEvacNodeID);
+
+        }
+    }
+
+    public void clearSelEvac() {
+        selectedEvacNode = null;
+        selectedEvacNodeIndex = -1;
+        newlysetEvacNodeID = -1;
+    }
+
+    public void selectStairwayShape(double x, double y) {
+        if (stairway_interact != null) {
+            Point pointer = ZFactory.jtsgf.createPoint(new Coordinate(x, y));
+            if (selectedStairwayID < 0) {
+                for (int i = 0; i < stairway_interact.size(); i++) {
+                    Polygon stair = stairway_interact.get(i);
+                    if (stair.contains(pointer)) {
+                        selectedStairwayID = i;
+                        selectedStairway = stair;
+                        break;
+                    }
+                }
+            } else {
+                if (!selectedStairway.contains(pointer)) {
+                    clearSelecteStairway();
+                }
+            }
+        }
+    }
+
+    public void clearSelecteStairway() {
+        selectedStairwayID = -1;
+        selectedStairway = null;
     }
 
     /* ------------- buffer curve shape interact ------------- */
@@ -724,7 +830,6 @@ public class MallInteract {
     public void switchFloor(char floorKey) {
 
     }
-
 
     public void drawBufferCurve(PApplet app, JtsRender jtsRender) {
         app.pushStyle();
@@ -851,30 +956,6 @@ public class MallInteract {
         atrium_interact[index] = newAtriumShape;
     }
 
-    public void setRect_interact(Polygon[] rect_interact) {
-        this.rect_interact = rect_interact;
-    }
-
-    public Polygon getSelectedRect() {
-        return selectedRect;
-    }
-
-    public int getSelectedRectID() {
-        return selectedRectID;
-    }
-
-    public void setShopCell_interact(List<Shop> currentShops) {
-        this.shopCell_interact = new ArrayList<>();
-        for (Shop shop : currentShops) {
-            shopCell_interact.add(shop.getShape());
-        }
-        this.selectedShopCell = new ArrayList<>();
-    }
-
-    public List<Polygon> getShopCell_interact() {
-        return shopCell_interact;
-    }
-
     public void setEscalatorBounds_interact(List<Polygon> escalatorBounds_interact) {
         this.escalatorBounds_interact = escalatorBounds_interact;
     }
@@ -892,6 +973,68 @@ public class MallInteract {
         this.escalatorBounds_interact.set(selectedEscalatorID, bound);
     }
 
+    public void setRect_interact(Polygon[] rect_interact) {
+        this.rect_interact = rect_interact;
+    }
+
+    public Polygon getSelectedRect() {
+        return selectedRect;
+    }
+
+    public int getSelectedRectID() {
+        return selectedRectID;
+    }
+
+    public List<Integer> getSelectedShopCellID() {
+        return selectedShopCellID;
+    }
+
+    public void setShopCell_interact(List<Shop> currentShops) {
+        this.shopCell_interact = new ArrayList<>();
+        for (Shop shop : currentShops) {
+            shopCell_interact.add(shop.getShape());
+        }
+        this.selectedShopCell = new ArrayList<>();
+        this.selectedShopCellID = new ArrayList<>();
+    }
+
+    public List<Polygon> getShopCell_interact() {
+        return shopCell_interact;
+    }
+
+    public void setGeneratedEvacNodes(List<ZPoint> evacuationNodes, List<Integer> ids) {
+        this.generatedEvacNodes = evacuationNodes;
+        this.generatedEvacNodeIDs = ids;
+    }
+
+    public List<ZPoint> getGeneratedEvacNodes() {
+        return generatedEvacNodes;
+    }
+
+    public List<Integer> getGeneratedEvacNodeIDs() {
+        return generatedEvacNodeIDs;
+    }
+
+    public void setAllEvacuationNodes(List<ZPoint> allEvacuationNodes) {
+        this.allEvacuationNodes = allEvacuationNodes;
+    }
+
+    public int getSelectedEvacNodeIndex() {
+        return selectedEvacNodeIndex;
+    }
+
+    public int getNewlysetEvacNodeID() {
+        return newlysetEvacNodeID;
+    }
+
+    public void setStairway_interact(List<Polygon> stairway_interact) {
+        this.stairway_interact = stairway_interact;
+    }
+
+    public int getSelectedStairwayID() {
+        return selectedStairwayID;
+    }
+
     /* ------------- draw ------------- */
 
     public void displayLocal(PApplet app, WB_Render render, JtsRender jtsRender, int status) {
@@ -899,10 +1042,10 @@ public class MallInteract {
         switch (status) {
             case -1:
                 break;
-            case 0:
+            case MallConst.E_SITE_BOUNDARY:
                 displaySiteBoundary(app, jtsRender);
                 break;
-            case 1:
+            case MallConst.E_TRAFFIC_ATRIUM:
                 if (trafficOrAtrium) {
                     displayTraffic(app, render);
                 }
@@ -911,13 +1054,13 @@ public class MallInteract {
                     displaySelectedAtriumRaw(app, jtsRender);
                 }
                 break;
-            case 2:
+            case MallConst.E_MAIN_CORRIDOR:
                 displayCorridorNode(app);
                 if (selectedCorridorNode != null) {
                     displaySelectedCorridorNode(app);
                 }
                 break;
-            case 3:
+            case MallConst.E_PUBLIC_SPACE:
                 displayPublicSpaceNodes(app);
                 if (selectedPublicSpaceNode != null) {
                     displaySelectedPublicNodes(app);
@@ -926,20 +1069,29 @@ public class MallInteract {
                     displaySelectedAtrium(app, jtsRender);
                 }
                 break;
-            case 4:
+            case MallConst.E_ESCALATOR:
+                if (selectedEscalatorBound != null) {
+                    displaySelectedEscalator(app, jtsRender);
+                }
+                break;
+            case MallConst.E_STRUCTURE_GRID:
                 if (selectedRect != null) {
                     displaySelectedGrid(app, jtsRender);
                 }
                 break;
-            case 5:
+            case MallConst.E_SHOP_EDIT:
                 if (selectedShopCell != null) {
                     displaySelectedCell(app, jtsRender);
                 }
                 break;
-            case 6:
-                if (selectedEscalatorBound != null) {
-                    displaySelectedEscalator(app, jtsRender);
+            case MallConst.E_EVAC_STAIRWAY:
+                displayEvacPos(app);
+                if (selectedStairway != null) {
+                    displaySelEvacShape(app, jtsRender);
                 }
+                break;
+            case MallConst.E_BATHROOM:
+
                 break;
         }
         app.popStyle();
@@ -1118,5 +1270,23 @@ public class MallInteract {
         app.stroke(0, 255, 0);
         app.strokeWeight(5);
         jtsRender.drawGeometry(selectedEscalatorBound);
+    }
+
+    private void displayEvacPos(PApplet app) {
+        app.noStroke();
+        app.fill(255, 97, 136);
+        for (ZPoint p : generatedEvacNodes) {
+            app.ellipse(p.xf(), p.yf(), (float) MallConst.EVACATION_NODE_R, (float) MallConst.EVACATION_NODE_R);
+        }
+    }
+
+    private void displaySelEvacShape(PApplet app, JtsRender jtsRender) {
+        app.pushMatrix();
+        app.translate(0, 0, 0.5f);
+        app.noFill();
+        app.stroke(0, 255, 0);
+        app.strokeWeight(5);
+        jtsRender.drawGeometry(selectedStairway);
+        app.popMatrix();
     }
 }

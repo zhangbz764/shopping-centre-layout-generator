@@ -3,6 +3,8 @@ package mallIO;
 import igeo.ICurve;
 import igeo.IG;
 import igeo.IPoint;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LineString;
 import processing.core.PApplet;
 import transform.ZTransform;
 import wblut.geom.WB_Point;
@@ -10,6 +12,7 @@ import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -22,12 +25,12 @@ import java.util.List;
  */
 public class ImportData {
     // geometries
-    private WB_Polygon inputSite;
+    private List<Geometry> inputSite;
+    private WB_Polygon inputBlock;
     private WB_Polygon inputBoundary;
     private List<WB_Point> inputEntries;
     private List<WB_Point> inputInnerNodes;
 
-    private WB_Polygon inputAtriumTemp;
     // statistics
     private double siteArea;
 
@@ -65,27 +68,65 @@ public class ImportData {
         // load site polygon
         ICurve[] site = IG.layer("site").curves();
         if (site.length > 0) {
-            this.inputSite = (WB_Polygon) ZTransform.ICurveToWB(site[0]);
+            this.inputBlock = (WB_Polygon) ZTransform.ICurveToWB(site[0]);
         }
-        // load boundary polygon
-        ICurve[] boundary = IG.layer("tempBoundary").curves();
+
+
+//        // load boundary polygon
+//        ICurve[] boundary = IG.layer("tempBoundary").curves();
+//        if (boundary.length > 0) {
+//            this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0]);
+//        }
+    }
+
+    /**
+     * load Shaoxing site
+     *
+     * @param path input file path
+     * @return void
+     */
+    public void loadDataShaoxing(String path) {
+        System.out.println("** LOADING FILE **");
+        IG.init();
+        IG.open(path);
+
+        // load site
+        ICurve[] site = IG.layer("testSite").curves();
+        if (site.length > 0) {
+            for (ICurve c : site) {
+                this.inputSite.add(ZTransform.ICurveToJts(c));
+            }
+        }
+
+        // load red line
+        ICurve[] redLine = IG.layer("testRedLine").curves();
+        if (redLine.length > 0) {
+            this.inputBlock = (WB_Polygon) ZTransform.ICurveToWB(redLine[0]);
+        }
+
+        // load boundary
+        ICurve[] boundary = IG.layer("testBoundary").curves();
         if (boundary.length > 0) {
             this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0]);
         }
+    }
 
-        // temp: load public space polygon
-        ICurve[] publicSpace = IG.layer("tempAtrium").curves();
-        if (publicSpace.length > 0) {
-            this.inputAtriumTemp = (WB_Polygon) ZTransform.ICurveToWB(publicSpace[0]);
+    public void loadDataSite(String path){
+        System.out.println("** LOADING FILE **");
+        IG.init();
+        IG.open(path);
+
+        // load red line
+        ICurve[] redLine = IG.layer("testRedLine").curves();
+        if (redLine.length > 0) {
+            this.inputBlock = (WB_Polygon) ZTransform.ICurveToWB(redLine[0]);
         }
-
-        // print
-//        String inputInfo = "\n" + "*** IMPORT STATS ***"
-//                + "\n" + "boundary points " + "---> " + inputBoundary.getNumberOfPoints()
-//                + "\n" + "entries " + "---> " + inputEntries.size()
-//                + "\n" + "inner nodes " + "---> " + inputInnerNodes.size()
-//                + "\n";
-//        System.out.println(inputInfo + "**  LOADING SUCCESS **" + "\n" + "----------------------" + "\n");
+        // load boundary
+        ICurve[] boundary = IG.layer("site5").curves();
+        System.out.println(boundary.length);
+        if (boundary.length > 0) {
+            this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0]);
+        }
     }
 
     /**
@@ -126,8 +167,12 @@ public class ImportData {
         System.out.println(inputInfo + "**  LOADING SUCCESS **" + "\n" + "----------------------" + "\n");
     }
 
-    public WB_Polygon getInputSite() {
+    public List<Geometry> getInputSite() {
         return inputSite;
+    }
+
+    public WB_Polygon getInputBlock() {
+        return inputBlock;
     }
 
     public WB_Polygon getInputBoundary() {
@@ -140,10 +185,6 @@ public class ImportData {
 
     public List<WB_Point> getInputInnerNodes() {
         return this.inputInnerNodes;
-    }
-
-    public WB_Polygon getInputAtriumTemp() {
-        return inputAtriumTemp;
     }
 
     /*-------- print & draw --------*/

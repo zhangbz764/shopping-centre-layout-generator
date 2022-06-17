@@ -1,8 +1,10 @@
 package main;
 
+import controlP5.CColor;
 import controlP5.ControlFont;
 import controlP5.ControlP5;
 import controlP5.DropdownList;
+import javafx.scene.paint.Color;
 import mallParameters.MallConst;
 import mallParameters.MallParam;
 import processing.core.PApplet;
@@ -33,6 +35,7 @@ public class MallGUI {
                 new String[]{},
                 new String[]{},
                 new String[]{},
+                new String[]{},
                 new String[]{}
         };
     }
@@ -44,65 +47,104 @@ public class MallGUI {
      *
      * @return void
      */
-    public void initGUI(ControlP5 cp5, int cp5H, MallParam mallParam) {
-        cp5.addButton("场地&建筑轮廓")
-                .setPosition(0, 0)
+    public void initGUI(ControlP5 cp5, int cp5H, MallParam mallParam, PApplet app) {
+//        int startW = (int) (app.width * 0.02);
+//        int startH = (int) (0.5 * (app.height - cp5H * 9));
+        int startW = 20;
+        int startH = 20;
+
+        cp5.addButton("场地与轮廓导入")
+                .setPosition(startW, startH)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_SITE_BOUNDARY)
                 .setFont(font)
+                .setColorBackground(app.color(63, 63, 63))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("主路径+中庭形状")
-                .setPosition(0, cp5H)
+        cp5.addButton("动线&中庭形状")
+                .setPosition(startW, startH + cp5H)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_TRAFFIC_ATRIUM)
                 .setFont(font)
+                .setColorBackground(app.color(63, 63, 63))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("空中走廊")
-                .setPosition(0, cp5H * 2)
+        cp5.addButton("空中连廊")
+                .setPosition(startW, startH + cp5H * 2)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_MAIN_CORRIDOR)
                 .setFont(font)
+                .setColorBackground(app.color(63, 63, 63))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("交通空间轮廓")
-                .setPosition(0, cp5H * 3)
+        cp5.addButton("公共空间形态")
+                .setPosition(startW, startH + cp5H * 3)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_PUBLIC_SPACE)
                 .setFont(font)
+                .setColorBackground(app.color(63, 63, 63))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("柱网")
-                .setPosition(0, cp5H * 4)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_STRUCTURE_GRID)
-                .setFont(font)
-        ;
-        cp5.addButton("铺位划分")
-                .setPosition(0, cp5H * 5)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_SHOP_EDIT)
-                .setFont(font)
-        ;
-
-        cp5.addButton("自动扶梯位置")
-                .setPosition(0, cp5H * 6)
+        cp5.addButton("自动扶梯")
+                .setPosition(startW, startH + cp5H * 4)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_ESCALATOR)
                 .setFont(font)
-        ;
-        cp5.addButton("疏散楼梯位置")
-                .setPosition(0, cp5H * 7)
-                .setSize(MallConst.STATUS_W, cp5H)
-                .setId(MallConst.E_EVACUATION)
-                .setFont(font)
+                .setColorBackground(app.color(63, 63, 63))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
 
-        addStatus0GUI(cp5, 0, mallParam);
-        addStatus1GUI(cp5, cp5H, mallParam);
-        addStatus2GUI(cp5, cp5H * 2, mallParam);
-        addStatus3GUI(cp5, cp5H * 3, mallParam);
-        addStatus4GUI(cp5, cp5H * 4);
-        addStatus5GUI(cp5, cp5H * 5);
-        addStatus6GUI(cp5, cp5H * 6);
-//        addStatus7GUI(cp5, cp5H * 7);
+        cp5.addButton("格网参考线")
+                .setPosition(startW, startH + cp5H * 5)
+                .setSize(MallConst.STATUS_W, cp5H)
+                .setId(MallConst.E_STRUCTURE_GRID)
+                .setFont(font)
+                .setColorBackground(app.color(63, 63, 63))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
+        ;
+        cp5.addButton("铺位划分")
+                .setPosition(startW, startH + cp5H * 6)
+                .setSize(MallConst.STATUS_W, cp5H)
+                .setId(MallConst.E_SHOP_EDIT)
+                .setFont(font)
+                .setColorBackground(app.color(63, 63, 63))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
+        ;
+        cp5.addButton("疏散楼梯")
+                .setPosition(startW, startH + cp5H * 7)
+                .setSize(MallConst.STATUS_W, cp5H)
+                .setId(MallConst.E_EVAC_STAIRWAY)
+                .setFont(font)
+                .setColorBackground(app.color(63, 63, 63))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
+        ;
+        cp5.addButton("卫生间")
+                .setPosition(startW, startH + cp5H * 8)
+                .setSize(MallConst.STATUS_W, cp5H)
+                .setId(MallConst.E_EVAC_STAIRWAY)
+                .setFont(font)
+                .setColorBackground(app.color(63, 63, 63))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
+        ;
+
+        addBoundaryGUI(cp5, startW, startH, mallParam, app);
+        addTrafficGUI(cp5, startW, startH + cp5H, mallParam, app);
+        addCorridorGUI(cp5, startW, startH + cp5H * 2, mallParam, app);
+        addPublicGUI(cp5, startW, startH + cp5H * 3, mallParam, app);
+        addEscalatorGUI(cp5, startW, startH + cp5H * 4, app);
+        addGridGUI(cp5, startW, startH + cp5H * 5, app);
+        addShopGUI(cp5, startW, startH + cp5H * 6, app);
+        addStairwayGUI(cp5, startW, startH + cp5H * 7, app);
+        addBathroomGUI(cp5, startH + cp5H * 8);
     }
 
 
@@ -127,16 +169,20 @@ public class MallGUI {
             case (MallConst.E_PUBLIC_SPACE):
                 setVisible(cp5, MallConst.E_PUBLIC_SPACE);
                 break;
+            case (MallConst.E_ESCALATOR):
+                setVisible(cp5, MallConst.E_ESCALATOR);
+                break;
             case (MallConst.E_STRUCTURE_GRID):
                 setVisible(cp5, MallConst.E_STRUCTURE_GRID);
                 break;
             case (MallConst.E_SHOP_EDIT):
                 setVisible(cp5, MallConst.E_SHOP_EDIT);
                 break;
-            case (MallConst.E_ESCALATOR):
-                setVisible(cp5, MallConst.E_ESCALATOR);
+            case (MallConst.E_EVAC_STAIRWAY):
+                setVisible(cp5, MallConst.E_EVAC_STAIRWAY);
                 break;
-            case (MallConst.E_EVACUATION):
+            case (MallConst.E_BATHROOM):
+                setVisible(cp5, MallConst.E_BATHROOM);
                 break;
         }
     }
@@ -169,17 +215,20 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus0GUI(ControlP5 cp5, int startH, MallParam mallParam) {
+    public void addBoundaryGUI(ControlP5 cp5, int startW, int startH, MallParam mallParam, PApplet app) {
         cp5.addButton("switchDirection")
-                .setPosition(MallConst.STATUS_W, startH)
+                .setPosition(startW + MallConst.STATUS_W, startH)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_SWITCH_BOUNDARY)
                 .setFont(font)
                 .setLabel("切换方向")
                 .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         cp5.addSlider("siteRedLineDist")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_REDLINE_DIST)
                 .setRange(0, MallConst.SITE_REDLINEDIST_MAX)
@@ -188,9 +237,12 @@ public class MallGUI {
                 .setLabel("红线距离")
                 .setVisible(false)
                 .plugTo(mallParam)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         cp5.addSlider("siteBufferDist")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_OFFSET_DIST)
                 .setRange(MallConst.SITE_BUFFER_MIN, MallConst.SITE_BUFFER_MAX)
@@ -199,6 +251,9 @@ public class MallGUI {
                 .setLabel("退界距离")
                 .setVisible(false)
                 .plugTo(mallParam)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
 
         this.controllerNames[0] = new String[]{
@@ -215,32 +270,22 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus1GUI(ControlP5 cp5, int startH, MallParam mallParam) {
-//        cp5.addButton("删除内部控制点")
-//                .setPosition(MallConst.STATUS_W, startH)
-//                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-//                .setId(MallConst.BUTTON_DELETE_INNERNODE)
-//                .setFont(font)
-//        ;
-//        cp5.addButton("删除轮廓控制点")
-//                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
-//                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-//                .setId(MallConst.BUTTON_DELETE_ENTRYNODE)
-//                .setFont(font)
-//        ;
-
+    public void addTrafficGUI(ControlP5 cp5, int startW, int startH, MallParam mallParam, PApplet app) {
         // traffic controllers' visibility
         cp5.addButton("trafficControllers")
-                .setPosition(MallConst.STATUS_W, startH)
+                .setPosition(startW + MallConst.STATUS_W, startH)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_TRAFFIC_CONTROLLERS)
                 .setFont(font)
                 .setLabel("显示/隐藏路径控制点")
                 .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // traffic buffer distance
         cp5.addSlider("trafficBufferDist")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_TRAFFIC_WIDTH)
                 .setRange(MallConst.TRAFFIC_BUFFER_DIST_MIN, MallConst.TRAFFIC_BUFFER_DIST_MAX)
@@ -249,28 +294,37 @@ public class MallGUI {
                 .setLabel("路径偏移距离")
                 .setVisible(false)
                 .plugTo(mallParam)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // curve button
         cp5.addButton("curveOrPoly")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_CURVE_ATRIUM)
                 .setFont(font)
                 .setLabel("中庭曲线/折线")
                 .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // delete button
         cp5.addButton("deleteAtrium")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 3)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 3)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_DELETE_ATRIUM)
                 .setFont(font)
                 .setLabel("删除中庭")
                 .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // angle slider
         cp5.addSlider("atriumAngle")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 4)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 4)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_ATRIUM_ANGLE)
                 .setRange(-180, 180)
@@ -279,10 +333,13 @@ public class MallGUI {
                 .setLabel("中庭旋转角度")
                 .setVisible(false)
                 .plugTo(mallParam)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // area slider
         cp5.addSlider("atriumArea")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 5)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 5)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_ATRIUM_AREA)
                 .setRange(MallConst.ATRIUM_AREA_MIN, MallConst.ATRIUM_AREA_MAX)
@@ -291,15 +348,21 @@ public class MallGUI {
                 .setLabel("中庭面积")
                 .setVisible(false)
                 .plugTo(mallParam)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // atrium type DropdownList
         DropdownList ddl = cp5.addDropdownList("atriumShape")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 6)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 6)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H * 9)
                 .setId(MallConst.LIST_ATRIUM_FACTORY)
                 .setFont(font)
                 .setLabel("中庭形状列表")
-                .setVisible(false);
+                .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83));
         ddl.setItemHeight(MallConst.CONTROLLER_H);
         ddl.setBarHeight(MallConst.CONTROLLER_H);
         ddl.setCaptionLabel("中庭形状列表");
@@ -333,10 +396,10 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus2GUI(ControlP5 cp5, int startH, MallParam mallParam) {
+    public void addCorridorGUI(ControlP5 cp5, int startW, int startH, MallParam mallParam, PApplet app) {
         // public corridor width
         cp5.addSlider("corridorWidth")
-                .setPosition(MallConst.STATUS_W, startH)
+                .setPosition(startW + MallConst.STATUS_W, startH)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_CORRIDOR_WIDTH)
                 .setRange(MallConst.CORRIDOR_WIDTH_MIN, MallConst.CORRIDOR_WIDTH_MAX)
@@ -345,6 +408,9 @@ public class MallGUI {
                 .setLabel("公区走道宽度")
                 .setVisible(false)
                 .plugTo(mallParam)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
 
         this.controllerNames[2] = new String[]{
@@ -359,19 +425,22 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus3GUI(ControlP5 cp5, int startH, MallParam mallParam) {
+    public void addPublicGUI(ControlP5 cp5, int startW, int startH, MallParam mallParam, PApplet app) {
         // delete public space node
         cp5.addButton("deletePublicSpaceNode")
-                .setPosition(MallConst.STATUS_W, startH)
+                .setPosition(startW + MallConst.STATUS_W, startH)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_DELETE_PUBLIC_NODE)
                 .setFont(font)
                 .setLabel("删除控制点")
                 .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // public space buffer distance slider
         cp5.addSlider("publicSpaceBufferDist")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_BUFFER_DIST)
                 .setRange(MallConst.PUBLIC_BUFFER_DIST_MIN, MallConst.PUBLIC_BUFFER_DIST_MAX)
@@ -380,19 +449,25 @@ public class MallGUI {
                 .setLabel("交通空间偏移距离")
                 .setVisible(false)
                 .plugTo(mallParam)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // switch round or smooth
         cp5.addButton("atriumRoundType")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_ATRIUM_ROUND)
                 .setFont(font)
                 .setLabel("中庭圆角/倒角")
                 .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // the radius of rounding atrium
         cp5.addSlider("atriumRoundRadius")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 3)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 3)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_ROUND_RADIUS)
                 .setRange(MallConst.ATRIUM_ROUND_RADIUS_MIN, MallConst.ATRIUM_ROUND_RADIUS_MAX)
@@ -401,10 +476,13 @@ public class MallGUI {
                 .setLabel("中庭圆角半径")
                 .setVisible(false)
                 .plugTo(mallParam)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // smooth times of atrium
         cp5.addSlider("atriumSmoothTimes")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 4)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 4)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.SLIDER_SMOOTH_TIMES)
                 .setRange(0, 5)
@@ -413,6 +491,9 @@ public class MallGUI {
                 .setLabel("中庭倒角次数")
                 .setVisible(false)
                 .plugTo(mallParam)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
 
         this.controllerNames[3] = new String[]{
@@ -425,25 +506,54 @@ public class MallGUI {
     }
 
     /**
+     * update status 6 GUI
+     *
+     * @param cp5    controlP5
+     * @param startH start height of the controllers
+     * @return void
+     */
+    public void addEscalatorGUI(ControlP5 cp5, int startW, int startH, PApplet app) {
+        // change escalator position
+        cp5.addButton("changeEscalatorPosition")
+                .setPosition(startW + MallConst.STATUS_W, startH)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.BUTTON_UPDATE_ESCALATOR)
+                .setFont(font)
+                .setLabel("更改扶梯位置")
+                .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
+        ;
+
+        this.controllerNames[4] = new String[]{
+                "changeEscalatorPosition"
+        };
+    }
+
+    /**
      * update status 4 GUI
      *
      * @param cp5    controlP5
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus4GUI(ControlP5 cp5, int startH) {
+    public void addGridGUI(ControlP5 cp5, int startW, int startH, PApplet app) {
         // grid model
         cp5.addButton("gridModel")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_GRID_MODEL)
                 .setFont(font)
                 .setLabel("8.4m/9m")
                 .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
         // grid number list
         cp5.addDropdownList("gridNum")
-                .setPosition(MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H * 2)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H * 4)
                 .setId(MallConst.LIST_GRID_NUM)
                 .setItemHeight(MallConst.CONTROLLER_H)
@@ -455,9 +565,12 @@ public class MallGUI {
                 .setFont(font)
                 .setLabel("柱网数目")
                 .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
 
-        this.controllerNames[4] = new String[]{
+        this.controllerNames[5] = new String[]{
                 "gridModel",
                 "gridNum"
         };
@@ -470,42 +583,35 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus5GUI(ControlP5 cp5, int startH) {
+    public void addShopGUI(ControlP5 cp5, int startW, int startH, PApplet app) {
         // union cells
         cp5.addButton("unionShopCell")
-                .setPosition(MallConst.STATUS_W, startH)
+                .setPosition(startW + MallConst.STATUS_W, startH)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_UNION_CELLS)
                 .setFont(font)
                 .setLabel("合并选中商铺")
                 .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
-
-        this.controllerNames[5] = new String[]{
-                "unionShopCell"
-        };
-    }
-
-    /**
-     * update status 6 GUI
-     *
-     * @param cp5    controlP5
-     * @param startH start height of the controllers
-     * @return void
-     */
-    public void addStatus6GUI(ControlP5 cp5, int startH) {
-        // change escalator position
-        cp5.addButton("changeEscalatorPosition")
-                .setPosition(MallConst.STATUS_W, startH)
+        // split cells
+        cp5.addButton("splitShopCell")
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
-                .setId(MallConst.BUTTON_UPDATE_ESCALATOR)
+                .setId(MallConst.BUTTON_SPLIT_CELLS)
                 .setFont(font)
-                .setLabel("更改扶梯位置")
+                .setLabel("阴/阳角二次剖分")
                 .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
         ;
 
         this.controllerNames[6] = new String[]{
-                "changeEscalatorPosition"
+                "unionShopCell",
+                "splitShopCell"
         };
     }
 
@@ -516,8 +622,50 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addStatus7GUI(ControlP5 cp5, int startH) {
+    public void addStairwayGUI(ControlP5 cp5, int startW, int startH, PApplet app) {
+        // generate stairway module
+        cp5.addButton("generateModule")
+                .setPosition(startW + MallConst.STATUS_W, startH)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.BUTTON_EVAC_MODEL)
+                .setFont(font)
+                .setLabel("生成模块")
+                .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
+        ;
+        // change stairway module direction
+        cp5.addButton("moduleDirection")
+                .setPosition(startW + MallConst.STATUS_W, startH + MallConst.CONTROLLER_H)
+                .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
+                .setId(MallConst.BUTTON_EVAC_DIR)
+                .setFont(font)
+                .setLabel("模块方向")
+                .setVisible(false)
+                .setColorBackground(app.color(80, 80, 80))
+                .setColorForeground(app.color(200, 120, 60))
+                .setColorActive(app.color(220, 151, 83))
+        ;
 
+        this.controllerNames[7] = new String[]{
+                "generateModule",
+                "moduleDirection"
+        };
+    }
+
+    /**
+     * update status 8 GUI
+     *
+     * @param cp5    controlP5
+     * @param startH start height of the controllers
+     * @return void
+     */
+    public void addBathroomGUI(ControlP5 cp5, int startH) {
+
+        this.controllerNames[8] = new String[]{
+
+        };
     }
 
     /* ------------- info display ------------- */

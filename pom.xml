@@ -173,8 +173,8 @@
                         <!-- 需要保持的属性：异常，注解等-->
                         <option>-keep public class main.MallMain { public static void main(java.lang.String[]);}
                         </option>
-                        <option>-keep public class main.MallNew</option>
-                        <option>-keep public class main.MallNew {public void controlEvent(controlP5.ControlEvent);}</option>
+                        <option>-keep public class main.Mall</option>
+                        <option>-keep public class main.Mall {public void controlEvent(controlP5.ControlEvent);}</option>
                         <option>-keepattributes
                             Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LocalVariable*Table,*Annotation*,Synthetic,EnclosingMethod
                         </option>

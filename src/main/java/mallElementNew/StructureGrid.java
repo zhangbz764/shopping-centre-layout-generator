@@ -86,7 +86,8 @@ public class StructureGrid {
         for (ZPoint pt : dividePoint10) {
             lon10.add(new ZLine(pt, pt.add(dir12)));
         }
-        this.size10 = lon10.size();;
+        this.size10 = lon10.size();
+        ;
         for (ZPoint pt : dividePoint12) {
             lat12.add(new ZLine(pt, pt.add(dir10)));
         }
@@ -231,6 +232,18 @@ public class StructureGrid {
 
     public ZPoint[][] getGridNodes() {
         return gridNodes;
+    }
+
+    public ZPoint[] getGridNodesFlat() {
+        int row = gridNodes.length;
+        int column = gridNodes[0].length;
+        ZPoint[] flat = new ZPoint[row * column];
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < column; j++) {
+                flat[i * column + j] = gridNodes[i][j];
+            }
+        }
+        return flat;
     }
 
     public ZPoint getUnit10() {

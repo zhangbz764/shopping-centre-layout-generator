@@ -1,19 +1,15 @@
 package main;
 
 import advancedGeometry.rectCover.ZRectCover;
-import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
-import basicGeometry.ZPoint;
 import mallElementNew.*;
 import mallParameters.MallConst;
 import math.ZGeoMath;
-import math.ZMath;
 import org.locationtech.jts.geom.*;
 import processing.core.PApplet;
 import render.JtsRender;
+import render.ZRender;
 import transform.ZTransform;
-import wblut.geom.WB_Circle;
-import wblut.geom.WB_Coord;
 import wblut.geom.WB_Point;
 import wblut.geom.WB_Polygon;
 import wblut.processing.WB_Render;
@@ -32,15 +28,15 @@ import java.util.List;
  * @time 17:55
  */
 public class MallGenerator {
-    // site & boundary
+    // SiteBase: site & boundary
     private SiteBase siteBase;
     private double boundaryArea = 0;
 
-    // main traffic & raw atriums
+    // MainTraffic: main traffic & raw atriums
     private MainTraffic mainTraffic;
     private LineString innerTrafficCurve;          // 内部主路径轴线（除去入口）
 
-    // main corridor
+    // PublicSpace: main corridor & public space
     private Polygon[] rawAtrium_receive;       // 中庭多边形（共用）
     private PublicSpace publicSpace;
 
@@ -49,54 +45,24 @@ public class MallGenerator {
     private boolean validGrids = true;              // 轴网是否覆盖平面
     private boolean gridModelSwitch = true;         // 8.4m 或 9m 切换
 
-    // shop cells
-    // core generate result: floors
-    private MallFloor[] floors;
+    // ShopManager: shop cells
+    private ShopManager shopManager;
 
-    // evacuation
+//    // core generate result: floors
+//    private MallFloor[] floors;
+
+    // AuxiliarySpace: evacuation stairways & bathrooms
+    private AuxiliarySpace auxiliarySpace;
 
 
     private List<List<LineString>> bufferCurve_receive;   // 动线边界曲线（不同层）
 //    private List<List<WB_Polygon>> cellPolys_receive;     // 商铺剖分多边形（不同层）
 
-
-
     /* ------------- constructor ------------- */
 
     public MallGenerator() {
-        // setup floors
-        this.floors = new MallFloor[MallConst.FLOOR_TOTAL];
-//        for (int i = 0; i < floors.length; i++) {
-//            floors[i] = new MallFloor(i + 1, boundary_receive);
-//            floors[i].setStatus(0);
-//
-////            cellPolys_receive.add(new ArrayList<WB_Polygon>());
-//        }
-    }
 
-//    public void init(int gridNum) {
-//        // setup structure grids
-//        ZRectCover zrc = new ZRectCover(boundary_receive, gridNum);
-//        List<Polygon> rects = zrc.getBestRects();
-//        this.grids = new StructureGrid[gridNum];
-//        for (int i = 0; i < rects.size(); i++) {
-//            grids[i] = new StructureGrid(rects.get(i), MallConst.SHOP_SPAN_THRESHOLD);
-//        }
-//
-//        // setup floors
-//        this.floors = new MallFloor[MallConst.FLOOR_TOTAL];
-//
-//        this.bufferCurve_receive = new ArrayList<>();
-//        bufferCurve_receive.add(new ArrayList<LineString>());
-//        bufferCurve_receive.add(new ArrayList<LineString>());
-//        this.cellPolys_receive = new ArrayList<>();
-//        for (int i = 0; i < floors.length; i++) {
-//            floors[i] = new MallFloor(i + 1, boundary_receive);
-//            floors[i].setStatus(0);
-//
-//            cellPolys_receive.add(new ArrayList<WB_Polygon>());
-//        }
-//    }
+    }
 
     /* ------------- utils ------------- */
 
@@ -145,17 +111,16 @@ public class MallGenerator {
     }
 
     /**
-     * description
+     * update SiteBase_L parameters
      *
-     * @param base
-     * @param redLineDist
-     * @param siteBufferDist
+     * @param base           base point (L shape)
+     * @param redLineDist    red line distance
+     * @param siteBufferDist L shape buffer distance
      * @return void
      */
-    public void updateSiteBoundary(int base, double redLineDist, double siteBufferDist) {
+    public void updateSiteBaseL(int base, double redLineDist, double siteBufferDist) {
         siteBase.updateByParams(base, redLineDist, siteBufferDist);
         this.boundaryArea = siteBase.getBoundaryArea();
-        System.out.println(boundaryArea);
     }
 
     /**
@@ -166,6 +131,7 @@ public class MallGenerator {
      */
     public void updateBoundaryByNodes(Coordinate[] boundaryNodes_receive) {
         this.siteBase.updateByNodes(boundaryNodes_receive);
+        this.boundaryArea = siteBase.getBoundaryArea();
     }
 
     /* ------------- generating main traffic ------------- */
@@ -202,7 +168,7 @@ public class MallGenerator {
         mainTraffic.updateTrafficWidth(bufferDist);
     }
 
-    /* ------------- generating main corridor ------------- */
+    /* ------------- generating main corridor & public space ------------- */
 
     /**
      * initialize the main corridor
@@ -240,8 +206,7 @@ public class MallGenerator {
         }
     }
 
-    /* ------------- generating public space ------------- */
-
+    /*temp*/
     public void setPublicSpaceShapeTemp(Polygon publicSpaceShape) {
         this.publicSpace = new PublicSpace();
         this.publicSpace.setPublicSpaceShapeTemp(publicSpaceShape);
@@ -252,7 +217,7 @@ public class MallGenerator {
      *
      * @return void
      */
-    public void initPublicSpace() {
+    public void initPublicSpaceShape() {
         publicSpace.initPublicShape();
     }
 
@@ -312,6 +277,27 @@ public class MallGenerator {
         publicSpace.updateAtriumSmoothTimes(atriumID, times);
     }
 
+    /* ------------- generating escalators ------------- */
+
+    /**
+     * initialize escalators in public space
+     *
+     * @return void
+     */
+    public void initEscalators() {
+        publicSpace.initEscalators(mainTraffic.getMainTrafficCurve());
+    }
+
+    /**
+     * update escalator position by counting ids
+     *
+     * @param atriumID the atrium id with selected escalator
+     * @return void
+     */
+    public void updateEscalatorPos(int atriumID) {
+        publicSpace.updateEscalatorPos(atriumID);
+    }
+
     /* ------------- generating structure grid ------------- */
 
     /**
@@ -368,11 +354,11 @@ public class MallGenerator {
     }
 
     /**
-    * description
-    *
-    * @param gridModulus
-    * @return void
-    */
+     * update structure grid modulus
+     *
+     * @param gridModulus modulus of the grid
+     * @return void
+     */
     public void updateGridModulus(double gridModulus) {
         for (StructureGrid g : grids) {
             g.updateModel(gridModulus);
@@ -384,262 +370,113 @@ public class MallGenerator {
     /**
      * initialize shop cells
      *
-     * @param floorNum number of floor
      * @return void
      */
-    public void initShopCells(int floorNum) {
-        if (floorNum == 1) {
-            List<LineString> publicSpaceLS = new ArrayList<>(ZTransform.PolygonToLineString(publicSpace.getPublicSpaceShape()));
-            floors[floorNum - 1] = new MallFloor(floorNum, siteBase.getBoundary());
-            floors[floorNum - 1].setStatus(0);
-            this.floors[floorNum - 1].updateSubdivision(publicSpaceLS, grids);
-        } else {
-            // mainly here
-            List<LineString> publicSpaceLS = new ArrayList<>(
-                    ZTransform.PolygonToLineString(publicSpace.getPublicSpaceShape())
-            );
-            floors[floorNum - 1] = new MallFloor(floorNum, siteBase.getBoundary());
-            floors[floorNum - 1].setStatus(0);
-            Point verify = publicSpace.getPublicSpaceShape().getInteriorPoint();
-            floors[floorNum - 1].setVerify(verify);
-            this.floors[floorNum - 1].updateSubdivision(publicSpaceLS, grids);
-        }
+    public void initShopCells() {
+        this.shopManager = new ShopManager();
+        List<LineString> publicSpaceLS = new ArrayList<>(
+                ZTransform.PolygonToLineString(publicSpace.getPublicSpaceShape())
+        );
+
+        shopManager.updateShopPartition(
+                siteBase.getBoundary(),
+                publicSpaceLS,
+                publicSpace.getPublicSpaceShape().getInteriorPoint(),
+                grids
+        );
     }
 
-    /* ------------- generating escalators ------------- */
-
-    public void initEscalators() {
-        publicSpace.initEscalators(mainTraffic.getMainTrafficCurve());
+    /**
+     * split internal & external shops
+     *
+     * @param splitShopID selected id of shop to split
+     * @return void
+     */
+    public void splitShopCell(List<Integer> splitShopID) {
+        shopManager.updateSplit(splitShopID, publicSpace.getPublicSpaceShape(), grids);
     }
 
-    public void updateEscalatorPos(int atriumID) {
-        publicSpace.updateEscalatorPos(atriumID);
-    }
+//    /**
+//     * initialize shop cells
+//     *
+//     * @param floorNum number of floor
+//     * @return void
+//     */
+//    public void initShopCells(int floorNum) {
+//        if (floorNum == 1) {
+//            floors[floorNum - 1] = new MallFloor(floorNum, siteBase.getBoundary());
+//            floors[floorNum - 1].setStatus(0);
+//            floors[floorNum - 1].updateSubdivision(publicSpace.getPublicSpaceShape(), grids);
+//        } else {
+//            // mainly here
+//            floors[floorNum - 1] = new MallFloor(floorNum, siteBase.getBoundary());
+//            floors[floorNum - 1].setStatus(0);
+//            Point verify = publicSpace.getPublicSpaceShape().getInteriorPoint();
+//            floors[floorNum - 1].setVerify(verify);
+//            floors[floorNum - 1].updateSubdivision(publicSpace.getPublicSpaceShape(), grids);
+//        }
+//    }
+//
+//    /**
+//     * split internal & external shops
+//     *
+//     * @param floorNum
+//     * @param splitShopID
+//     * @return void
+//     */
+//    public void splitShopCell(int floorNum, List<Integer> splitShopID) {
+//        if (floorNum == 1) {
+//
+//        } else {
+//            // mainly here
+//            floors[floorNum - 1].updateSplit(splitShopID, publicSpace.getPublicSpaceShape(), grids);
+//        }
+//    }
 
     /* ------------- generating evacuations ------------- */
 
-    private List<Polygon> evacRectTemp;
-    private List<Polygon> evacPoly;
-    private Polygon newBound;
-    private List<Stairway> stairways;
-
-    public void initEvacuation2() {
-        this.stairways = new ArrayList<>();
-        // buffer
-        Polygon bound = siteBase.getBoundary();
-        WB_Polygon boundShape = ZTransform.PolygonToWB_Polygon(bound);
-        WB_Polygon bufferBoundary = ZFactory.wbgf.createBufferedPolygons2D(boundShape, MallConst.STRUCTURE_MODEL * -0.5).get(0);
-        WB_Polygon validBuffer = ZTransform.validateWB_Polygon(boundShape);
-
-        // add start position
-        List<ZPoint> generatePoints = new ArrayList<>();
-        ZPoint start = new ZPoint(bound.getCoordinates()[0]);
-        generatePoints.add(start);
-
-        double recordDist = 0;
-        double boundaryLength = ZGeoMath.getPolyLength(validBuffer);
-        while (recordDist < boundaryLength - MallConst.EVACUATION_DIST) {
-            ZPoint curr = generatePoints.get(generatePoints.size() - 1);
-            WB_Point currP = curr.toWB_Point();
-            int currEdgeIndex = ZGeoMath.pointOnWhichEdgeIndices(curr, validBuffer)[0];
-            WB_Circle circle = new WB_Circle(curr.toWB_Point(), MallConst.EVACUATION_DIST);
-            List<WB_Point> intersection = ZGeoMath.polylineCircleIntersection(validBuffer, circle);
-
-            if (intersection.size() > 0) {
-                double[] dists = new double[intersection.size()];
-                for (int i = 0; i < intersection.size(); i++) {
-                    WB_Point inter = intersection.get(i);
-                    int[] onWhich = ZGeoMath.pointOnWhichEdgeIndices(new ZPoint(inter), validBuffer);
-                    int interIndex = onWhich[0];
-                    if (interIndex == currEdgeIndex) {
-                        // on same edge
-                        if (inter.getSqDistance2D(validBuffer.getPoint(interIndex)) >= currP.getSqDistance2D(validBuffer.getPoint(interIndex))) {
-                            dists[i] = inter.getDistance2D(currP);
-                        } else {
-                            dists[i] = boundaryLength - inter.getDistance2D(currP);
-                        }
-                    } else {
-                        // on different edge
-                        int currIndex = currEdgeIndex;
-                        double distAlong = 0;
-
-                        currIndex = (currIndex + 1) % validBuffer.getNumberOfPoints();
-                        distAlong += currP.getDistance2D(validBuffer.getPoint(currIndex));
-                        while (currIndex != interIndex) {
-                            distAlong += validBuffer.getPoint(currIndex).getDistance2D(validBuffer.getPoint((currIndex + 1) % validBuffer.getNumberOfPoints()));
-                            currIndex = (currIndex + 1) % validBuffer.getNumberOfPoints();
-                        }
-                        distAlong += validBuffer.getPoint(currIndex).getDistance2D(inter);
-
-                        dists[i] = distAlong;
-                    }
-                }
-
-                int minIndex = ZMath.getMinIndex(dists);
-                ZPoint p = new ZPoint(intersection.get(minIndex));
-                generatePoints.add(p);
-                recordDist += dists[minIndex];
-            }
-        }
-        if (generatePoints.get(generatePoints.size() - 1).distance(generatePoints.get(0)) < MallConst.EVACUATION_DIST * 0.5) {
-            generatePoints.remove(generatePoints.size() - 1);
-        }
-        System.out.println("final stairway num:  " + generatePoints.size());
-
-
-//        BufferParameters parameters = new BufferParameters(0, 1, 2, 5.0D);
-//        Geometry buffer = BufferOp.bufferOp(bound, MallConst.SHOP_SPAN_THRESHOLD[0] * -0.5, parameters);
-////        WB_Polygon bufferBoundary = ZFactory.wbgf.createBufferedPolygons2D(siteBaseL.getBoundary(), MallConst.SHOP_SPAN_THRESHOLD[0] * -0.5).get(0);
-//        WB_Polygon validBuffer = ZTransform.validateWB_Polygon(ZTransform.PolygonToWB_Polygon((Polygon) buffer));
-//        List<ZPoint> dividePoints = ZGeoMath.splitPolyLineByThreshold(validBuffer, MallConst.EVACUATION_DIST, MallConst.EVACUATION_DIST - 10);
-
-        this.evacRectTemp = new ArrayList<>();
-        this.evacPoly = new ArrayList<>();
-
-        for (ZPoint p : generatePoints) {
-            double random = Math.random();
-            if (random > 0.5) {
-                stairways.add(new Stairway(0, p, validBuffer));
-            } else {
-                stairways.add(new Stairway(1, p, validBuffer));
-            }
+    /**
+     * initialize evacuation stairway position
+     *
+     * @return void
+     */
+    public void initEvacStairwaysPos() {
+        this.auxiliarySpace = new AuxiliarySpace();
+        List<WB_Polygon> shopPolys = new ArrayList<>();
+        for (Shop s : shopManager.getAllShops()) {
+            WB_Polygon p = ZGeoMath.polygonFaceUp(s.getShapeWB());
+            ZTransform.validateWB_Polygon(p);
+            shopPolys.add(p);
         }
 
-//        for (ZPoint p : generatePoints) {
-//            for (StructureGrid g : grids) {
-//                Polygon rect = g.getRect();
-//                if (rect.contains(p.toJtsPoint())) {
-//                    double distTo10 = WB_GeometryOp.getDistance2D(p.toWB_Point(), g.getLat12().get(0).toWB_Segment());
-//                    double distTo12 = WB_GeometryOp.getDistance2D(p.toWB_Point(), g.getLon10().get(0).toWB_Segment());
-//
-//                    if (distTo10 < g.getLengthUnit12()) {
-//                        // 距离小于一个单元，靠近10边
-//                        int n = (int) (distTo12 / g.getLengthUnit10());
-//                        Coordinate[] coords = new Coordinate[5];
-//                        if (n < 1) {
-//                            // 012角
-//                            coords[0] = g.getGridNodes()[0][0].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[0][1].centerWith(g.getGridNodes()[0][0]).toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[4][1].centerWith(g.getGridNodes()[4][0]).toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[4][0].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else if (n > g.getSize10() - 4) {
-//                            coords[0] = g.getGridNodes()[g.getSize10() - 5][0].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[g.getSize10() - 5][1].centerWith(g.getGridNodes()[g.getSize10() - 5][0]).toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[g.getSize10() - 1][1].centerWith(g.getGridNodes()[g.getSize10() - 1][0]).toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[g.getSize10() - 1][0].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else {
-//                            coords[0] = g.getGridNodes()[n][0].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[n][1].centerWith(g.getGridNodes()[n][0]).toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[n + 4][1].centerWith(g.getGridNodes()[n + 4][0]).toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[n + 4][0].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        }
-//                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
-//                    } else if (distTo10 <= g.getLength12() && distTo10 > g.getLength12() - g.getLengthUnit12()) {
-//                        // 靠近23边
-//                        int size12 = g.getLat12().size();
-//                        int n = (int) (distTo12 / g.getLengthUnit10());
-//                        Coordinate[] coords = new Coordinate[5];
-//                        if (n < 1) {
-//                            coords[0] = g.getGridNodes()[0][size12 - 2].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[0][size12 - 1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[2][size12 - 1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[2][size12 - 2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else if (n > g.getSize10() - 2) {
-//                            coords[0] = g.getGridNodes()[n][size12 - 2].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[n][size12 - 1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[n + 2][size12 - 1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[n + 2][size12 - 2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else {
-//                            coords[0] = g.getGridNodes()[n - 1][size12 - 2].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[n - 1][size12 - 1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[n + 1][size12 - 1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[n + 1][size12 - 2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        }
-//                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
-//                    } else if (distTo12 < g.getLengthUnit10()) {
-//                        // 靠近12边
-//                        int n = (int) (distTo10 / g.getLengthUnit12());
-//                        Coordinate[] coords = new Coordinate[5];
-//                        if (n < 1) {
-//                            coords[0] = g.getGridNodes()[1][0].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[0][0].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[0][2].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[1][2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else if (n > g.getLat12().size() - 2) {
-//                            coords[0] = g.getGridNodes()[1][n - 1].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[0][n - 1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[0][n + 1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[1][n + 1].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else {
-//                            coords[0] = g.getGridNodes()[1][n].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[0][n].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[0][n + 2].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[1][n + 2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        }
-//                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
-//                    } else if (distTo12 <= g.getLength10() && distTo12 > g.getLength10() - g.getLengthUnit10()) {
-//                        // 靠近30边
-//                        int size10 = g.getSize10();
-//                        int n = (int) (distTo10 / g.getLengthUnit12());
-//                        Coordinate[] coords = new Coordinate[5];
-//                        if (n < 1) {
-//                            coords[0] = g.getGridNodes()[size10 - 1][0].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[size10 - 2][0].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[size10 - 2][2].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[size10 - 1][2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else if (n > g.getLat12().size() - 2) {
-//                            coords[0] = g.getGridNodes()[size10 - 1][n - 1].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[size10 - 2][n - 1].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[size10 - 2][n + 1].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[size10 - 1][n + 1].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        } else {
-//                            coords[0] = g.getGridNodes()[size10 - 1][n].toJtsCoordinate();
-//                            coords[1] = g.getGridNodes()[size10 - 2][n].toJtsCoordinate();
-//                            coords[2] = g.getGridNodes()[size10 - 2][n + 2].toJtsCoordinate();
-//                            coords[3] = g.getGridNodes()[size10 - 1][n + 2].toJtsCoordinate();
-//                            coords[4] = coords[0];
-//                        }
-//                        evacRectTemp.add(ZFactory.jtsgf.createPolygon(coords));
-//                    }
-//                    break;
-//                }
-//            }
-//        }
-//
-//        this.evacPoly = evacRectTemp;
+        double floorArea = boundaryArea;
+        for (double a : publicSpace.getAtriumCurrAreas()) {
+            floorArea -= a;
+        }
+        auxiliarySpace.initEvacuationGenerator(
+                mainTraffic.getMainTrafficInnerWB(),
+                shopPolys,
+                floorArea,
+                ZTransform.PolygonToWB_Polygon(siteBase.getBoundary())
+        );
+    }
 
-//        // 布尔运算
-//        for (Polygon rect : evacRectTemp) {
-//            Geometry intersect = bound.intersection(rect);
-//            if (intersect instanceof Polygon) {
-//                evacPoly.add((Polygon) intersect);
-//            }
-//        }
-//        Geometry difference = bound;
-//        for (Polygon rect : evacRectTemp) {
-//            difference = difference.difference(rect);
-//        }
-//        if (difference.getGeometryType().equals("MultiPolygon")) {
-//            double area = 0;
-//            for (int i = 0; i < difference.getNumGeometries(); i++) {
-//                Geometry g = difference.getGeometryN(i);
-//                if (g instanceof Polygon && g.getArea() > area) {
-//                    this.newBound = (Polygon) g;
-//                }
-//            }
-//        }
-//        System.out.println("diff: " + difference.getGeometryType());
+    public void updateEvacPosByID(List<Integer> newEvacGenIDs) {
+        auxiliarySpace.updateEvacuationGenerator(newEvacGenIDs);
+    }
+
+    public void generateEvacShape() {
+        auxiliarySpace.generateStairwayShape(siteBase.getBoundary(), shopManager.getShopBlocks().get(0));
+    }
+
+    public void switchEvacDirection(int id) {
+        auxiliarySpace.switchEvacDir(id, siteBase.getBoundary(), shopManager.getShopBlocks().get(0));
+    }
+
+    /* ------------- generating bathrooms ------------- */
+
+    public void initBathrooms() {
+        auxiliarySpace.initBathroom(siteBase.getBoundary(), mainTraffic.getMainTrafficInnerLS());
     }
 
     /* ------------- setter & getter ------------- */
@@ -656,12 +493,8 @@ public class MallGenerator {
         return boundaryArea > 0 ? String.format("%.2f", boundaryArea) + "㎡" : "";
     }
 
-    public LineString getMainTrafficCurve() {
-        return mainTraffic.getMainTrafficCurve();
-    }
-
-    public Polygon getMainTrafficBuffer() {
-        return mainTraffic.getMainTrafficBuffer();
+    public MainTraffic getMainTraffic() {
+        return mainTraffic;
     }
 
     public List<WB_Point> getTrafficInnerNodes() {
@@ -676,16 +509,8 @@ public class MallGenerator {
         this.rawAtrium_receive = rawAtrium_receive;
     }
 
-    public Coordinate[] getPublicSpaceCurveCtrls() {
-        return publicSpace.getPublicSpaceShapeBufferCtrls();
-    }
-
-    public Polygon[] getAtriumCurrShapes() {
-        return publicSpace.getAtriumCurrShapes();
-    }
-
-    public Polygon getAtriumCurrShape(int index) {
-        return publicSpace.getAtriumCurrShapeN(index);
+    public PublicSpace getPublicSpace() {
+        return publicSpace;
     }
 
     public List<WB_Point> getCorridorNode() {
@@ -695,30 +520,6 @@ public class MallGenerator {
             corridorNode.add(l.getPt1().toWB_Point());
         }
         return corridorNode;
-    }
-
-    public StructureGrid[] getGrids() {
-        return grids;
-    }
-
-    public Polygon[] getGridRects() {
-        Polygon[] rects = new Polygon[grids.length];
-        for (int i = 0; i < grids.length; i++) {
-            rects[i] = grids[i].getRect();
-        }
-        return rects;
-    }
-
-    public List<Shop> getShopCells(int floorNum) {
-        return floors[floorNum - 1].getAllShops();
-    }
-
-    public void setShopCells(int floorNum, List<Polygon> shopCellPolys) {
-        List<Shop> newShops = new ArrayList<>();
-        for (Polygon p : shopCellPolys) {
-            newShops.add(new Shop(p));
-        }
-        this.floors[floorNum - 1].setAllShops(newShops);
     }
 
     public List<Polygon> getEscalatorBounds() {
@@ -733,64 +534,110 @@ public class MallGenerator {
         return publicSpace.getEscalatorBoundN(escalatorAtriumID);
     }
 
+    public StructureGrid[] getGrids() {
+        return grids;
+    }
+
+    public Polygon[] getGridRects() {
+        Polygon[] rects = new Polygon[grids.length];
+        for (int i = 0; i < grids.length; i++) {
+            rects[i] = grids[i].getRect();
+        }
+        return rects;
+    }
+
+    public List<Shop> getShopCells() {
+        return shopManager.getAllShops();
+    }
+
+    public void setShopCells(List<Polygon> shopCellPolys) {
+        List<Shop> newShops = new ArrayList<>();
+        for (Polygon p : shopCellPolys) {
+            newShops.add(new Shop(p));
+        }
+        shopManager.setAllShops(newShops);
+    }
+
+//    public List<Shop> getShopCells(int floorNum) {
+//        return floors[floorNum - 1].getAllShops();
+//    }
+//
+//    public void setShopCells(int floorNum, List<Polygon> shopCellPolys) {
+//        List<Shop> newShops = new ArrayList<>();
+//        for (Polygon p : shopCellPolys) {
+//            newShops.add(new Shop(p));
+//        }
+//        this.floors[floorNum - 1].setAllShops(newShops);
+//    }
+
+    public AuxiliarySpace getAuxiliarySpace() {
+        return auxiliarySpace;
+    }
+
+
+
     /* ------------- draw ------------- */
 
-    public void displayLocal(PApplet app, WB_Render render, JtsRender jtsRender, int status, int floorNum) {
+    public void displayLocal(PApplet app, WB_Render render, JtsRender jtsRender, int status) {
         app.pushStyle();
         switch (status) {
             case -1:
                 break;
-            case 0:
+            case MallConst.E_SITE_BOUNDARY:
                 displaySiteBoundaryLocal(app, jtsRender);
                 break;
-            case 1:
+            case MallConst.E_TRAFFIC_ATRIUM:
                 displaySiteBoundaryLocal(app, jtsRender);
                 displayTrafficLocal(app, jtsRender);
                 break;
-            case 2:
+            case MallConst.E_MAIN_CORRIDOR:
                 displaySiteBoundaryLocal(app, jtsRender);
                 displayTrafficLocal(app, jtsRender);
                 displayMainCorridorLocal(app, jtsRender);
                 break;
-            case 3:
+            case MallConst.E_PUBLIC_SPACE:
                 displaySiteBoundaryLocal(app, jtsRender);
                 displayPublicSpaceLocal(app, jtsRender);
                 break;
-            case 4:
+            case MallConst.E_ESCALATOR:
                 displaySiteBoundaryLocal(app, jtsRender);
                 displayPublicSpaceLocal(app, jtsRender);
-                displayGridLocal(app);
-                break;
-            case 5:
-                displaySiteBoundaryLocal(app, jtsRender);
-                displayPublicSpaceLocal(app, jtsRender);
-                displayGridLocal(app);
-                displayShopCellsLocal(floorNum, app, jtsRender);
-                break;
-            case 6:
-                displaySiteBoundaryLocal(app, jtsRender);
-                displayPublicSpaceLocal(app, jtsRender);
-                displayShopCellsLocal(floorNum, app, jtsRender);
                 displayEscalatorLocal(app, jtsRender);
                 displayEscalatorRadiusLocal(app);
                 break;
-            case 7:
+            case MallConst.E_STRUCTURE_GRID:
                 displaySiteBoundaryLocal(app, jtsRender);
                 displayPublicSpaceLocal(app, jtsRender);
-                displayShopCellsLocal(floorNum, app, jtsRender);
-                displayGridLocal(app);
                 displayEscalatorLocal(app, jtsRender);
-                displayEvacuationLocal(app, jtsRender);
-                if (test) {
-                    displayEvacuationRadiusLocal(app);
-                }
-
+                displayGridLocal(app);
+                break;
+            case MallConst.E_SHOP_EDIT:
+                displaySiteBoundaryLocal(app, jtsRender);
+                displayPublicSpaceLocal(app, jtsRender);
+                displayEscalatorLocal(app, jtsRender);
+                displayGridLocal(app);
+                displayShopCellsLocal(app, jtsRender);
+                break;
+            case MallConst.E_EVAC_STAIRWAY:
+                displaySiteBoundaryLocal(app, jtsRender);
+                displayPublicSpaceLocal(app, jtsRender);
+                displayEscalatorLocal(app, jtsRender);
+                displayShopCellsLocal(app, jtsRender);
+                displayGridLocal(app);
+                displayEvacStairwayPosLocal(app);
+                displayEvacStairwayLocal(app, jtsRender);
+                break;
+            case MallConst.E_BATHROOM:
+                displaySiteBoundaryLocal(app, jtsRender);
+                displayPublicSpaceLocal(app, jtsRender);
+                displayEscalatorLocal(app, jtsRender);
+                displayShopCellsLocal(app, jtsRender);
+                displayGridLocal(app);
+                displayEvacStairwayPosLocal(app);
                 break;
         }
         app.popStyle();
     }
-
-    public boolean test = false;
 
     public void displaySiteBoundaryLocal(PApplet app, JtsRender render) {
         // draw boundary and site
@@ -875,32 +722,6 @@ public class MallGenerator {
         }
     }
 
-    public void displayShopCellsLocal(int floorNum, PApplet app, JtsRender jtsRender) {
-        if (floors[floorNum - 1].getAllShops() != null) {
-            app.strokeWeight(3);
-            app.stroke(255);
-            List<Shop> cells = floors[floorNum - 1].getAllShops();
-            for (Shop s : cells) {
-                jtsRender.drawGeometry(s.getShape());
-            }
-            app.noStroke();
-            for (Shop s : floors[floorNum - 1].getAllShops()) {
-                s.display(app, jtsRender);
-            }
-
-            app.fill(255);
-            app.textSize(2);
-
-            for (Shop s : floors[floorNum - 1].getAllShops()) {
-                app.pushMatrix();
-                app.scale(1, -1);
-                app.translate(0, (float) (-2 * s.getCenter().getY()));
-                s.displayText(app);
-                app.popMatrix();
-            }
-        }
-    }
-
     public void displayEscalatorLocal(PApplet app, JtsRender jtsRender) {
         app.noFill();
         app.stroke(255);
@@ -937,20 +758,75 @@ public class MallGenerator {
         }
     }
 
-    public void displayEvacuationLocal(PApplet app, JtsRender jtsRender) {
-        app.pushStyle();
-        if (stairways != null) {
+    public void displayShopCellsLocal(PApplet app, JtsRender jtsRender) {
+        if (shopManager.getAllShops() != null) {
+            app.strokeWeight(3);
             app.stroke(255);
-            for (Stairway s : stairways) {
-                app.fill(80);
-                jtsRender.drawGeometry(s.getBound());
-                app.fill(255, 0, 0);
-                s.getBase().displayAsPoint(app);
-                for (ZLine l : s.getShapes()) {
-                    l.display(app);
-                }
+            List<Shop> cells = shopManager.getAllShops();
+            for (Shop s : cells) {
+                jtsRender.drawGeometry(s.getShape());
+            }
+            app.noStroke();
+            for (Shop s : shopManager.getAllShops()) {
+                s.display(app, jtsRender);
+            }
+
+            app.fill(255);
+            app.textSize(2);
+
+            for (Shop s : shopManager.getAllShops()) {
+                app.pushMatrix();
+                app.scale(1, -1);
+                app.translate(0, (float) (-2 * s.getCenter().getY()));
+                s.displayText(app);
+                app.popMatrix();
             }
         }
+    }
+
+    public void displayEvacStairwayPosLocal(PApplet app) {
+        app.strokeWeight(3);
+        app.stroke(255, 97, 136);
+        app.noFill();
+        for (ZLine path : auxiliarySpace.getCoveredPath()) {
+            ZRender.drawZLine2D(app, path);
+        }
+
+//        app.noStroke();
+//        app.fill(255, 97, 136);
+//        for (ZPoint generator : auxiliarySpace.getSelGeneratorPos()) {
+//            ZRender.drawZPoint(app, generator, 5);
+//        }
+    }
+
+    public void displayEvacStairwayLocal(PApplet app, JtsRender jtsRender) {
+        if (auxiliarySpace.getEvacShapes() != null) {
+            app.pushMatrix();
+            app.translate(0, 0, 0.5f);
+            app.strokeWeight(3);
+            app.stroke(255);
+            app.fill(82);
+            for (Polygon shape : auxiliarySpace.getStairwayShapePoly()) {
+                jtsRender.drawGeometry(shape);
+            }
+            app.popMatrix();
+        }
+    }
+
+//    public void displayEvacuationLocal(PApplet app, JtsRender jtsRender) {
+//        app.pushStyle();
+//        if (stairways != null) {
+//            app.stroke(255);
+//            for (Stairway s : stairways) {
+//                app.fill(80);
+//                jtsRender.drawGeometry(s.getBound());
+//                app.fill(255, 0, 0);
+//                s.getBase().displayAsPoint(app);
+//                for (ZLine l : s.getShapes()) {
+//                    l.display(app);
+//                }
+//            }
+//        }
 //        if (evacPoly != null) {
 //            app.stroke(255);
 //            app.fill(80);
@@ -991,37 +867,37 @@ public class MallGenerator {
 //            jtsRender.drawGeometry(newBound);
 //            app.popMatrix();
 //        }
+//
+//        app.popStyle();
+//    }
 
-        app.popStyle();
-    }
-
-    public void displayEvacuationRadiusLocal(PApplet app) {
-        app.pushStyle();
-        for (Stairway s : stairways) {
-            ZPoint base = s.getBase();
-            app.noFill();
-            app.stroke(255, 0, 0);
-            app.strokeWeight(1.2f);
-            app.ellipse(base.xf(), base.yf(), 100, 100);
-            app.line(
-                    base.xf(),
-                    base.yf(),
-                    base.xf() + 50,
-                    base.yf()
-            );
-            app.fill(255, 0, 0);
-            app.textSize(5);
-            app.pushMatrix();
-            app.scale(1, -1);
-            app.translate(0, (float) (-2 * base.yf()));
-            app.text("50m",
-                    base.xf() + 0.5f * 25,
-                    base.yf() + 1
-            );
-            app.popMatrix();
-        }
-        app.popStyle();
-    }
+//    public void displayEvacuationRadiusLocal(PApplet app) {
+//        app.pushStyle();
+//        for (Stairway s : stairways) {
+//            ZPoint base = s.getBase();
+//            app.noFill();
+//            app.stroke(255, 0, 0);
+//            app.strokeWeight(1.2f);
+//            app.ellipse(base.xf(), base.yf(), 100, 100);
+//            app.line(
+//                    base.xf(),
+//                    base.yf(),
+//                    base.xf() + 50,
+//                    base.yf()
+//            );
+//            app.fill(255, 0, 0);
+//            app.textSize(5);
+//            app.pushMatrix();
+//            app.scale(1, -1);
+//            app.translate(0, (float) (-2 * base.yf()));
+//            app.text("50m",
+//                    base.xf() + 0.5f * 25,
+//                    base.yf() + 1
+//            );
+//            app.popMatrix();
+//        }
+//        app.popStyle();
+//    }
 
 
     /* ------------- deprecated ------------- */
@@ -1042,25 +918,25 @@ public class MallGenerator {
 //        this.cellPolys_receive.set(floorNum - 1, cellPolys_receive);
     }
 
-    public void setShopCells_receive(int floorNum, List<Shop> shopCell_receive) {
-        this.floors[floorNum - 1].setAllShops(shopCell_receive);
-    }
+//    public void setShopCells_receive(int floorNum, List<Shop> shopCell_receive) {
+//        this.floors[floorNum - 1].setAllShops(shopCell_receive);
+//    }
 
     public void setCellPolys_receive(List<List<WB_Polygon>> cellPolys_receive) {
 //        this.cellPolys_receive = cellPolys_receive;
     }
 
-    public MallFloor[] getFloors() {
-        return floors;
-    }
+//    public MallFloor[] getFloors() {
+//        return floors;
+//    }
 
 //    public List<WB_Segment> getGraphSegments(int floorNum) {
 //        return floors[floorNum - 1].getGraph().toWB_Segments();
 //    }
 
-    public List<List<WB_Coord>> getBufferControlPoints(int floorNum) {
-        return floors[floorNum - 1].getBufferControlPoints();
-    }
+//    public List<List<WB_Coord>> getBufferControlPoints(int floorNum) {
+//        return floors[floorNum - 1].getBufferControlPoints();
+//    }
 
 //    public String getFloorStats(int floorNum) {
 //        MallFloor floor = floors[floorNum - 1];
@@ -1158,41 +1034,41 @@ public class MallGenerator {
 //        app.popStyle();
 //    }
 
-    public void displayPartitionLocal(int floorNum, PApplet app, JtsRender jtsRender) {
-        app.pushStyle();
-        app.strokeWeight(3);
-        app.stroke(255);
-        if (floors[floorNum - 1].getAllShops() != null) {
-            List<Shop> cells = floors[floorNum - 1].getAllShops();
-            for (Shop s : cells) {
-                jtsRender.drawGeometry(s.getShape());
-            }
-        }
-//        if (floors[floorNum - 1].getAllSubLines() != null) {
-//            for (LineString l : floors[floorNum - 1].getAllSubLines()) {
-//                jtsRender.drawGeometry(l);
+//    public void displayPartitionLocal(int floorNum, PApplet app, JtsRender jtsRender) {
+//        app.pushStyle();
+//        app.strokeWeight(3);
+//        app.stroke(255);
+//        if (floors[floorNum - 1].getAllShops() != null) {
+//            List<Shop> cells = floors[floorNum - 1].getAllShops();
+//            for (Shop s : cells) {
+//                jtsRender.drawGeometry(s.getShape());
 //            }
 //        }
-
-        if (floors[floorNum - 1].getAllShops() != null) {
-            app.noStroke();
-            for (Shop s : floors[floorNum - 1].getAllShops()) {
-                s.display(app, jtsRender);
-            }
-
-            app.fill(255);
-            app.textSize(2);
-
-            for (Shop s : floors[floorNum - 1].getAllShops()) {
-                app.pushMatrix();
-                app.scale(1, -1);
-                app.translate(0, (float) (-2 * s.getCenter().getY()));
-                s.displayText(app);
-                app.popMatrix();
-            }
-        }
-        app.popStyle();
-    }
+////        if (floors[floorNum - 1].getAllSubLines() != null) {
+////            for (LineString l : floors[floorNum - 1].getAllSubLines()) {
+////                jtsRender.drawGeometry(l);
+////            }
+////        }
+//
+//        if (floors[floorNum - 1].getAllShops() != null) {
+//            app.noStroke();
+//            for (Shop s : floors[floorNum - 1].getAllShops()) {
+//                s.display(app, jtsRender);
+//            }
+//
+//            app.fill(255);
+//            app.textSize(2);
+//
+//            for (Shop s : floors[floorNum - 1].getAllShops()) {
+//                app.pushMatrix();
+//                app.scale(1, -1);
+//                app.translate(0, (float) (-2 * s.getCenter().getY()));
+//                s.displayText(app);
+//                app.popMatrix();
+//            }
+//        }
+//        app.popStyle();
+//    }
 
 //
 //    /**

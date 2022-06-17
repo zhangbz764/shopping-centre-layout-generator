@@ -64,7 +64,6 @@ public class MainTraffic {
         if (!ridgeGraph.isLoop()) {
             if (ridgeGraph.isPath()) {
                 // single path
-                centralSegs.addAll(boundarySkel.getExtendedRidges());
                 centralLs = ZFactory.createLineString(centralSegs);
             } else {
                 // has forks, find the longest chain
@@ -141,6 +140,14 @@ public class MainTraffic {
         return mainTrafficCurve;
     }
 
+    public LineString getMainTrafficInnerLS(){
+        return new ZBSpline(innerNodes.toArray(new WB_Point[0]), 3, 50, ZBSpline.CLAMPED).getAsLineString();
+    }
+
+    public WB_PolyLine getMainTrafficInnerWB(){
+        return new ZBSpline(innerNodes.toArray(new WB_Point[0]), 3, 50, ZBSpline.CLAMPED).getAsWB_PolyLine();
+    }
+
     public Polygon getMainTrafficBuffer() {
         return mainTrafficBuffer;
     }
@@ -157,5 +164,4 @@ public class MainTraffic {
         return entryNodes;
     }
 
-    /* ------------- draw ------------- */
 }

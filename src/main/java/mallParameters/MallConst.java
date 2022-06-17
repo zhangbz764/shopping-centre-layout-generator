@@ -41,28 +41,41 @@ public class MallConst {
     public static final float ATRIUM_ROUND_RADIUS_MAX = 5f;
     public static final float ATRIUM_ROUND_RADIUS_MIN = 0.5f;
     // 4
+    public static final double ESCALATOR_LENGTH = 13;     // 扶梯长度
+    public static final double ESCALATOR_WIDTH = 3.2;     // 扶梯宽度
+    public static final float ESCALATOR_DIST_MAX = 50;    // 扶梯服务半径上限
+    public static final float ESCALATOR_DIST_MIN = 30;    // 扶梯服务半径上限
+    // 5
     public static final double STRUCTURE_MODEL = 8.4;     // 柱距预设值8.4m
     public static final double STRUCTURE_MODEL_2 = 9;     // 柱距预设值9m
     public static final int STRUCTURE_GRID_NUM = 2;       // 柱网体系预设数量
     public static final int STRUCTURE_GRID_MAX = 4;       // 柱网体系最大数量
     public static final float STRUCTURE_CTRL_R = 5;       // 柱网控制点判定范围// 中庭倒角半径
-    // 5
-    public static final double ESCALATOR_LENGTH = 13;     // 扶梯长度
-    public static final double ESCALATOR_WIDTH = 3.2;     // 扶梯宽度
-    public static final float ESCALATOR_DIST_MAX = 50;    // 扶梯服务半径上限
-    public static final float ESCALATOR_DIST_MIN = 30;    // 扶梯服务半径上限
+
 
     public static double ATRIUM_R = 10;
 
     public static double[] SHOP_SPAN_THRESHOLD = {7, 9};
 
-    public static double EVACUATION_WIDTH = 2.4;
-    public static double EVACUATION_DIST = 60;
+    // 7
+    public static final double POPULATION_RATE = 0.43;
+    public static final double EVAC_WIDTH_HUNDRED = 0.65;
+    public static final double EVACUATION_WIDTH = 2;
+    public static final double EVACUATION_DIST = 50;
+    public static final double STAIRWAY_LENGTH = 2 * MallConst.STRUCTURE_MODEL;
+    public static final double STAIRWAY_WIDTH = 1.25 * MallConst.STRUCTURE_MODEL;
     public static double STAIRWAY1_LENGTH = 33.6;
     public static double STAIRWAY1_WIDTH = 4;
     public static double STAIRWAY2_LENGTH = 16.8;
     public static double STAIRWAY2_WIDTH = 8.4;
     public static double STAIRWAY_RADIUS = 2;
+    public static double EVACATION_NODE_R = 5;
+
+    // 8
+    public static final int BATHROOM_NUM = 2;
+    public static final double BATHROOM_LENGTH = 2 * MallConst.STRUCTURE_MODEL;
+    public static final double BATHROOM_WIDTH = 1.25 * MallConst.STRUCTURE_MODEL;
+    public static final double BATHROOM_SERV_R = 80;        // 卫生间服务半径
 
     /* cp5 constants */
 
@@ -81,10 +94,11 @@ public class MallConst {
     public static final int E_TRAFFIC_ATRIUM = 1;
     public static final int E_MAIN_CORRIDOR = 2;
     public static final int E_PUBLIC_SPACE = 3;
-    public static final int E_STRUCTURE_GRID = 4;
-    public static final int E_SHOP_EDIT = 5;
-    public static final int E_ESCALATOR = 6;
-    public static final int E_EVACUATION = 7;
+    public static final int E_ESCALATOR = 4;
+    public static final int E_STRUCTURE_GRID = 5;
+    public static final int E_SHOP_EDIT = 6;
+    public static final int E_EVAC_STAIRWAY = 7;
+    public static final int E_BATHROOM = 8;
 
     public static final int INIT_FLAG = 0;
 
@@ -118,8 +132,9 @@ public class MallConst {
     public static final int BUTTON_ATRIUM_ROUND = 99;
     public static final int SLIDER_ROUND_RADIUS = 98;
     public static final int SLIDER_SMOOTH_TIMES = 97;
-
     // 4
+    public static final int BUTTON_UPDATE_ESCALATOR = 124;
+    // 5
     public static final int BUTTON_GRID_8 = 118;
     public static final int BUTTON_GRID_9 = 119;
     public static final int BUTTON_GRIDNUM_1 = 120;
@@ -129,8 +144,11 @@ public class MallConst {
     public static final int BUTTON_GRID_MODEL = 31;
     public static final int SLIDER_GRID_ANGLE = 32;
     public static final int LIST_GRID_NUM = 30;
-    // 5
-    public static final int BUTTON_UNION_CELLS = 123;
     // 6
-    public static final int BUTTON_UPDATE_ESCALATOR = 124;
+    public static final int BUTTON_UNION_CELLS = 123;
+    public static final int BUTTON_SPLIT_CELLS = 125;
+    // 7
+    public static final int BUTTON_EVAC_MODEL = 126;
+    public static final int BUTTON_EVAC_DIR = 127;
+    // 8
 }

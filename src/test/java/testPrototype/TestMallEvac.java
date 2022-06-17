@@ -87,7 +87,7 @@ public class TestMallEvac extends PApplet {
         this.coveredPath = auxiliarySpace.getCoveredPath();
 
         // stairway shape
-        auxiliarySpace.generateStairwayShape(boundary, grids);
+//        auxiliarySpace.generateStairwayShape(boundary, grids);
     }
 
     private void load() {

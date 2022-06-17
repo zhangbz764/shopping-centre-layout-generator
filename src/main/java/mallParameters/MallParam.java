@@ -18,7 +18,7 @@ public class MallParam {
 
     public float corridorWidth;             // 空中走廊宽度
 
-    public float publicSpaceBufferDist;
+    public float publicSpaceBufferDist;     // 公区轮廓偏移距离
     public float atriumRoundRadius;         // 中庭倒圆角半径
     public int atriumSmoothTimes;           // 中庭倒角次数
 
