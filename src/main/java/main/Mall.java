@@ -496,13 +496,13 @@ public class Mall extends PApplet {
                     println("STATUS " + EDIT_STATUS + ": edit evacuations");
                 }
                 break;
-            case (MallConst.E_BATHROOM):
-                if (EDIT_STATUS >= MallConst.E_BATHROOM - 1) {
-                    mallGenerator.initBathrooms();
+            case (MallConst.E_WASHROOM):
+                if (EDIT_STATUS >= MallConst.E_WASHROOM - 1) {
+                    mallGenerator.initwashrooms();
 
-                    this.EDIT_STATUS = MallConst.E_BATHROOM;
+                    this.EDIT_STATUS = MallConst.E_WASHROOM;
                     mallGUI.updateGUI(EDIT_STATUS, cp5);
-                    println("STATUS " + EDIT_STATUS + ": edit bathrooms");
+                    println("STATUS " + EDIT_STATUS + ": edit washrooms");
                 }
                 break;
         }

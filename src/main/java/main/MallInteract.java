@@ -1090,7 +1090,7 @@ public class MallInteract {
                     displaySelEvacShape(app, jtsRender);
                 }
                 break;
-            case MallConst.E_BATHROOM:
+            case MallConst.E_WASHROOM:
 
                 break;
         }

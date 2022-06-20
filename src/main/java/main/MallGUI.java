@@ -1,10 +1,8 @@
 package main;
 
-import controlP5.CColor;
 import controlP5.ControlFont;
 import controlP5.ControlP5;
 import controlP5.DropdownList;
-import javafx.scene.paint.Color;
 import mallParameters.MallConst;
 import mallParameters.MallParam;
 import processing.core.PApplet;
@@ -144,7 +142,7 @@ public class MallGUI {
         addGridGUI(cp5, startW, startH + cp5H * 5, app);
         addShopGUI(cp5, startW, startH + cp5H * 6, app);
         addStairwayGUI(cp5, startW, startH + cp5H * 7, app);
-        addBathroomGUI(cp5, startH + cp5H * 8);
+        addWashroomGUI(cp5, startH + cp5H * 8);
     }
 
 
@@ -181,8 +179,8 @@ public class MallGUI {
             case (MallConst.E_EVAC_STAIRWAY):
                 setVisible(cp5, MallConst.E_EVAC_STAIRWAY);
                 break;
-            case (MallConst.E_BATHROOM):
-                setVisible(cp5, MallConst.E_BATHROOM);
+            case (MallConst.E_WASHROOM):
+                setVisible(cp5, MallConst.E_WASHROOM);
                 break;
         }
     }
@@ -661,7 +659,7 @@ public class MallGUI {
      * @param startH start height of the controllers
      * @return void
      */
-    public void addBathroomGUI(ControlP5 cp5, int startH) {
+    public void addWashroomGUI(ControlP5 cp5, int startH) {
 
         this.controllerNames[8] = new String[]{
 

@@ -72,10 +72,10 @@ public class MallConst {
     public static double EVACATION_NODE_R = 5;
 
     // 8
-    public static final int BATHROOM_NUM = 2;
-    public static final double BATHROOM_LENGTH = 2 * MallConst.STRUCTURE_MODEL;
-    public static final double BATHROOM_WIDTH = 1.25 * MallConst.STRUCTURE_MODEL;
-    public static final double BATHROOM_SERV_R = 80;        // 卫生间服务半径
+    public static final int WASHROOM_NUM = 2;
+    public static final double WASHROOM_LENGTH = 2 * MallConst.STRUCTURE_MODEL;
+    public static final double WASHROOM_WIDTH = 1.25 * MallConst.STRUCTURE_MODEL;
+    public static final double WASHROOM_SERV_R = 80;        // 卫生间服务半径
 
     /* cp5 constants */
 
@@ -98,7 +98,7 @@ public class MallConst {
     public static final int E_STRUCTURE_GRID = 5;
     public static final int E_SHOP_EDIT = 6;
     public static final int E_EVAC_STAIRWAY = 7;
-    public static final int E_BATHROOM = 8;
+    public static final int E_WASHROOM = 8;
 
     public static final int INIT_FLAG = 0;
 

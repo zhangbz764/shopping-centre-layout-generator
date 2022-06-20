@@ -21,7 +21,7 @@ import wblut.hemesh.HE_Mesh;
 import java.util.*;
 
 /**
- * generator of auxiliary space: evacuation stairways and bathrooms
+ * generator of auxiliary space: evacuation stairways and washrooms
  *
  * @author ZHANG Baizhou zhangbz
  * @project shopping_mall
@@ -38,7 +38,7 @@ public class AuxiliarySpace {
 
     private List<EvacShape> evacShapes;     // shapes of stairway and corridor
 
-    private List<Polygon> bathroomShapes;   // shapes of bathrooms
+    private List<Polygon> washroomShapes;   // shapes of washrooms
 
     /* ------------- constructor ------------- */
 
@@ -128,17 +128,17 @@ public class AuxiliarySpace {
     /* ------------- public member function: evacuation stairway ------------- */
 
     /**
-     * generate the shape of bathroom
+     * generate the shape of washroom
      *
      * @param floorBoundary boundary of current storey
      * @param trafficLS     main traffic LineString
      * @return void
      */
-    public void initBathroom(Polygon floorBoundary, LineString trafficLS) {
-        this.bathroomShapes = new ArrayList<>();
-        List<EvacGenerator> maxCoveredGen = enumBathroomPos(MallConst.BATHROOM_NUM, floorBoundary, trafficLS);
+    public void initWashroom(Polygon floorBoundary, LineString trafficLS) {
+        this.washroomShapes = new ArrayList<>();
+        List<EvacGenerator> maxCoveredGen = enumWashroomPos(MallConst.WASHROOM_NUM, floorBoundary, trafficLS);
         for (EvacGenerator g : maxCoveredGen) {
-            bathroomShapes.add(generateBathroomShape(g, floorBoundary));
+            washroomShapes.add(generateWashroomShape(g, floorBoundary));
         }
     }
 
@@ -190,7 +190,7 @@ public class AuxiliarySpace {
             for (HE_Halfedge he : edgeList) {
                 list.add(new ZLine(he.getStartPosition(), he.getEndPosition()));
             }
-            WB_PolyLine pl = ZFactory.createWB_PolyLine(list);
+            WB_PolyLine pl = ZFactory.createWB_PolyLineFromSegs(list);
 
             // test distance to judge reverse
             assert pl != null;
@@ -362,52 +362,52 @@ public class AuxiliarySpace {
         return covered;
     }
 
-    /* ------------- private member function: bathroom ------------- */
+    /* ------------- private member function: washroom ------------- */
 
-    private List<EvacGenerator> enumBathroomPos(int bathroomNum, Polygon boundary, LineString trafficLS) {
-        // check each generator if a bathroom shape can fit in
-        List<EvacGenerator> possibleForBathroom = new ArrayList<>();
+    private List<EvacGenerator> enumWashroomPos(int washroomNum, Polygon boundary, LineString trafficLS) {
+        // check each generator if a washroom shape can fit in
+        List<EvacGenerator> possibleForWashroom = new ArrayList<>();
         for (int i = 0; i < selGenerator.size(); i++) {
             EvacGenerator g = selGenerator.get(i);
             if (!g.shape.dirLeft) {
                 // stairway shape direction: along boundary direction
-                // bathroom shape direction: against boundary direction
+                // washroom shape direction: against boundary direction
                 // need to check the previous generator
                 EvacGenerator g_prev = selGenerator.get((i + selGenerator.size() - 1) % selGenerator.size());
-                if ((g_prev.shape.dirLeft && ZGeoMath.distAlongEdge(g_prev.start, g.start, boundary) > 0.75 * MallConst.BATHROOM_LENGTH)
+                if ((g_prev.shape.dirLeft && ZGeoMath.distAlongEdge(g_prev.start, g.start, boundary) > 0.75 * MallConst.WASHROOM_LENGTH)
                         ||
-                        (!g_prev.shape.dirLeft && ZGeoMath.distAlongEdge(g_prev.start, g.start, boundary) > (MallConst.BATHROOM_LENGTH + 0.75 * MallConst.STAIRWAY_LENGTH))
+                        (!g_prev.shape.dirLeft && ZGeoMath.distAlongEdge(g_prev.start, g.start, boundary) > (MallConst.WASHROOM_LENGTH + 0.75 * MallConst.STAIRWAY_LENGTH))
                 ) {
-                    possibleForBathroom.add(g);
+                    possibleForWashroom.add(g);
                 }
             } else {
                 // stairway shape direction: against boundary direction
-                // bathroom shape direction: along boundary direction
+                // washroom shape direction: along boundary direction
                 // need to check the next generator
                 EvacGenerator g_next = selGenerator.get((i + 1) % selGenerator.size());
-                if ((!g_next.shape.dirLeft && ZGeoMath.distAlongEdge(g.start, g_next.start, boundary) > 0.75 * MallConst.BATHROOM_LENGTH)
+                if ((!g_next.shape.dirLeft && ZGeoMath.distAlongEdge(g.start, g_next.start, boundary) > 0.75 * MallConst.WASHROOM_LENGTH)
                         ||
-                        (g_next.shape.dirLeft && ZGeoMath.distAlongEdge(g.start, g_next.start, boundary) > (MallConst.BATHROOM_LENGTH + 0.75 * MallConst.STAIRWAY_LENGTH))
+                        (g_next.shape.dirLeft && ZGeoMath.distAlongEdge(g.start, g_next.start, boundary) > (MallConst.WASHROOM_LENGTH + 0.75 * MallConst.STAIRWAY_LENGTH))
                 ) {
-                    possibleForBathroom.add(g);
+                    possibleForWashroom.add(g);
                 }
             }
         }
 
         // enumerate the position of possible generators
-        int[] selGenIndex = ZMath.createIntegerSeries(0, possibleForBathroom.size());
+        int[] selGenIndex = ZMath.createIntegerSeries(0, possibleForWashroom.size());
         ZPermuCombi zpc = new ZPermuCombi();
-        zpc.combination(selGenIndex, bathroomNum, 0, 0);
+        zpc.combination(selGenIndex, washroomNum, 0, 0);
         List<List<Integer>> combiResult = zpc.getCombinationResults();
 
-        // find the most-traffic-covered bathroom group
+        // find the most-traffic-covered washroom group
         double[] coverRatios = new double[combiResult.size()];
         for (int i = 0; i < combiResult.size(); i++) {
             List<Integer> list = combiResult.get(i);
             Geometry unionCircle = ZFactory.jtsgf.createPolygon();
             for (Integer index : list) {
-                EvacGenerator g = possibleForBathroom.get(index);
-                ZPoint[] cirPts = ZFactory.createCircle(g.start, MallConst.BATHROOM_SERV_R, 32);
+                EvacGenerator g = possibleForWashroom.get(index);
+                ZPoint[] cirPts = ZFactory.createCircle(g.start, MallConst.WASHROOM_SERV_R, 32);
                 Coordinate[] cirCoords = new Coordinate[cirPts.length];
                 for (int j = 0; j < cirPts.length; j++) {
                     cirCoords[j] = cirPts[j].toJtsCoordinate();
@@ -419,14 +419,14 @@ public class AuxiliarySpace {
             coverRatios[i] = intersection.getLength();
         }
         int max = ZMath.getMaxIndex(coverRatios);
-        List<EvacGenerator> bathroomGenerator = new ArrayList<>();
+        List<EvacGenerator> washroomGenerator = new ArrayList<>();
         for (Integer index : combiResult.get(max)) {
-            bathroomGenerator.add(possibleForBathroom.get(index));
+            washroomGenerator.add(possibleForWashroom.get(index));
         }
-        return bathroomGenerator;
+        return washroomGenerator;
     }
 
-    private Polygon generateBathroomShape(EvacGenerator g, Polygon floorBoundary) {
+    private Polygon generateWashroomShape(EvacGenerator g, Polygon floorBoundary) {
         WB_PolyLine sl = g.sideLine;
         WB_Segment firstSeg = sl.getSegment(0);
         ZPoint firstSegDir = new ZPoint(firstSeg.getDirection()).normalize();
@@ -434,11 +434,11 @@ public class AuxiliarySpace {
         ZPoint generateDir;
         if (!g.shape.dirLeft) {
             // stairway shape direction: along boundary direction
-            // bathroom shape direction: against boundary direction
+            // washroom shape direction: against boundary direction
             generateDir = firstSegDir.rotate2D(Math.PI * 0.5);
         } else {
             // stairway shape direction: against boundary direction
-            // bathroom shape direction: along boundary direction
+            // washroom shape direction: along boundary direction
             generateDir = firstSegDir.rotate2D(Math.PI * -0.5);
         }
 
@@ -446,7 +446,7 @@ public class AuxiliarySpace {
     }
 
     /**
-     * generate rectangle module shape (stairway or bathroom)
+     * generate rectangle module shape (stairway or washroom)
      *
      * @param g             given generator
      * @param floorBoundary boundary of current storey

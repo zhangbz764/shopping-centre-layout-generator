@@ -51,7 +51,7 @@ public class MallGenerator {
 //    // core generate result: floors
 //    private MallFloor[] floors;
 
-    // AuxiliarySpace: evacuation stairways & bathrooms
+    // AuxiliarySpace: evacuation stairways & washrooms
     private AuxiliarySpace auxiliarySpace;
 
 
@@ -473,10 +473,10 @@ public class MallGenerator {
         auxiliarySpace.switchEvacDir(id, siteBase.getBoundary(), shopManager.getShopBlocks().get(0));
     }
 
-    /* ------------- generating bathrooms ------------- */
+    /* ------------- generating washrooms ------------- */
 
-    public void initBathrooms() {
-        auxiliarySpace.initBathroom(siteBase.getBoundary(), mainTraffic.getMainTrafficInnerLS());
+    public void initwashrooms() {
+        auxiliarySpace.initWashroom(siteBase.getBoundary(), mainTraffic.getMainTrafficInnerLS());
     }
 
     /* ------------- setter & getter ------------- */
@@ -627,7 +627,7 @@ public class MallGenerator {
                 displayEvacStairwayPosLocal(app);
                 displayEvacStairwayLocal(app, jtsRender);
                 break;
-            case MallConst.E_BATHROOM:
+            case MallConst.E_WASHROOM:
                 displaySiteBoundaryLocal(app, jtsRender);
                 displayPublicSpaceLocal(app, jtsRender);
                 displayEscalatorLocal(app, jtsRender);

@@ -140,10 +140,10 @@ public class TestMallEvac extends PApplet {
             ZRender.drawZPoint(this, p, 5);
         }
 
-        stroke(0, 0, 255);
-        for (ZPoint p : auxiliarySpace.getDividePts()) {
-            ZRender.drawZPoint(this, p, 5);
-        }
+//        stroke(0, 0, 255);
+//        for (ZPoint p : auxiliarySpace.getDividePts()) {
+//            ZRender.drawZPoint(this, p, 5);
+//        }
 
         stroke(0, 255, 0);
         for (int i = 0; i < evacPos.size(); i++) {
