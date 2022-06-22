@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import geometry.Segments;
+import geometry.Vertices;
 import main.MallGenerator;
 import mallElementNew.StructureGrid;
 import mallIO.ImportData;
@@ -13,6 +14,7 @@ import mallParameters.MallConst;
 import org.locationtech.jts.geom.LineString;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -41,14 +43,14 @@ public class MallJsonProcessor {
     /* ------------- member function ------------- */
 
     /**
-    * description
-    *
-    * @param functionID
-    * @param jsonR
-    * @param jsonS
-    * @param properties
-    * @return void
-    */
+     * back-end process for edit status 0
+     *
+     * @param functionID ID of function
+     * @param jsonR      received Archijson
+     * @param jsonS      Archijson to send
+     * @param properties properties to send
+     * @return void
+     */
     public void processStatus0(
             int functionID,
             ArchiJSON jsonR,
@@ -63,15 +65,14 @@ public class MallJsonProcessor {
                         input.getInputBlock(),
                         input.getInputBoundary(),
                         0,
-                        10,
-                        67.2
+                        MallConst.SITE_REDLINEDIST_DEFAULT,
+                        MallConst.SITE_BUFFER_DEFAULT
                 );
 
                 Segments b1 = JTSConverter.toSegments(mg.getSiteBase().getBoundary());
                 Segments s1 = JTSConverter.toSegments(mg.getSiteBase().getSite());
                 elements.add(gson.toJsonTree(b1));
                 elements.add(gson.toJsonTree(s1));
-
                 break;
             case MallConst.BUTTON_SWITCH_BOUNDARY:
             case MallConst.SLIDER_OFFSET_DIST:
@@ -83,7 +84,6 @@ public class MallJsonProcessor {
 
                 Segments b2 = JTSConverter.toSegments(mg.getSiteBase().getBoundary());
                 elements.add(gson.toJsonTree(b2));
-
                 break;
         }
 
@@ -92,14 +92,14 @@ public class MallJsonProcessor {
     }
 
     /**
-    * description
-    *
-    * @param functionID
-    * @param jsonR
-    * @param jsonS
-    * @param properties
-    * @return void
-    */
+     * back-end process for edit status 0
+     *
+     * @param functionID ID of function
+     * @param jsonR      received Archijson
+     * @param jsonS      Archijson to send
+     * @param properties properties to send
+     * @return void
+     */
     public void processStatus4(
             int functionID,
             ArchiJSON jsonR,
