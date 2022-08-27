@@ -230,6 +230,7 @@
             <groupId>org.locationtech.jts</groupId>
             <artifactId>jts-core</artifactId>
             <version>1.16.1</version>
+            <classifier>sources</classifier>
         </dependency>
 
         <dependency>
@@ -252,10 +253,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.github.Agent14zbz</groupId>
-            <artifactId>Ztools</artifactId>
-            <version>0.1</version>
-            <scope>compile</scope>
+            <groupId>org.github.zhangbz764</groupId>
+            <artifactId>ztools</artifactId>
+            <version>0.1.4</version>
         </dependency>
 
         <dependency>

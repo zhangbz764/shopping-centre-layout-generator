@@ -137,7 +137,7 @@ public class TestMallEvac extends PApplet {
         }
 
         for (ZPoint p : evacPos) {
-            ZRender.drawZPoint(this, p, 5);
+            ZRender.drawZPoint2D(this, p, 5);
         }
 
 //        stroke(0, 0, 255);
@@ -149,7 +149,7 @@ public class TestMallEvac extends PApplet {
         for (int i = 0; i < evacPos.size(); i++) {
             ZPoint[] pair = dirTest[i];
             for (ZPoint dir : pair) {
-                dir.displayAsVector(this, evacPos.get(i), 10, 1);
+                ZRender.drawZPointAsVec2D(this, dir, evacPos.get(i), 10, 1);
             }
         }
     }

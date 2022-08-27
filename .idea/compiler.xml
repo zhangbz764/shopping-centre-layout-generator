@@ -7,12 +7,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="shopping_mall" />
-        <module name="Ztools" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8">
       <module name="commercial_street" target="8" />
       <module name="shopping_mall" target="1.8" />
+      <module name="ztools" target="1.8" />
       <module name="Ztools" target="1.8" />
     </bytecodeTargetLevel>
   </component>
