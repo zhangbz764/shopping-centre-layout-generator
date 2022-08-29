@@ -102,33 +102,38 @@ public class MallConst {
     public static final int SLIDER_REDLINE_DIST = 102;
 
     // 1
-    public static final int DRAG_TRAFFIC_CTRL = 301;
-    public static final int BUTTON_TRAFFIC_CONTROLLERS = 12;
-    public static final int SLIDER_TRAFFIC_WIDTH = 103;
-    public static final int DBCLICK_ADD_ATRIUM = 302;
-    public static final int BUTTON_CURVE_ATRIUM = 104;
-    public static final int BUTTON_DELETE_ATRIUM = 26;
-    public static final int SLIDER_ATRIUM_ANGLE = 15;
-    public static final int SLIDER_ATRIUM_AREA = 16;
+    public static final int BUTTON_TRAFFIC_CONTROLLERS = 200;
+    public static final int DRAG_TRAFFIC_CTRL = 201;
+    public static final int SLIDER_TRAFFIC_WIDTH = 202;
+
+    public static final int DBCLICK_ADD_ATRIUM = 203;
+    public static final int BUTTON_CURVE_ATRIUM = 204;
+    public static final int BUTTON_DELETE_ATRIUM = 205;
+    public static final int SLIDER_ATRIUM_ANGLE = 206;
+    public static final int SLIDER_ATRIUM_AREA = 207;
     public static final int LIST_ATRIUM_FACTORY = 17;
-    public static final int ITEM_A_TRIANGLE = 200;
-    public static final int ITEM_A_SQUARE = 201;
-    public static final int ITEM_A_TRAPEZOID = 202;
-    public static final int ITEM_A_PENTAGON = 203;
-    public static final int ITEM_A_HEXAGON1 = 204;
-    public static final int ITEM_A_HEXAGON2 = 205;
-    public static final int ITEM_A_LSHAPE = 206;
-    public static final int ITEM_A_OCTAGON = 207;
+    public static final int ITEM_A_TRIANGLE = 2000;
+    public static final int ITEM_A_SQUARE = 2001;
+    public static final int ITEM_A_TRAPEZOID = 2002;
+    public static final int ITEM_A_PENTAGON = 2003;
+    public static final int ITEM_A_HEXAGON1 = 2004;
+    public static final int ITEM_A_HEXAGON2 = 2005;
+    public static final int ITEM_A_LSHAPE = 2006;
+    public static final int ITEM_A_OCTAGON = 2007;
+
     // 2
-    public static final int SLIDER_CORRIDOR_WIDTH = 116;
+    public static final int SLIDER_CORRIDOR_WIDTH = 300;
+
     // 3
+    public static final int SLIDER_BUFFER_DIST = 400;
     public static final int BUTTON_DELETE_PUBLIC_NODE = 96;
-    public static final int SLIDER_BUFFER_DIST = 117;
     public static final int BUTTON_ATRIUM_ROUND = 99;
     public static final int SLIDER_ROUND_RADIUS = 98;
     public static final int SLIDER_SMOOTH_TIMES = 97;
+
     // 4
-    public static final int BUTTON_UPDATE_ESCALATOR = 124;
+    public static final int BUTTON_UPDATE_ESCALATOR = 500;
+
     // 5
     public static final int BUTTON_GRID_8 = 118;
     public static final int BUTTON_GRID_9 = 119;

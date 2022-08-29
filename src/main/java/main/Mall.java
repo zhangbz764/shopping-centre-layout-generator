@@ -608,7 +608,7 @@ public class Mall extends PApplet {
                         }
                         break;
                     case (MallConst.LIST_ATRIUM_FACTORY):
-                        int atriumTypeNum = (int) theEvent.getController().getValue() + 200;
+                        int atriumTypeNum = (int) theEvent.getController().getValue() + 2000;
                         mallInteractor.setSelectedAtriumRawType(atriumTypeNum);
                         break;
                 }
