@@ -117,10 +117,14 @@ public class MallJsonProcessor {
     ) {
         List<JsonElement> elements = new ArrayList<>();
 
+        // traffic
         Segments trafficPath, trafficBuffer;
         Vertices entryVer, innerVer;
-        List<WB_Coord> entryCoords,innerCoords;
+        List<WB_Coord> entryCoords, innerCoords;
         double bufferDist;
+        // atrium
+        int atriumShapeID;
+        double atriumPosX, atriumPosY;
 
         switch (functionID) {
             case MallConst.INIT_FLAG:
@@ -170,7 +174,16 @@ public class MallJsonProcessor {
                 elements.add(gson.toJsonTree(trafficBuffer));
                 break;
             case MallConst.DBCLICK_ADD_ATRIUM:
+                atriumShapeID = jsonR.getProperties().get("atriumShapeID").getAsInt();
+                atriumPosX = jsonR.getProperties().get("atriumPosX").getAsDouble();
+                atriumPosY = jsonR.getProperties().get("atriumPosY").getAsDouble();
 
+                mg.addAtriumRaw(atriumPosX, atriumPosY, atriumShapeID);
+                List<Polygon> atriumRawShapes = mg.getAtriumRawShapes();
+                for (Polygon a : atriumRawShapes) {
+                    Segments atriumSeg = JTSConverter.toSegments(a);
+                    elements.add(gson.toJsonTree(atriumSeg));
+                }
                 break;
         }
 

@@ -206,7 +206,7 @@ public class MallGenerator {
     /* ------------- generating raw atrium ------------- */
 
     /**
-     * add a raw atriumwang
+     * add a raw atrium
      *
      * @param x          pointer x
      * @param y          pointer x
