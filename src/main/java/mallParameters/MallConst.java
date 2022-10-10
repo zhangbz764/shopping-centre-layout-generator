@@ -107,10 +107,12 @@ public class MallConst {
     public static final int SLIDER_TRAFFIC_WIDTH = 202;
 
     public static final int DBCLICK_ADD_ATRIUM = 203;
+    public static final int DBCLICK_SEL_ATRIUM = 208;
     public static final int BUTTON_CURVE_ATRIUM = 204;
     public static final int BUTTON_DELETE_ATRIUM = 205;
     public static final int SLIDER_ATRIUM_ANGLE = 206;
     public static final int SLIDER_ATRIUM_AREA = 207;
+
     public static final int LIST_ATRIUM_FACTORY = 17;
     public static final int ITEM_A_TRIANGLE = 2000;
     public static final int ITEM_A_SQUARE = 2001;

@@ -1,6 +1,7 @@
 package mallWeb;
 
 import archijson.ArchiJSON;
+import basicGeometry.ZFactory;
 import basicGeometry.ZLine;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -36,6 +37,9 @@ public class MallJsonProcessor {
     private final ImportData input = new ImportData(); // temp
     private final MallGenerator mg;
     private final Gson gson = new Gson();
+
+    private static final int codeSuccess = 200;
+    private static final int codeFail = 400;
 
     /* ------------- constructor ------------- */
 
@@ -185,6 +189,16 @@ public class MallJsonProcessor {
                     elements.add(gson.toJsonTree(atriumSeg));
                 }
                 break;
+            case MallConst.DBCLICK_SEL_ATRIUM:
+                atriumPosX = jsonR.getProperties().get("atriumPosX").getAsDouble();
+                atriumPosY = jsonR.getProperties().get("atriumPosY").getAsDouble();
+                int activatedID = jsonR.getProperties().get("atriumActivatedID").getAsInt();
+
+                int[] result = getSelectID(activatedID, atriumPosX, atriumPosY);
+                properties.addProperty("statusCode", result[0]);
+                properties.addProperty("activatedID", result[1]);
+
+                break;
         }
 
         jsonS.setGeometryElements(elements);
@@ -242,7 +256,44 @@ public class MallJsonProcessor {
         jsonS.setProperties(properties);
     }
 
-    /* ------------- setter & getter ------------- */
+    /* ------------- private functions ------------- */
 
-
+    /**
+     * get select/unselect results for atrium
+     *
+     * @param actID activated atrium ID
+     * @param x     mouse x
+     * @param y     mouse y
+     * @return int[]
+     */
+    private int[] getSelectID(int actID, double x, double y) {
+        if (actID == -1) {
+            // select
+            int id = -1;
+            List<Polygon> atriumShapes = mg.getAtriumRawShapes();
+            for (int i = 0; i < atriumShapes.size(); i++) {
+                Polygon shp = atriumShapes.get(i);
+                if (shp.contains(ZFactory.jtsgf.createPoint(new Coordinate(x, y)))) {
+                    id = i;
+                    break;
+                }
+            }
+            if (id > -1) {
+                return new int[]{codeSuccess, id}; // select success
+            } else {
+                return new int[]{codeFail, -1}; // not select any atrium
+            }
+        } else if (actID > -1) {
+            // unselect
+            List<Polygon> atriumShapes = mg.getAtriumRawShapes();
+            Polygon shp = atriumShapes.get(actID);
+            if (!shp.contains(ZFactory.jtsgf.createPoint(new Coordinate(x, y)))) {
+                return new int[]{codeSuccess, -1};
+            } else {
+                return new int[]{codeFail, -1};
+            }
+        } else {
+            return new int[]{codeFail, -1};
+        }
+    }
 }
