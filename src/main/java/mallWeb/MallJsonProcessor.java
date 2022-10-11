@@ -129,6 +129,10 @@ public class MallJsonProcessor {
         // atrium
         int atriumShapeID;
         double atriumPosX, atriumPosY;
+        int activatedID;
+        int atriumDragFlag;
+        int currCtrlID;
+        Segments changedAtrium;
 
         switch (functionID) {
             case MallConst.INIT_FLAG:
@@ -192,11 +196,29 @@ public class MallJsonProcessor {
             case MallConst.DBCLICK_SEL_ATRIUM:
                 atriumPosX = jsonR.getProperties().get("atriumPosX").getAsDouble();
                 atriumPosY = jsonR.getProperties().get("atriumPosY").getAsDouble();
-                int activatedID = jsonR.getProperties().get("atriumActivatedID").getAsInt();
+                activatedID = jsonR.getProperties().get("atriumActivatedID").getAsInt();
 
-                int[] result = getSelectID(activatedID, atriumPosX, atriumPosY);
+                int[] result = this.getSelectID(activatedID, atriumPosX, atriumPosY);
                 properties.addProperty("statusCode", result[0]);
                 properties.addProperty("activatedID", result[1]);
+
+                break;
+            case MallConst.DRAG_ATRIUM_CTRL:
+                activatedID = jsonR.getProperties().get("activatedID").getAsInt();
+                atriumDragFlag = jsonR.getProperties().get("dragFlag").getAsInt();
+                currCtrlID = jsonR.getProperties().get("currCtrlID").getAsInt();
+                atriumPosX = jsonR.getProperties().get("posX").getAsDouble();
+                atriumPosY = jsonR.getProperties().get("posY").getAsDouble();
+
+                mg.updateAtriumRawByCtrls(
+                        activatedID,
+                        atriumDragFlag,
+                        currCtrlID,
+                        new WB_Point(atriumPosX, atriumPosY)
+                );
+
+                changedAtrium = JTSConverter.toSegments(mg.getChangedAtriumRawShape(activatedID));
+                elements.add(gson.toJsonTree(changedAtrium));
 
                 break;
         }
