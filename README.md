@@ -1,5 +1,7 @@
-# 水石商业综合体平面动线辅助生成
-时间：2020-2021
+# Shopping Mall Planning Generator
+2020-2021
 
-![Generate Result 1](./imgs/result1.png "Generate Result 1")  
-![Generate Result 2](./imgs/result2.png "Generate Result 2")  
+Shopping Mall Planning Generator is a research project in cooperation with Shuishi Design Inc., aiming to digitize design patterns and provide a standardized scheme for the initial stage of commercial building design.
+
+![Generate Result 1](./imgs/result1.jpg "Generate Result 1")  
+![Generate Result 2](./imgs/result2.jpg "Generate Result 2")  
