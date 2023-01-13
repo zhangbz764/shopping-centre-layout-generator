@@ -126,10 +126,17 @@ public class MallJsonProcessor {
         Vertices entryVer, innerVer;
         List<WB_Coord> entryCoords, innerCoords;
         double bufferDist;
+
         // atrium
         int atriumShapeID;
         double atriumPosX, atriumPosY;
-        int activatedID;
+
+        int statusCode;
+        int activatedID_F, activatedID_B;
+        Polygon actShp = null;
+        List<Coordinate> actShpCoords;
+        Vertices actShpCtrls;
+
         int atriumDragFlag;
         int currCtrlID;
         Segments changedAtrium;
@@ -196,28 +203,75 @@ public class MallJsonProcessor {
             case MallConst.DBCLICK_SEL_ATRIUM:
                 atriumPosX = jsonR.getProperties().get("atriumPosX").getAsDouble();
                 atriumPosY = jsonR.getProperties().get("atriumPosY").getAsDouble();
-                activatedID = jsonR.getProperties().get("atriumActivatedID").getAsInt();
+                activatedID_F = jsonR.getProperties().get("atriumActivatedID").getAsInt();
 
-                int[] result = this.getSelectID(activatedID, atriumPosX, atriumPosY);
-                properties.addProperty("statusCode", result[0]);
-                properties.addProperty("activatedID", result[1]);
+                if (activatedID_F == -1) {
+                    // select
+                    int id = -1;
+                    List<Polygon> atriumShapes = mg.getAtriumRawShapes();
+                    for (int i = 0; i < atriumShapes.size(); i++) {
+                        Polygon shp = atriumShapes.get(i);
+                        if (shp.contains(ZFactory.jtsgf.createPoint(new Coordinate(atriumPosX, atriumPosY)))) {
+                            id = i;
+                            actShp = shp;
+                            break;
+                        }
+                    }
+                    if (id > -1) {
+                        statusCode = codeSuccess; // select success
+                        activatedID_B = id;
+                    } else {
+                        statusCode = codeFail; // not select any atrium
+                        activatedID_B = -1;
+                    }
+                } else if (activatedID_F > -1) {
+                    // unselect
+                    List<Polygon> atriumShapes = mg.getAtriumRawShapes();
+                    Polygon shp = atriumShapes.get(activatedID_F);
+                    if (!shp.contains(ZFactory.jtsgf.createPoint(new Coordinate(atriumPosX, atriumPosY)))) {
+                        statusCode = codeSuccess;
+                    } else {
+                        statusCode = codeFail;
+                    }
+                    activatedID_B = -1;
+                } else {
+                    statusCode = codeFail;
+                    activatedID_B = -1;
+                }
+
+                properties.addProperty("statusCode", statusCode);
+                properties.addProperty("activatedID", activatedID_B);
+                if (actShp != null) {
+                    actShpCoords = new ArrayList<>();
+                    for (int i = 0; i < actShp.getNumPoints() - 1; i++) {
+                        actShpCoords.add(actShp.getCoordinates()[i]);
+                    }
+                    actShpCtrls = JTSConverter.toVertices(actShpCoords, 3);
+                    elements.add(gson.toJsonTree(actShpCtrls));
+                } else {
+                    actShpCtrls = new Vertices();
+                    elements.add(gson.toJsonTree(actShpCtrls));
+                }
+
+                actShp = null;
 
                 break;
             case MallConst.DRAG_ATRIUM_CTRL:
-                activatedID = jsonR.getProperties().get("activatedID").getAsInt();
+                activatedID_F = jsonR.getProperties().get("activatedID").getAsInt();
                 atriumDragFlag = jsonR.getProperties().get("dragFlag").getAsInt();
                 currCtrlID = jsonR.getProperties().get("currCtrlID").getAsInt();
                 atriumPosX = jsonR.getProperties().get("posX").getAsDouble();
                 atriumPosY = jsonR.getProperties().get("posY").getAsDouble();
 
                 mg.updateAtriumRawByCtrls(
-                        activatedID,
+                        activatedID_F,
                         atriumDragFlag,
                         currCtrlID,
                         new WB_Point(atriumPosX, atriumPosY)
                 );
 
-                changedAtrium = JTSConverter.toSegments(mg.getChangedAtriumRawShape(activatedID));
+                System.out.println(activatedID_F + "  " + atriumDragFlag + "  " + currCtrlID + "  " + atriumPosX + "  " + atriumPosY);
+                changedAtrium = JTSConverter.toSegments(mg.getChangedAtriumRawShape(activatedID_F));
                 elements.add(gson.toJsonTree(changedAtrium));
 
                 break;
