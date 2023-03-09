@@ -71,7 +71,11 @@ public class JTSConverter {
             Coordinate pt = iterator.next();
 
             for (int i = 0; i < size; ++i) {
-                coords.add(pt.getOrdinate(i));
+                if (Double.isNaN(pt.getOrdinate(i))) {
+                    coords.add(0.0);
+                } else {
+                    coords.add(pt.getOrdinate(i));
+                }
             }
         }
 
