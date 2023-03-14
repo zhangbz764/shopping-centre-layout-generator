@@ -2,3 +2,7 @@ out
 target
 .gradle
 .idea
+bin
+
+.project
+*.log
