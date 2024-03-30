@@ -161,7 +161,6 @@ public class Mall extends PApplet {
         // temp:中庭与动线
         if (key == 'k') {
             IG.init();
-
             ZTransform.PolygonToICurve(mallGenerator.getSiteBase().getBoundary()).layer("boundary");
             ZTransform.PolygonToICurve(mallGenerator.getMainTraffic().getMainTrafficBuffer()).layer("traffic");
             ZTransform.LineStringToICurve(mallGenerator.getMainTraffic().getMainTrafficCurve()).layer("traffic");

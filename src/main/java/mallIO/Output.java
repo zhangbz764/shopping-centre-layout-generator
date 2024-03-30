@@ -1,7 +1,6 @@
 package mallIO;
 
 import igeo.IG;
-import oldVersion.Floor;
 
 /**
  * output all generated model
@@ -24,9 +23,6 @@ public class Output {
 
     /* ------------- member function ------------- */
 
-    private void saveFloors(Floor floor){
-
-    }
 
     public void outputJPG() {
         System.out.println("** STARTING FILE OUTPUT **");

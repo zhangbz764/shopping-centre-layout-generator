@@ -252,13 +252,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.github.Agent14zbz</groupId>
-            <artifactId>Ztools</artifactId>
-            <version>0.1</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
             <groupId>com.github.archialgo</groupId>
             <artifactId>camera</artifactId>
             <version>1.1</version>
@@ -277,6 +270,12 @@
             <groupId>com.github.archialgo</groupId>
             <artifactId>controlp5-maven-lib</artifactId>
             <version>2.2.6</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.github.zhangbz764</groupId>
+            <artifactId>ztools</artifactId>
+            <version>0.1.4</version>
         </dependency>
     </dependencies>
 
