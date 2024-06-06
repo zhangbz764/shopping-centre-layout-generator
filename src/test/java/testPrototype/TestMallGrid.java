@@ -15,6 +15,7 @@ import render.JtsRender;
 import render.ZRender;
 import transform.ZTransform;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,13 +27,16 @@ import java.util.List;
  * @time 12:21
  */
 public class TestMallGrid extends PApplet {
+    public static void main(String[] args) {
+        PApplet.main(TestMallGrid.class.getName());
+    }
 
     /* ------------- settings ------------- */
 
     public void settings() {
 //        size(1280, 720, SVG, ".\\src\\test\\resources\\grid_modulus.svg");
-        size(1280, 720, SVG, ".\\src\\test\\resources\\grid_shape.svg");
-//        size(1000, 1000, P3D);
+//        size(1280, 720, SVG, ".\\src\\test\\resources\\grid_shape.svg");
+        size(1000, 1000, P3D);
     }
 
     /* ------------- setup ------------- */
@@ -43,6 +47,9 @@ public class TestMallGrid extends PApplet {
     private StructureGrid[] grid2;
 
     private List<ZLine> rays;
+
+    private List<ZLine> randRayPair1;
+    private List<ZLine> randRayPair2;
 
     private StructureGrid gi;
 
@@ -60,18 +67,26 @@ public class TestMallGrid extends PApplet {
         loadBoundary();
 
         // rect
-//        ZRectCover zrc1 = new ZRectCover(boundary1, 2);
-//        ZRectCover zrc2 = new ZRectCover(boundary2, 3);
-//        this.rays = zrc2.getRayExtends();
-//
-//        this.grid1 = new StructureGrid[zrc1.getBestRects().size()];
-//        for (int i = 0; i < grid1.length; i++) {
-//            grid1[i] = new StructureGrid(zrc1.getBestRects().get(i), 8.4);
-//        }
-//        this.grid2 = new StructureGrid[zrc2.getBestRects().size()];
-//        for (int i = 0; i < grid2.length; i++) {
-//            grid2[i] = new StructureGrid(zrc2.getBestRects().get(i), 8.4);
-//        }
+        ZRectCover zrc1 = new ZRectCover(boundary1, 2);
+        ZRectCover zrc2 = new ZRectCover(b3, 3);
+        this.rays = zrc2.getRayExtends();
+
+        this.randRayPair1 = new ArrayList<>();
+        this.randRayPair1.add(rays.get((int) (Math.random() * rays.size())));
+        this.randRayPair1.add(rays.get((int) (Math.random() * rays.size())));
+        this.randRayPair2 = new ArrayList<>();
+        this.randRayPair2.add(rays.get((int) (Math.random() * rays.size())));
+        this.randRayPair2.add(rays.get((int) (Math.random() * rays.size())));
+
+
+        this.grid1 = new StructureGrid[zrc1.getBestRects().size()];
+        for (int i = 0; i < grid1.length; i++) {
+            grid1[i] = new StructureGrid(zrc1.getBestRects().get(i), 8.4);
+        }
+        this.grid2 = new StructureGrid[zrc2.getBestRects().size()];
+        for (int i = 0; i < grid2.length; i++) {
+            grid2[i] = new StructureGrid(zrc2.getBestRects().get(i), 8.4);
+        }
 
         // modulus
 //        ZRectCover zrc3 = new ZRectCover(boundary1, 2);
@@ -143,13 +158,13 @@ public class TestMallGrid extends PApplet {
     public void draw() {
         background(255);
 
-//        strokeWeight(3);
-//        stroke(0);
-//        noFill();
-//        jtsRender.drawGeometry(boundary1);
-//        jtsRender.drawGeometry(boundary2);
-//
-//
+        strokeWeight(3);
+        stroke(0);
+        noFill();
+        jtsRender.drawGeometry(b3);
+        jtsRender.drawGeometry(boundary2);
+
+
 //        strokeWeight(0.5f);
 //        stroke(100);
 //        for (StructureGrid g : grid1) {
@@ -162,19 +177,20 @@ public class TestMallGrid extends PApplet {
 //                ZRender.drawZLine2D(this, l);
 //            }
 //        }
-//
-//        strokeWeight(2);
-//        stroke(190, 60, 45);
-//        for (StructureGrid g : grid1) {
-//            jtsRender.drawGeometry(g.getRect());
-//        }
-//        for (StructureGrid g : grid2) {
-//            jtsRender.drawGeometry(g.getRect());
-//        }
-//
-//        for (ZLine l : rays) {
-//            ZRender.drawZLine2D(this, l);
-//        }
+
+        strokeWeight(2);
+        stroke(190, 60, 45);
+        for (StructureGrid g : grid1) {
+            jtsRender.drawGeometry(g.getRect());
+        }
+        for (StructureGrid g : grid2) {
+            jtsRender.drawGeometry(g.getRect());
+        }
+        strokeWeight(0.5f);
+        stroke(100);
+        for (ZLine l : rays) {
+            ZRender.drawZLine2D(this, l);
+        }
 
 //        jtsRender.drawGeometry(gi.getRect());
 //        for (int i = 0; i < gi.getLon10().size(); i++) {
@@ -189,42 +205,61 @@ public class TestMallGrid extends PApplet {
 //            text(i, l.getPt0().xf(), l.getPt0().yf());
 //        }
 
-        strokeWeight(3);
-        stroke(0);
-        noFill();
-        jtsRender.drawGeometry(b1);
-        jtsRender.drawGeometry(b2);
-        jtsRender.drawGeometry(b3);
-        jtsRender.drawGeometry(b4);
 
-        strokeWeight(0.5f);
-        stroke(100);
-        for (StructureGrid g : g1) {
-            for (ZLine l : g.getAllLines()) {
-                ZRender.drawZLine2D(this, l);
-            }
-        }
-        for (StructureGrid g : g2) {
-            for (ZLine l : g.getAllLines()) {
-                ZRender.drawZLine2D(this, l);
-            }
-        }
-        for (StructureGrid g : g3) {
-            for (ZLine l : g.getAllLines()) {
-                ZRender.drawZLine2D(this, l);
-            }
-        }
-        for (StructureGrid g : g4) {
-            for (ZLine l : g.getAllLines()) {
-                ZRender.drawZLine2D(this, l);
-            }
-        }
+        // 4个轮廓
+//        strokeWeight(3);
+//        stroke(0);
+//        noFill();
+//        jtsRender.drawGeometry(b1);
+//        jtsRender.drawGeometry(b2);
+//        jtsRender.drawGeometry(b3);
+//        jtsRender.drawGeometry(b4);
+//
+//        strokeWeight(0.5f);
+//        stroke(100);
+//        for (StructureGrid g : g1) {
+//            for (ZLine l : g.getAllLines()) {
+//                ZRender.drawZLine2D(this, l);
+//            }
+//        }
+//        for (StructureGrid g : g2) {
+//            for (ZLine l : g.getAllLines()) {
+//                ZRender.drawZLine2D(this, l);
+//            }
+//        }
+//        for (StructureGrid g : g3) {
+//            for (ZLine l : g.getAllLines()) {
+//                ZRender.drawZLine2D(this, l);
+//            }
+//        }
+//        for (StructureGrid g : g4) {
+//            for (ZLine l : g.getAllLines()) {
+//                ZRender.drawZLine2D(this, l);
+//            }
+//        }
 
-        println("Finished.");
-        exit();
+//        println("Finished.");
+//        exit();
     }
 
     public void keyPressed() {
+        if (key == '1') {
+            IG.init();
+            ZTransform.PolygonToICurve(b3).layer("boundary");
+            for (ZLine l : rays) {
+                new ICurve(
+                        new IVec[]{
+                                new IVec(l.getPt0().toIPoint()),
+                                new IVec(l.getPt1().toIPoint())
+                        }
+                ).layer("rays");
+            }
+            for (StructureGrid g : grid2) {
+                ZTransform.PolygonToICurve(g.getRect()).layer("rect");
+            }
+            IG.save(".\\src\\test\\resources\\grid_rays.3dm");
+        }
+
         if (key == 's') {
             save(".\\src\\test\\resources\\grid");
         }
@@ -244,6 +279,7 @@ public class TestMallGrid extends PApplet {
             }
             IG.save("E:\\AAA_Study\\202112_MasterDegreeThesis\\正文\\图\\grid_rays.3dm");
         }
+
 
         if (key == 'q') {
             IG.init();

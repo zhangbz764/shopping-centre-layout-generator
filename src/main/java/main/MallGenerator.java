@@ -624,7 +624,7 @@ public class MallGenerator {
                 displayEscalatorLocal(app, jtsRender);
                 displayShopCellsLocal(app, jtsRender);
                 displayGridLocal(app);
-                displayEvacStairwayPosLocal(app);
+//                displayEvacStairwayPosLocal(app);
                 displayEvacStairwayLocal(app, jtsRender);
                 break;
             case MallConst.E_WASHROOM:

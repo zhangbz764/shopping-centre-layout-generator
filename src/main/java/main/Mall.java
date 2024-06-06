@@ -7,6 +7,7 @@ import guo_cam.CameraController;
 import igeo.ICurve;
 import igeo.IG;
 import igeo.IVec;
+import mallElementNew.Shop;
 import mallIO.ImportData;
 import mallParameters.MallConst;
 import mallParameters.MallParam;
@@ -16,6 +17,8 @@ import processing.core.PFont;
 import render.JtsRender;
 import transform.ZTransform;
 import wblut.geom.WB_Point;
+import wblut.geom.WB_Polygon;
+import wblut.hemesh.HE_Mesh;
 import wblut.processing.WB_Render;
 
 /**
@@ -55,7 +58,7 @@ public class Mall extends PApplet {
     /* ------------- settings ------------- */
 
     public void settings() {
-        size(1920, 1080, P3D);
+        size(1600, 900, P3D);
     }
 
     /* ------------- setup ------------- */
@@ -75,7 +78,8 @@ public class Mall extends PApplet {
         // import
         this.importData = new ImportData();
         String importPath = "./src/main/resources/20220406.3dm";
-        importData.loadDataShaoxing(importPath);
+//        importData.loadDataShaoxing(importPath);
+        importData.loadDataSite(importPath);
 
         // initialize core managers
         this.mallInteract = new MallInteract();
@@ -232,8 +236,35 @@ public class Mall extends PApplet {
             for (int i = 0; i < mallGenerator.getPublicSpace().getAtriumCurrShapes().length; i++) {
                 ZTransform.PolygonToICurve(mallGenerator.getPublicSpace().getAtriumCurrShapeN(i)).layer("atrium");
             }
-            IG.save("E:\\AAA_Study\\202112_MasterDegreeThesis\\正文\\图\\publicSpace.3dm");
+            for (ZLine l : mallGenerator.getPublicSpace().getEscalatorShapes()) {
+                l.createICurve().layer("escalator");
+            }
+            for (Polygon bound : mallGenerator.getPublicSpace().getEscalatorBounds()) {
+                ZTransform.PolygonToICurve(bound).layer("escalator");
+            }
+//            IG.save("E:\\AAA_Study\\202112_MasterDegreeThesis\\正文\\图\\publicSpace.3dm");
+            IG.save("E:\\0_论文\\202403mall web\\图片\\publicSpace1.3dm");
         }
+
+        if (key == 'b') {
+            IG.init();
+            ZTransform.PolygonToICurve(mallGenerator.getSiteBase().getBoundary()).layer("boundary");
+            ZTransform.PolygonToICurve(mallGenerator.getPublicSpace().getPublicSpaceShape()).layer("publicSpace");
+            for (int i = 0; i < mallGenerator.getPublicSpace().getAtriumCurrShapes().length; i++) {
+                ZTransform.PolygonToICurve(mallGenerator.getPublicSpace().getAtriumCurrShapeN(i)).layer("atrium");
+            }
+            for (ZLine l : mallGenerator.getPublicSpace().getEscalatorShapes()) {
+                l.createICurve().layer("escalator");
+            }
+            for (Polygon bound : mallGenerator.getPublicSpace().getEscalatorBounds()) {
+                ZTransform.PolygonToICurve(bound).layer("escalator");
+            }
+            for (Shop shopCell : mallGenerator.getShopCells()) {
+                ZTransform.PolygonToICurve(shopCell.getShape()).layer("tenant");
+            }
+            IG.save("E:\\0_论文\\202403mall web\\图片\\tenant1.3dm");
+        }
+
 
         if (key == 'u') {
             IG.init();

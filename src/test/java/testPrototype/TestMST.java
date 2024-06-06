@@ -2,7 +2,7 @@ package testPrototype;
 
 import guo_cam.CameraController;
 import igeo.IG;
-import oldVersion.mallElements.TrafficGraph;
+//import oldVersion.mallElements.TrafficGraph;
 import processing.core.PApplet;
 import render.JtsRender;
 import wblut.processing.WB_Render;
@@ -25,7 +25,7 @@ public class TestMST extends PApplet {
 
     /* ------------- setup ------------- */
 
-    private TrafficGraph graph;
+//    private TrafficGraph graph;
 
     private CameraController gcam;
     private JtsRender jtsRender;
@@ -41,7 +41,7 @@ public class TestMST extends PApplet {
         IG.init();
         IG.open(path);
 
-        this.graph = new TrafficGraph();
+//        this.graph = new TrafficGraph();
     }
 
     /* ------------- draw ------------- */

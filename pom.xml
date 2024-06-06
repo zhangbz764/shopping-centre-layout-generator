@@ -69,63 +69,6 @@
                 </executions>
             </plugin>
 
-            <!-- maven-shade-plugin -->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-shade-plugin</artifactId>-->
-<!--                <version>3.2.1</version>-->
-
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>shade</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <shadedArtifactAttached>true</shadedArtifactAttached>-->
-<!--                            <transformers>-->
-<!--                                <transformer implementation=-->
-<!--                                                     "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
-<!--                                    <mainClass>main.MallMain</mainClass>-->
-<!--                                </transformer>-->
-<!--                            </transformers>-->
-
-<!--                            <artifactSet>-->
-<!--                                <includes>-->
-<!--                                    <include>org.github.Agent14zbz:Ztools</include>-->
-
-<!--                                    <include>org.processing:core</include>-->
-<!--                                    <include>org.jogamp.gluegen:gluegen-rt</include>-->
-<!--                                    <include>org.jogamp.gluegen:gluegen-rt-natives-windows-amd64</include>-->
-<!--                                    <include>org.jogamp.gluegen:gluegen-rt-natives-windows-i586</include>-->
-<!--                                    <include>org.jogamp.jogl:jogl-all</include>-->
-<!--                                    <include>org.jogamp.jogl:jogl-all-natives-windows-amd64</include>-->
-<!--                                    <include>org.jogamp.jogl:jogl-all-natives-windows-i586</include>-->
-<!--                                    <include>org.locationtech.jts:jts-core</include>-->
-<!--                                    <include>com.github.twak:campskeleton</include>-->
-<!--                                    <include>com.github.twak:jutils</include>-->
-<!--                                    <include>javax.vecmath:vecmath</include>-->
-<!--                                    <include>gov.nist.math:jama</include>-->
-<!--                                    &lt;!&ndash;<include>io.socket:socket.io-client</include>&ndash;&gt;-->
-<!--                                    &lt;!&ndash;<include>com.google.code.gson:gson</include>&ndash;&gt;-->
-
-<!--                                    <include>com.github.archialgo:camera</include>-->
-<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:eclipse-collections-9.0.0</include>-->
-<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:eclipse-collections-api-9.0.0</include>-->
-<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:hemesh</include>-->
-<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:hemesh-data-3_0_0</include>-->
-<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:hemesh-external-6_0_0</include>-->
-<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:hemesh-lab</include>-->
-<!--                                    <include>com.github.archialgo.HE_Mesh-maven-lib:javaluator-3.0.2</include>-->
-<!--                                    <include>com.github.archialgo:iGeo-maven-lib</include>-->
-<!--                                    <include>com.github.archialgo:controlp5-maven-lib</include>-->
-<!--                                </includes>-->
-<!--                            </artifactSet>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
-
             <!-- ProGuard混淆插件-->
             <plugin>
                 <groupId>com.github.wvengen</groupId>

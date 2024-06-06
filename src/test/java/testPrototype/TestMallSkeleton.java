@@ -24,12 +24,16 @@ import wblut.geom.WB_Point;
  */
 public class TestMallSkeleton extends PApplet {
 
+    public static void main(String[] args) {
+        PApplet.main(TestMallSkeleton.class.getName());
+    }
+
     /* ------------- settings ------------- */
 
     public void settings() {
 //        size(1280, 720, SVG, ".\\src\\test\\resources\\skeleton.svg");
-        size(1280, 720, SVG, ".\\src\\test\\resources\\traffic.svg");
-//        size(1000, 1000, P3D);e
+//        size(1280, 720, SVG, ".\\src\\test\\resources\\traffic.svg");
+        size(1000, 1000, P3D);
     }
 
     /* ------------- setup ------------- */

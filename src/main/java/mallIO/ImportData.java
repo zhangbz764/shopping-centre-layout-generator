@@ -122,7 +122,7 @@ public class ImportData {
             this.inputBlock = (WB_Polygon) ZTransform.ICurveToWB(redLine[0]);
         }
         // load boundary
-        ICurve[] boundary = IG.layer("site5").curves();
+        ICurve[] boundary = IG.layer("site4").curves();
         System.out.println(boundary.length);
         if (boundary.length > 0) {
             this.inputBoundary = (WB_Polygon) ZTransform.ICurveToWB(boundary[0]);

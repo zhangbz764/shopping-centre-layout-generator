@@ -51,7 +51,7 @@ public class MallGUI {
         int startW = 20;
         int startH = 20;
 
-        cp5.addButton("场地与轮廓导入")
+        cp5.addButton("Site Import")
                 .setPosition(startW, startH)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_SITE_BOUNDARY)
@@ -60,8 +60,8 @@ public class MallGUI {
                 .setColorForeground(app.color(200, 120, 60))
                 .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("动线&中庭形状")
-                .setPosition(startW, startH + cp5H)
+        cp5.addButton("Skeleton & Atrium")
+                .setPosition(startW, startH + cp5H+10)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_TRAFFIC_ATRIUM)
                 .setFont(font)
@@ -69,8 +69,8 @@ public class MallGUI {
                 .setColorForeground(app.color(200, 120, 60))
                 .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("空中连廊")
-                .setPosition(startW, startH + cp5H * 2)
+        cp5.addButton("Corridor")
+                .setPosition(startW, startH + cp5H * 2+10)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_MAIN_CORRIDOR)
                 .setFont(font)
@@ -78,8 +78,8 @@ public class MallGUI {
                 .setColorForeground(app.color(200, 120, 60))
                 .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("公共空间形态")
-                .setPosition(startW, startH + cp5H * 3)
+        cp5.addButton("Walkway Space Generation")
+                .setPosition(startW, startH + cp5H * 3+10)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_PUBLIC_SPACE)
                 .setFont(font)
@@ -87,8 +87,8 @@ public class MallGUI {
                 .setColorForeground(app.color(200, 120, 60))
                 .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("自动扶梯")
-                .setPosition(startW, startH + cp5H * 4)
+        cp5.addButton("Escalator")
+                .setPosition(startW, startH + cp5H * 4+10)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_ESCALATOR)
                 .setFont(font)
@@ -97,8 +97,8 @@ public class MallGUI {
                 .setColorActive(app.color(220, 151, 83))
         ;
 
-        cp5.addButton("格网参考线")
-                .setPosition(startW, startH + cp5H * 5)
+        cp5.addButton("Grids")
+                .setPosition(startW, startH + cp5H * 5+20)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_STRUCTURE_GRID)
                 .setFont(font)
@@ -106,8 +106,8 @@ public class MallGUI {
                 .setColorForeground(app.color(200, 120, 60))
                 .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("铺位划分")
-                .setPosition(startW, startH + cp5H * 6)
+        cp5.addButton("Tenant Partition")
+                .setPosition(startW, startH + cp5H * 6+20)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_SHOP_EDIT)
                 .setFont(font)
@@ -115,8 +115,8 @@ public class MallGUI {
                 .setColorForeground(app.color(200, 120, 60))
                 .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("疏散楼梯")
-                .setPosition(startW, startH + cp5H * 7)
+        cp5.addButton("Staircase Generation")
+                .setPosition(startW, startH + cp5H * 7+30)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_EVAC_STAIRWAY)
                 .setFont(font)
@@ -124,8 +124,8 @@ public class MallGUI {
                 .setColorForeground(app.color(200, 120, 60))
                 .setColorActive(app.color(220, 151, 83))
         ;
-        cp5.addButton("卫生间")
-                .setPosition(startW, startH + cp5H * 8)
+        cp5.addButton("Result Export")
+                .setPosition(startW, startH + cp5H * 8+40)
                 .setSize(MallConst.STATUS_W, cp5H)
                 .setId(MallConst.E_EVAC_STAIRWAY)
                 .setFont(font)
@@ -219,7 +219,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_SWITCH_BOUNDARY)
                 .setFont(font)
-                .setLabel("切换方向")
+                .setLabel("Switch Direction")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -232,7 +232,7 @@ public class MallGUI {
                 .setRange(0, MallConst.SITE_REDLINEDIST_MAX)
                 .setValue(mallParam.siteRedLineDist)
                 .setFont(font)
-                .setLabel("红线距离")
+                .setLabel("Red Line Distance")
                 .setVisible(false)
                 .plugTo(mallParam)
                 .setColorBackground(app.color(80, 80, 80))
@@ -246,7 +246,7 @@ public class MallGUI {
                 .setRange(MallConst.SITE_BUFFER_MIN, MallConst.SITE_BUFFER_MAX)
                 .setValue(mallParam.siteBufferDist)
                 .setFont(font)
-                .setLabel("退界距离")
+                .setLabel("Setback Distance")
                 .setVisible(false)
                 .plugTo(mallParam)
                 .setColorBackground(app.color(80, 80, 80))
@@ -275,7 +275,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_TRAFFIC_CONTROLLERS)
                 .setFont(font)
-                .setLabel("显示/隐藏路径控制点")
+                .setLabel("Show / Hide Nodes")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -289,7 +289,7 @@ public class MallGUI {
                 .setRange(MallConst.TRAFFIC_BUFFER_DIST_MIN, MallConst.TRAFFIC_BUFFER_DIST_MAX)
                 .setValue(mallParam.trafficBufferDist)
                 .setFont(font)
-                .setLabel("路径偏移距离")
+                .setLabel("Buffer Distance")
                 .setVisible(false)
                 .plugTo(mallParam)
                 .setColorBackground(app.color(80, 80, 80))
@@ -302,7 +302,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_CURVE_ATRIUM)
                 .setFont(font)
-                .setLabel("中庭曲线/折线")
+                .setLabel("Curve / Poly")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -314,7 +314,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_DELETE_ATRIUM)
                 .setFont(font)
-                .setLabel("删除中庭")
+                .setLabel("Delete Atrium")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -328,7 +328,7 @@ public class MallGUI {
                 .setRange(-180, 180)
                 .setValue(mallParam.atriumAngle)
                 .setFont(font)
-                .setLabel("中庭旋转角度")
+                .setLabel("Atrium Angle")
                 .setVisible(false)
                 .plugTo(mallParam)
                 .setColorBackground(app.color(80, 80, 80))
@@ -343,7 +343,7 @@ public class MallGUI {
                 .setRange(MallConst.ATRIUM_AREA_MIN, MallConst.ATRIUM_AREA_MAX)
                 .setValue(mallParam.atriumArea)
                 .setFont(font)
-                .setLabel("中庭面积")
+                .setLabel("Atrium Area")
                 .setVisible(false)
                 .plugTo(mallParam)
                 .setColorBackground(app.color(80, 80, 80))
@@ -356,25 +356,25 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H * 9)
                 .setId(MallConst.LIST_ATRIUM_FACTORY)
                 .setFont(font)
-                .setLabel("中庭形状列表")
+                .setLabel("Atrium Shape List")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
                 .setColorActive(app.color(220, 151, 83));
         ddl.setItemHeight(MallConst.CONTROLLER_H);
         ddl.setBarHeight(MallConst.CONTROLLER_H);
-        ddl.setCaptionLabel("中庭形状列表");
+        ddl.setCaptionLabel("Atrium Shape List");
         ddl.getCaptionLabel().getStyle().marginTop = 3;
         ddl.getCaptionLabel().getStyle().marginLeft = 3;
         ddl.getValueLabel().getStyle().marginTop = 3;
-        ddl.addItem("三角形", MallConst.ITEM_A_TRIANGLE);
-        ddl.addItem("正方形", MallConst.ITEM_A_SQUARE);
-        ddl.addItem("梯形", MallConst.ITEM_A_TRAPEZOID);
-        ddl.addItem("五边形", MallConst.ITEM_A_PENTAGON);
-        ddl.addItem("六边形1", MallConst.ITEM_A_HEXAGON1);
-        ddl.addItem("六边形2", MallConst.ITEM_A_HEXAGON2);
-        ddl.addItem("L形", MallConst.ITEM_A_LSHAPE);
-        ddl.addItem("八边形", MallConst.ITEM_A_OCTAGON);
+        ddl.addItem("Triangle", MallConst.ITEM_A_TRIANGLE);
+        ddl.addItem("Square", MallConst.ITEM_A_SQUARE);
+        ddl.addItem("Trapezoid", MallConst.ITEM_A_TRAPEZOID);
+        ddl.addItem("Pentagon", MallConst.ITEM_A_PENTAGON);
+        ddl.addItem("Hexagon 1", MallConst.ITEM_A_HEXAGON1);
+        ddl.addItem("Hexagon 2", MallConst.ITEM_A_HEXAGON2);
+        ddl.addItem("L Shape", MallConst.ITEM_A_LSHAPE);
+        ddl.addItem("Octagon", MallConst.ITEM_A_OCTAGON);
 
         this.controllerNames[1] = new String[]{
                 "trafficControllers",
@@ -403,7 +403,7 @@ public class MallGUI {
                 .setRange(MallConst.CORRIDOR_WIDTH_MIN, MallConst.CORRIDOR_WIDTH_MAX)
                 .setValue(mallParam.corridorWidth)
                 .setFont(font)
-                .setLabel("公区走道宽度")
+                .setLabel("Corridor Width")
                 .setVisible(false)
                 .plugTo(mallParam)
                 .setColorBackground(app.color(80, 80, 80))
@@ -430,7 +430,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_DELETE_PUBLIC_NODE)
                 .setFont(font)
-                .setLabel("删除控制点")
+                .setLabel("Delete Node")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -444,7 +444,7 @@ public class MallGUI {
                 .setRange(MallConst.PUBLIC_BUFFER_DIST_MIN, MallConst.PUBLIC_BUFFER_DIST_MAX)
                 .setValue(mallParam.publicSpaceBufferDist)
                 .setFont(font)
-                .setLabel("交通空间偏移距离")
+                .setLabel("Buffer Distance")
                 .setVisible(false)
                 .plugTo(mallParam)
                 .setColorBackground(app.color(80, 80, 80))
@@ -457,7 +457,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_ATRIUM_ROUND)
                 .setFont(font)
-                .setLabel("中庭圆角/倒角")
+                .setLabel("Arc / Smooth")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -471,7 +471,7 @@ public class MallGUI {
                 .setRange(MallConst.ATRIUM_ROUND_RADIUS_MIN, MallConst.ATRIUM_ROUND_RADIUS_MAX)
                 .setValue(mallParam.atriumRoundRadius)
                 .setFont(font)
-                .setLabel("中庭圆角半径")
+                .setLabel("Arc Radius")
                 .setVisible(false)
                 .plugTo(mallParam)
                 .setColorBackground(app.color(80, 80, 80))
@@ -486,7 +486,7 @@ public class MallGUI {
                 .setRange(0, 5)
                 .setValue(mallParam.atriumSmoothTimes)
                 .setFont(font)
-                .setLabel("中庭倒角次数")
+                .setLabel("Smooth Times")
                 .setVisible(false)
                 .plugTo(mallParam)
                 .setColorBackground(app.color(80, 80, 80))
@@ -517,7 +517,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_UPDATE_ESCALATOR)
                 .setFont(font)
-                .setLabel("更改扶梯位置")
+                .setLabel("Update Position")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -556,12 +556,12 @@ public class MallGUI {
                 .setId(MallConst.LIST_GRID_NUM)
                 .setItemHeight(MallConst.CONTROLLER_H)
                 .setBarHeight(MallConst.CONTROLLER_H)
-                .setCaptionLabel("柱网数目")
+                .setCaptionLabel("Grid Num")
                 .addItem("1", 1)
                 .addItem("2", 2)
                 .addItem("3", 3)
                 .setFont(font)
-                .setLabel("柱网数目")
+                .setLabel("Grid Num")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -588,7 +588,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_UNION_CELLS)
                 .setFont(font)
-                .setLabel("合并选中商铺")
+                .setLabel("Union")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -600,7 +600,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_SPLIT_CELLS)
                 .setFont(font)
-                .setLabel("阴/阳角二次剖分")
+                .setLabel("Second Partition")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -627,7 +627,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_EVAC_MODEL)
                 .setFont(font)
-                .setLabel("生成模块")
+                .setLabel("Generate Model")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
@@ -639,7 +639,7 @@ public class MallGUI {
                 .setSize(MallConst.CONTROLLER_W, MallConst.CONTROLLER_H)
                 .setId(MallConst.BUTTON_EVAC_DIR)
                 .setFont(font)
-                .setLabel("模块方向")
+                .setLabel("Direction")
                 .setVisible(false)
                 .setColorBackground(app.color(80, 80, 80))
                 .setColorForeground(app.color(200, 120, 60))
