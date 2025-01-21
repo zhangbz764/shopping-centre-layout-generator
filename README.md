@@ -6,3 +6,6 @@ Shopping Centre Layout Generator is a collaborative research project between [In
 
 ![](https://archialgo-com-sources.oss-cn-hangzhou.aliyuncs.com/images/img-shopping-mall-planning-generator0.jpg)
 ![](https://archialgo-com-sources.oss-cn-hangzhou.aliyuncs.com/images/img-shopping-mall-planning-generator.jpg)
+
+Cite:
+[Zhang, B. and Li, B. (2025). From knowledge encoding to procedural generation for early-stage layout design: A case of linear shopping centres. Frontiers of Architectural Research](https://doi.org/10.1016/j.foar.2024.07.002)
